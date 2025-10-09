@@ -32,16 +32,18 @@ export default function WelcomeScreen() {
           style={[styles.button, styles.signInButton]}
           onPress={() => router.push("/login")}
         >
-          <Text style={styles.buttonText}>Sign In</Text>
+            <Text style={[styles.buttonText, { color: "#2E1759" }]}>
+            Sign In
+            </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, styles.signUpButton]}
           onPress={() => router.push("/signup")}
         >
-          <Text style={[styles.buttonText, { color: "#2E1759" }]}>
+            <Text style={[styles.buttonText, { color: "#2E1759" }]}>
             Sign Up
-          </Text>
+            </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
