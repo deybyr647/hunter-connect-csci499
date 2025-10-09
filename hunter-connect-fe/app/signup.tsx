@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { AuthStyles as styles } from "../components/AuthStyles";
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -109,75 +110,4 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#2E1759",
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  title: {
-    color: "#fff",
-    fontSize: 36,
-    fontWeight: "bold",
-    letterSpacing: 2,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    marginVertical: 10,
-  },
-  subtitle: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "bold",
-    letterSpacing: 1,
-  },
-  formContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    width: "85%",
-    alignSelf: "center",
-    padding: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  halfInput: {
-    width: "48%",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: "#2E1759",
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  haveAccount: {
-    color: "#2E1759",
-    textAlign: "center",
-    marginTop: 10,
-  },
-});
+

@@ -8,6 +8,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { AuthStyles as styles } from "../components/AuthStyles";
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -47,54 +48,3 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#2E1759",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 60,
-  },
-  title: {
-    color: "#fff",
-    fontSize: 36,
-    fontWeight: "bold",
-    letterSpacing: 2,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    marginVertical: 15,
-  },
-  subtitle: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "bold",
-    letterSpacing: 1,
-  },
-  buttonContainer: {
-    width: "85%",
-  },
-  button: {
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  signInButton: {
-    backgroundColor: "#fff",
-  },
-  signUpButton: {
-    backgroundColor: "#fff",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
