@@ -22,7 +22,7 @@ export const AuthStyles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 20,
   },
   title: {
     color: "#fff",
@@ -51,6 +51,7 @@ export const AuthStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 5,
     elevation: 5,
+    marginTop: 10,
   },
     buttonContainer: {
     width: "85%",

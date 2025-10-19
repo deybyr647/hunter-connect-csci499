@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { AuthStyles as styles } from "../components/AuthStyles";
+import { AuthStyles as styles } from "../../components/AuthStyles";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function LoginScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>HUNTER</Text>
         <Image
-          source={require("../assets/images/hunter_logo.png")}
+          source={require("../../assets/images/hunter_logo.png")}
           style={styles.logo}
         />
         <Text style={styles.subtitle}>CONNECT</Text>
