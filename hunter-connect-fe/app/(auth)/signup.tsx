@@ -1,18 +1,19 @@
+import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  Image,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
-  ScrollView,
-  Alert,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+
 import { AuthStyles as styles } from "../../components/AuthStyles";
 import { auth } from "../../firebase/firebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function SignUpScreen() {
   const router = useRouter();

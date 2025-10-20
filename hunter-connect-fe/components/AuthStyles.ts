@@ -53,10 +53,10 @@ export const AuthStyles = StyleSheet.create({
     elevation: 5,
     marginTop: 10,
   },
-    buttonContainer: {
+  buttonContainer: {
     width: "85%",
   },
-    signInButton: {
+  signInButton: {
     backgroundColor: "#fff",
   },
   signUpButton: {

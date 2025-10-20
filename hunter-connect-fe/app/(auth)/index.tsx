@@ -1,16 +1,9 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-} from "react-native";
 import { useRouter } from "expo-router";
+import React from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AuthStyles as styles } from "../../components/AuthStyles";
-
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -34,21 +27,16 @@ export default function WelcomeScreen() {
           style={[styles.button, styles.signInButton]}
           onPress={() => router.push("/login")}
         >
-            <Text style={[styles.buttonText, { color: "#2E1759" }]}>
-            Sign In
-            </Text>
+          <Text style={[styles.buttonText, { color: "#2E1759" }]}>Sign In</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, styles.signUpButton]}
           onPress={() => router.push("/signup")}
         >
-            <Text style={[styles.buttonText, { color: "#2E1759" }]}>
-            Sign Up
-            </Text>
+          <Text style={[styles.buttonText, { color: "#2E1759" }]}>Sign Up</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-

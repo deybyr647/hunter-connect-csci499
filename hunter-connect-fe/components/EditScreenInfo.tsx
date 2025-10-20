@@ -1,35 +1,37 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
+import Colors from "@/constants/Colors";
+import React from "react";
+import { StyleSheet } from "react-native";
 
-import { ExternalLink } from './ExternalLink';
-import { MonoText } from './StyledText';
-import { Text, View } from './Themed';
-
-import Colors from '@/constants/Colors';
+import { ExternalLink } from "./ExternalLink";
+import { MonoText } from "./StyledText";
+import { Text, View } from "./Themed";
 
 export default function EditScreenInfo({ path }: { path: string }) {
   return (
     <View>
       <View style={styles.getStartedContainer}>
-          <Text
-              style={styles.getStartedText}
-              lightColor="rgba(0,0,0,0.8)"
-              darkColor="rgba(255,255,255,0.8)">
-              Content Coming Soon...
-          </Text>
+        <Text
+          style={styles.getStartedText}
+          lightColor="rgba(0,0,0,0.8)"
+          darkColor="rgba(255,255,255,0.8)"
+        >
+          Content Coming Soon...
+        </Text>
 
-          <View
-            style={[styles.codeHighlightContainer, styles.homeScreenFilename]}
-            darkColor="rgba(255,255,255,0.05)"
-            lightColor="rgba(0,0,0,0.05)">
-            <MonoText>{path}</MonoText>
-          </View>
+        <View
+          style={[styles.codeHighlightContainer, styles.homeScreenFilename]}
+          darkColor="rgba(255,255,255,0.05)"
+          lightColor="rgba(0,0,0,0.05)"
+        >
+          <MonoText>{path}</MonoText>
+        </View>
       </View>
 
       <View style={styles.helpContainer}>
         <ExternalLink
           style={styles.helpLink}
-          href="https://github.com/deybyr647/hunter-connect-csci499">
+          href="https://github.com/deybyr647/hunter-connect-csci499"
+        >
           <Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
             Tap here to visit our app's GitHub Repo
           </Text>
@@ -41,7 +43,7 @@ export default function EditScreenInfo({ path }: { path: string }) {
 
 const styles = StyleSheet.create({
   getStartedContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginHorizontal: 50,
   },
   homeScreenFilename: {
@@ -54,17 +56,17 @@ const styles = StyleSheet.create({
   getStartedText: {
     fontSize: 17,
     lineHeight: 24,
-    textAlign: 'center',
+    textAlign: "center",
   },
   helpContainer: {
     marginTop: 15,
     marginHorizontal: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   helpLink: {
     paddingVertical: 15,
   },
   helpLinkText: {
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
