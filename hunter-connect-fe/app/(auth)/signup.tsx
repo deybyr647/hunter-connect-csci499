@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { AuthStyles as styles } from "../../components/AuthStyles";
 
@@ -33,7 +33,7 @@ export default function SignUpScreen() {
     });
 
     // TODO: Replace with actual backend API call
-    router.push("/login");
+    router.push("/(tabs)/Landing");
   };
 
   return (

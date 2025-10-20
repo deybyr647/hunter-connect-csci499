@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  SafeAreaView,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { AuthStyles as styles } from "../../components/AuthStyles";
 
@@ -19,7 +20,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     console.log("Logging in with:", email, password);
     // TODO: replace with real backend call
-    router.push("/(tabs)"); // Go to the main tab layout after login
+    router.push("/(tabs)/Landing"); // Go to the main tab layout after login
   };
 
   return (
