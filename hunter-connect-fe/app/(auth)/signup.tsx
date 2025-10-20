@@ -4,13 +4,15 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Image,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { AuthStyles as styles } from "../../components/AuthStyles";
+import { auth } from "../../firebase/firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -21,100 +23,110 @@ export default function SignUpScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSignUp = async () => {
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
+    if (!email || !password || !confirmPassword) {
+      Alert.alert("Missing Information", "Please fill in all fields.");
       return;
     }
 
-    console.log("Creating account:", {
-      firstName,
-      lastName,
-      email,
-    });
+    if (password !== confirmPassword) {
+      Alert.alert("Password Error", "Passwords do not match.");
+      return;
+    }
 
-    // TODO: Replace with actual backend API call
-    router.push("/(tabs)/Landing");
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      Alert.alert("Success", "Account created!");
+      router.push("/(tabs)/Landing");
+    } catch (error: any) {
+      Alert.alert("Sign Up Failed", error.message);
+    }
   };
 
   return (
-  <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
-    <ScrollView
-      contentContainerStyle={{
-        flexGrow: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>HUNTER</Text>
-        <Image
-          source={require("../../assets/images/hunter_logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.subtitle}>CONNECT</Text>
-      </View>
-
-      <View style={styles.formContainer}>
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, styles.halfInput]}
-            placeholder="First Name"
-            placeholderTextColor="#999"
-            value={firstName}
-            onChangeText={setFirstName}
+    <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingVertical: 20,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Section */}
+        <View style={styles.header}>
+          <Text style={styles.title}>HUNTER</Text>
+          <Image
+            source={require("../../assets/images/hunter_logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
           />
-
-          <TextInput
-            style={[styles.input, styles.halfInput]}
-            placeholder="Last Name"
-            placeholderTextColor="#999"
-            value={lastName}
-            onChangeText={setLastName}
-          />
+          <Text style={styles.subtitle}>CONNECT</Text>
         </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#999"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
+        {/* Form Section */}
+        <View style={styles.formContainer}>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="First Name"
+              placeholderTextColor="#999"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="Last Name"
+              placeholderTextColor="#999"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#999"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#999"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor="#999"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#999"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-          <Text style={styles.buttonText}>Create Account</Text>
-        </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            placeholderTextColor="#999"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+          />
 
-        <TouchableOpacity onPress={() => router.push("/login")}>
-          <Text style={styles.haveAccount}>
-            Already have an account? <Text style={{ fontWeight: "bold" }}>Sign In</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  </SafeAreaView>
-);
+          {/* Sign Up Button */}
+          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+            <Text style={styles.buttonText}>Create Account</Text>
+          </TouchableOpacity>
+
+          {/* Navigation Link */}
+          <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+            <Text style={styles.haveAccount}>
+              Already have an account?{" "}
+              <Text style={{ fontWeight: "bold", color: "#007AFF" }}>
+                Sign In
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
-
-

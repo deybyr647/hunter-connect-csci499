@@ -90,4 +90,10 @@ export const AuthStyles = StyleSheet.create({
     textAlign: "center",
     textDecorationLine: "underline",
   },
+  link: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#007AFF",
+    textDecorationLine: "underline",
+  },
 });

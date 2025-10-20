@@ -4,13 +4,17 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
+  Alert,
   Image,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../firebase/firebaseConfig";
 import { AuthStyles as styles } from "../../components/AuthStyles";
+
+
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -18,50 +22,73 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    console.log("Logging in with:", email, password);
-    // TODO: replace with real backend call
-    router.push("/(tabs)/Landing"); // Go to the main tab layout after login
+    if (!email || !password) {
+      Alert.alert("Missing Fields", "Please enter your email and password.");
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      Alert.alert("Welcome back!");
+      router.push("/(tabs)/Landing"); // Change this to the landing page whenever you merge all files
+    } catch (error: any) {
+      Alert.alert("Login Failed", error.message);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>HUNTER</Text>
-        <Image
-          source={require("../../assets/images/hunter_logo.png")}
-          style={styles.logo}
-        />
-        <Text style={styles.subtitle}>CONNECT</Text>
-      </View>
+  <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
+    <View style={styles.header}>
+      <Text style={styles.title}>HUNTER</Text>
+      <Image
+        source={require("../../assets/images/hunter_logo.png")}
+        style={styles.logo}
+        resizeMode="contain"
+      />
+      <Text style={styles.subtitle}>CONNECT</Text>
+    </View>
 
-      <View style={styles.formContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#999"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
+    <View style={styles.formContainer}>
+      {/* Email input */}
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor="#999"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#999"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+      {/* Password input */}
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor="#999"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Sign In</Text>
-        </TouchableOpacity>
+      {/* Login button */}
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => console.log("Forgot password")}>
-          <Text style={styles.forgotPassword}>Forgot password?</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
+      {/* Forgot password link */}
+      <TouchableOpacity onPress={() => console.log("Forgot password tapped")}>
+        <Text style={styles.forgotPassword}>Forgot password?</Text>
+      </TouchableOpacity>
+
+      {/* Sign-up link */}
+      <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
+        <Text style={styles.link}>
+          Don’t have an account?{" "}
+          <Text style={{ fontWeight: "bold", color: "#007AFF" }}>Sign up</Text>
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </SafeAreaView>
+);
 }
 
