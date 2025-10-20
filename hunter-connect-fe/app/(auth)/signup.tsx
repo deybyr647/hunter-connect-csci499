@@ -5,10 +5,10 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  SafeAreaView,
   ScrollView,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { AuthStyles as styles } from "../../components/AuthStyles";
 import { auth } from "../../firebase/firebaseConfig";
@@ -36,7 +36,7 @@ export default function SignUpScreen() {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", "Account created!");
-      router.push("/(auth)/login");
+      router.push("/(tabs)/Landing");
     } catch (error: any) {
       Alert.alert("Sign Up Failed", error.message);
     }

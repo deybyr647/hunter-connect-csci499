@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   Alert,
   Image,
-  SafeAreaView,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
@@ -29,7 +30,7 @@ export default function LoginScreen() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       Alert.alert("Welcome back!");
-      router.push("/welcome"); // Change this to the landing page whenever you merge all files
+      router.push("/(tabs)/Landing"); // Change this to the landing page whenever you merge all files
     } catch (error: any) {
       Alert.alert("Login Failed", error.message);
     }

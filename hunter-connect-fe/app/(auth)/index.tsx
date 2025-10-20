@@ -5,10 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { AuthStyles as styles } from "../../components/AuthStyles";
+
 
 export default function WelcomeScreen() {
   const router = useRouter();

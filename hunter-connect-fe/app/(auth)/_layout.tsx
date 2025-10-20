@@ -2,12 +2,16 @@ import { Stack } from "expo-router";
 
 export default function AuthLayout() {
   return (
-    <Stack>
+    <Stack
+        screenOptions={{
+            headerShown: false,
+        }
+            }
+    >
       <Stack.Screen
-        name="welcome"
+        name="index"
         options={{
             title: "Welcome",
-            headerShown: false, // ✅ hides the "(auth)/welcome" bar
         }}
       />
       <Stack.Screen
