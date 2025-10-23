@@ -41,10 +41,18 @@ export const AuthStyles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 1,
   },
-  formContainer: {
+  errorText: {
+    color: "#FF3B30", 
+    fontSize: 14,
+    textAlign: "center",
+    marginVertical: 6,
+    fontWeight: "500",
+  },
+  loginFormContainer: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    width: "85%",
+    width: "100%",
+    alignSelf: "center",
     padding: 20,
     shadowColor: "#000",
     shadowOpacity: 0.2,
@@ -53,16 +61,18 @@ export const AuthStyles = StyleSheet.create({
     elevation: 5,
     marginTop: 10,
   },
-  buttonContainer: {
-    width: "85%",
-  },
-  signInButton: {
+    signupFormContainer: {
     backgroundColor: "#fff",
-  },
-  signUpButton: {
-    backgroundColor: "#fff",
-    borderWidth: 2,
-    borderColor: "#fff",
+    borderRadius: 12,
+    width: "70%",
+    alignSelf: "center",
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
+    elevation: 5,
+    marginTop: 10,
   },
   input: {
     borderWidth: 1,
@@ -91,8 +101,6 @@ export const AuthStyles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   link: {
-    marginTop: 16,
-    fontSize: 16,
     color: "#007AFF",
     textDecorationLine: "underline",
   },

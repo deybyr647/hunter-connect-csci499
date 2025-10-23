@@ -13,18 +13,6 @@ export default function AuthLayout() {
           title: "Welcome",
         }}
       />
-      <Stack.Screen
-        name="login"
-        options={{
-          title: "Sign In", // You can still give other screens custom titles
-        }}
-      />
-      <Stack.Screen
-        name="signup"
-        options={{
-          title: "Sign Up",
-        }}
-      />
     </Stack>
   );
 }
