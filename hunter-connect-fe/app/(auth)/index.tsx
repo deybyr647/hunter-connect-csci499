@@ -14,6 +14,8 @@ import { auth } from "../../firebase/firebaseConfig";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  updateProfile,
+  reload,
 } from "firebase/auth";
 
 type AuthMode = "login" | "signup";
@@ -50,33 +52,41 @@ export default function AuthScreen() {
   };
 
   // handle both login and signup
-  const handleAuth = async () => {
-    setErrorMessage("");
+const handleAuth = async () => {
+  setErrorMessage("");
 
-    if (!email || !password) {
-      setErrorMessage("Please fill in all required fields.");
-      return;
+  if (!email || !password) {
+    setErrorMessage("Please fill in all required fields.");
+    return;
+  }
+
+  if (mode === "signup" && password !== confirmPassword) {
+    setErrorMessage("Passwords do not match.");
+    return;
+  }
+
+  try {
+    if (mode === "login") {
+      await signInWithEmailAndPassword(auth, email, password);
+    } else {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      // ✅ Save full name to Firebase Auth
+      await updateProfile(userCredential.user, {
+        displayName: `${firstName} ${lastName}`,
+      });
+
+      // ✅ Refresh the user object so `onAuthStateChanged` gets updated info
+      await reload(userCredential.user);
     }
 
-    if (mode === "signup" && password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
-      return;
-    }
-
-    try {
-      if (mode === "login") {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        await createUserWithEmailAndPassword(auth, email, password);
-      }
-
-      router.push("/(tabs)/Landing");
-    } catch (error: any) {
-      console.log("Firebase error:", error.code);
-      const friendlyMessage = getFriendlyErrorMessage(error.code);
-      setErrorMessage(friendlyMessage);
-    }
-  };
+    router.push("/(tabs)/Landing");
+  } catch (error: any) {
+    console.log("Firebase error:", error.code);
+    const friendlyMessage = getFriendlyErrorMessage(error.code);
+    setErrorMessage(friendlyMessage);
+  }
+};
 
   // toggle between login and signup
   const toggleMode = () => {

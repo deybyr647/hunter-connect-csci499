@@ -19,10 +19,14 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         tabBarIconStyle: {
           display: "none",
+          marginBottom: -2,
         },
         tabBarLabelStyle: {
           fontSize: 14,
+          textAlignVertical: "center",
+          marginBottom: 0,
         },
+        
         // Disable the static render of the header on web
         // to prevent a hydration error in React Navigation v6.
         headerShown: false,
