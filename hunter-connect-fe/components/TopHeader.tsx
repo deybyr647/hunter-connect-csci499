@@ -7,6 +7,7 @@ import {
   View,
   Text,
   Pressable,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e2e2e2",
     position: "relative",
+    zIndex: 20,
   },
   title: {
     fontSize: 20,
@@ -30,8 +32,8 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: "absolute",
-    top: 65,
-    right: 10,
+    top: 25,
+    right: -10,
     width: 220,
     backgroundColor: "white",
     borderRadius: 10,
@@ -41,7 +43,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderWidth: 1,
     borderColor: "#ddd",
-    zIndex: 10,
+    zIndex: 30,
   },
   dropdownHeader: {
     borderBottomWidth: 1,
@@ -70,14 +72,21 @@ const styles = StyleSheet.create({
     color: "red",
     fontWeight: "bold",
   },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+  },
 });
 
 const TopHeader = () => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
-  const [user, setUser] = useState<any>(null); // track current user
+  const [user, setUser] = useState<any>(null);
 
-  // 🔹 Listen for logged-in user changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -85,86 +94,102 @@ const TopHeader = () => {
     return () => unsubscribe();
   }, []);
 
-  const toggleMenu = () => setMenuVisible(!menuVisible);
-
   const handleSignOut = async () => {
     try {
       await signOut(auth);
       setMenuVisible(false);
-      router.replace("/(auth)"); 
+      router.replace("/(auth)");
     } catch (error) {
       console.error("Sign out failed:", error);
     }
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Mobile overlay (click outside closes dropdown) */}
+      {menuVisible && Platform.OS !== "web" && (
+        <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)} />
+      )}
+
       <View style={styles.header}>
         <FontAwesome name="graduation-cap" size={24} color="black" />
         <Text style={styles.title}>Hunter Connect</Text>
         <FontAwesome name="bell-o" size={22} color="black" />
         <FontAwesome name="comment-o" size={22} color="black" />
 
-        {/* 👇 Profile Icon */}
-        <TouchableOpacity onPress={toggleMenu}>
-          <FontAwesome name="user-circle-o" size={26} color="black" />
-        </TouchableOpacity>
+        {/* 👤 Profile Icon — hover on web, tap on mobile */}
+        <View
+          {...(Platform.OS === "web"
+            ? {
+                onMouseEnter: () => setMenuVisible(true),
+                onMouseLeave: () => setMenuVisible(false),
+              }
+            : {})}
+          // 👆 this safely adds web-only props
+        >
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              if (Platform.OS !== "web") setMenuVisible(!menuVisible);
+            }}
+          >
+            <FontAwesome name="user-circle-o" size={26} color="black" />
+          </TouchableOpacity>
 
-        {/* 👇 Dropdown Menu */}
-        {menuVisible && (
-          <View style={styles.dropdown}>
-            <View style={styles.dropdownHeader}>
-              <Text style={styles.dropdownName}>
-                {user?.displayName || "User"}
-              </Text>
-              <Text style={styles.dropdownEmail}>
-                {user?.email || "No email"}
-              </Text>
-            </View>
-
-            <Pressable
-              style={styles.dropdownItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push("/(tabs)/profile");
-              }}
-            >
-              <Text style={styles.dropdownItemText}>Profile Settings</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.dropdownItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push("/(tabs)/privacy");
-              }}
-            >
-              <Text style={styles.dropdownItemText}>Privacy Settings</Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.dropdownItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push("/(tabs)/help");
-              }}
-            >
-              <Text style={styles.dropdownItemText}>Help & Support</Text>
-            </Pressable>
-
+          {menuVisible && (
             <View
-              style={{
-                borderTopWidth: 1,
-                borderTopColor: "#eee",
-                marginTop: 5,
-              }}
-            />
+              {...(Platform.OS === "web"
+                ? {
+                    onMouseEnter: () => setMenuVisible(true), // keep open
+                    onMouseLeave: () => setMenuVisible(false), // close only after leaving dropdown
+                  }
+                : {})}
+              style={styles.dropdown}
+            >
+              <View style={styles.dropdownHeader}>
+                <Text style={styles.dropdownName}>
+                  {user?.displayName || "User"}
+                </Text>
+                <Text style={styles.dropdownEmail}>
+                  {user?.email || "No email"}
+                </Text>
+              </View>
 
-            <Pressable style={styles.dropdownItem} onPress={handleSignOut}>
-              <Text style={styles.signOutText}>Sign Out</Text>
-            </Pressable>
-          </View>
-        )}
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={() => router.push("/(tabs)/profile")}
+              >
+                <Text style={styles.dropdownItemText}>Profile Settings</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={() => router.push("/(tabs)/privacy")}
+              >
+                <Text style={styles.dropdownItemText}>Privacy Settings</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={() => router.push("/(tabs)/help")}
+              >
+                <Text style={styles.dropdownItemText}>Help & Support</Text>
+              </Pressable>
+
+              <View
+                style={{
+                  borderTopWidth: 1,
+                  borderTopColor: "#eee",
+                  marginTop: 5,
+                }}
+              />
+
+              <Pressable style={styles.dropdownItem} onPress={handleSignOut}>
+                <Text style={styles.signOutText}>Sign Out</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
       </View>
     </SafeAreaView>
   );
