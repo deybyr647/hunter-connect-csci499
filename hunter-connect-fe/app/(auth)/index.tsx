@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -23,6 +24,21 @@ type AuthMode = "login" | "signup";
 export default function AuthScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
+
+  useEffect(() => {
+    // only run on web to avoid affecting mobile keyboards
+    if (Platform.OS === "web") {
+      const listener = (e : KeyboardEvent) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); // stop form reload
+          handleAuth(); // run your function
+        }
+      };
+
+      document.addEventListener("keydown", listener);
+      return () => document.removeEventListener("keydown", listener);
+    }
+  }, []);
 
   // form states
   const [firstName, setFirstName] = useState("");
@@ -100,6 +116,7 @@ const handleAuth = async () => {
   };
 
   return (
+    
     <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
       <ScrollView
         contentContainerStyle={{
@@ -165,6 +182,8 @@ const handleAuth = async () => {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            returnKeyType="done" 
+            onSubmitEditing={handleAuth}
           />
 
           {/* Confirm password for signup */}
@@ -190,7 +209,7 @@ const handleAuth = async () => {
               {mode === "login" ? "Login" : "Create Account"}
             </Text>
           </TouchableOpacity>
-          {/* 🔹 Forgot password link — visible only in login mode */}
+          {/* Forgot password link — visible only in login mode */}
           {mode === "login" && (
             <TouchableOpacity onPress={() => console.log("Forgot password tapped")}>
               <Text style={styles.forgotPassword}>Forgot password?</Text>
