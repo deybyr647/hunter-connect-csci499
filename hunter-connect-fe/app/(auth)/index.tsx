@@ -96,7 +96,7 @@ const handleAuth = async () => {
       await reload(userCredential.user);
     }
 
-    router.push("/(tabs)/Landing");
+    router.push("/onboarding");
   } catch (error: any) {
     console.log("Firebase error:", error.code);
     const friendlyMessage = getFriendlyErrorMessage(error.code);
