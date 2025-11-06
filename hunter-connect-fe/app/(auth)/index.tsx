@@ -30,8 +30,8 @@ export default function AuthScreen() {
     if (Platform.OS === "web") {
       const listener = (e : KeyboardEvent) => {
         if (e.key === "Enter") {
-          e.preventDefault(); // stop form reload
-          handleAuth(); // run your function
+          e.preventDefault(); 
+          handleAuth(); 
         }
       };
 
@@ -47,6 +47,35 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [matchMessage, setMatchMessage] = useState("");
+
+const evaluatePasswordStrength = (pwd: string) => {
+  if (!pwd) return "";
+
+  // Strong: 8+ chars, at least one uppercase, one lowercase, one number, and one special symbol
+  const strongRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+
+  // Medium: at least 6+ chars with letters and numbers
+  const mediumRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+
+  if (strongRegex.test(pwd)) return "Strong";
+  if (mediumRegex.test(pwd)) return "Medium";
+  return "Weak";
+};
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    setPasswordStrength(evaluatePasswordStrength(text));
+    if (confirmPassword.length > 0) {
+      setMatchMessage(text === confirmPassword ? "Match" : "No Match");
+    }
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+    setMatchMessage(password === text ? "Match" : "No Match");
+  };
 
   // user-friendly Firebase error mapping
   const getFriendlyErrorMessage = (errorCode: string): string => {
@@ -80,7 +109,14 @@ const handleAuth = async () => {
     setErrorMessage("Passwords do not match.");
     return;
   }
-
+  if (evaluatePasswordStrength(password) === "Weak") {
+    setErrorMessage("Password is too weak. Please make it stronger before continuing.");
+    return;
+  }
+  if (mode === "signup" && !email.endsWith("@myhunter.cuny.edu")) {
+    setErrorMessage("Please use your @myhunter.cuny.edu email to sign up.");
+    return;
+  }
   try {
     if (mode === "login") {
       await signInWithEmailAndPassword(auth, email, password);
@@ -113,6 +149,8 @@ const handleAuth = async () => {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    setPasswordStrength("");
+    setMatchMessage("");
   };
 
   return (
@@ -167,7 +205,7 @@ const handleAuth = async () => {
           {/* Shared email + password */}
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder="Hunter Email"
             placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
@@ -180,22 +218,56 @@ const handleAuth = async () => {
             placeholder="Password"
             placeholderTextColor="#999"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={handlePasswordChange}
             secureTextEntry
             returnKeyType="done" 
             onSubmitEditing={handleAuth}
           />
 
-          {/* Confirm password for signup */}
+          {/* Password Strength Indicator */}
+          {mode === "signup" && password.length > 0 && (
+            <Text
+              style={{
+                alignSelf: "flex-start",
+                color:
+                  passwordStrength === "Strong"
+                    ? "green"
+                    : passwordStrength === "Medium"
+                    ? "orange"
+                    : "red",
+                marginBottom: 6,
+              }}
+            >
+              Password strength: {passwordStrength}
+            </Text>
+          )}
+
+          {/* Confirm Password (signup only) */}
           {mode === "signup" && (
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="#999"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-            />
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                placeholderTextColor="#999"
+                value={confirmPassword}
+                onChangeText={handleConfirmPasswordChange}
+                secureTextEntry
+              />
+
+              {confirmPassword.length > 0 && (
+                <Text
+                  style={{
+                    alignSelf: "flex-start",
+                    color: matchMessage === "Match" ? "green" : "red",
+                    marginBottom: 6,
+                  }}
+                >
+                  {matchMessage === "Match"
+                    ? "✅ Passwords match"
+                    : "❌ Passwords do not match"}
+                </Text>
+              )}
+            </>
           )}
 
           {/* Inline error message */}
