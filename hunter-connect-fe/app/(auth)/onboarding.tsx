@@ -28,15 +28,21 @@ export default function OnboardingScreen() {
     const user = auth.currentUser;
     if (!user) return;
 
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        preferences: { academicYear, courses, skills, interests },
-      },
-      { merge: true }
-    );
+    try {
+      await setDoc(doc(db, "users", user.uid), {
+        preferences: {
+          academicYear,
+          courses,
+          skills,
+          interests,
+        },
+      }, { merge: true });
 
-    router.replace("/(tabs)/Landing");
+      console.log("User preferences saved!");
+      router.replace("/(tabs)/Landing");
+    } catch (error) {
+      console.error("Error saving preferences:", error);
+    }
   };
 
   return (
