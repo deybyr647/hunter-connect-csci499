@@ -17,6 +17,7 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   reload,
+  sendEmailVerification,
 } from "firebase/auth";
 
 type AuthMode = "login" | "signup";
@@ -119,7 +120,13 @@ const handleAuth = async () => {
   }
   try {
     if (mode === "login") {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      if (!userCredential.user.emailVerified) {
+        await auth.signOut();
+        setErrorMessage("Please verify your email before logging in.");
+        return;
+      }
       router.push("/(tabs)/Landing");
     } else {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -129,9 +136,11 @@ const handleAuth = async () => {
         displayName: `${firstName} ${lastName}`,
       });
 
+      await sendEmailVerification(userCredential.user);
+  
       // ✅ Refresh the user object so `onAuthStateChanged` gets updated info
       await reload(userCredential.user);
-      router.push("/onboarding");
+      router.replace("/verify-email");
     }
   } catch (error: any) {
     console.log("Firebase error:", error.code);
