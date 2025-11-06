@@ -84,6 +84,7 @@ const handleAuth = async () => {
   try {
     if (mode === "login") {
       await signInWithEmailAndPassword(auth, email, password);
+      router.push("/(tabs)/Landing");
     } else {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
@@ -94,9 +95,8 @@ const handleAuth = async () => {
 
       // ✅ Refresh the user object so `onAuthStateChanged` gets updated info
       await reload(userCredential.user);
+      router.push("/onboarding");
     }
-
-    router.push("/onboarding");
   } catch (error: any) {
     console.log("Firebase error:", error.code);
     const friendlyMessage = getFriendlyErrorMessage(error.code);

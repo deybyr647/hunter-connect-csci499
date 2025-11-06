@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { auth } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/firebase/firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 
 export default function OnboardingScreen() {
@@ -56,7 +56,9 @@ export default function OnboardingScreen() {
               style={styles.option}
               onPress={() => setAcademicYear(y)}
             >
-              <Text style={{ color: academicYear === y ? '#2E1759' : '#000' }}>• {y}</Text>
+              <Text style={{ color: academicYear === y ? '#2E1759' : '#000' }}>
+                {academicYear === y ? '☑️' : '◻️'} {y}
+              </Text>
             </TouchableOpacity>
           ))}
 
@@ -68,7 +70,9 @@ export default function OnboardingScreen() {
               style={styles.option}
               onPress={() => toggleSelection(courses, c, setCourses)}
             >
-              <Text style={{ color: courses.includes(c) ? '#2E1759' : '#000' }}>☑️ {c}</Text>
+              <Text style={{ color: courses.includes(c) ? '#2E1759' : '#000' }}>
+                {courses.includes(c) ? '☑️' : '◻️'} {c}
+              </Text>
             </TouchableOpacity>
           ))}
 
@@ -80,7 +84,9 @@ export default function OnboardingScreen() {
               style={styles.option}
               onPress={() => toggleSelection(skills, s, setSkills)}
             >
-              <Text style={{ color: skills.includes(s) ? '#2E1759' : '#000' }}>☑️ {s}</Text>
+              <Text style={{ color: skills.includes(s) ? '#2E1759' : '#000' }}>
+                {skills.includes(s) ? '☑️' : '◻️'} {s}
+              </Text>
             </TouchableOpacity>
           ))}
 
@@ -92,7 +98,9 @@ export default function OnboardingScreen() {
               style={styles.option}
               onPress={() => toggleSelection(interests, i, setInterests)}
             >
-              <Text style={{ color: interests.includes(i) ? '#2E1759' : '#000' }}>☑️ {i}</Text>
+              <Text style={{ color: interests.includes(i) ? '#2E1759' : '#000' }}>
+                {interests.includes(i) ? '☑️' : '◻️'} {i}
+              </Text>
             </TouchableOpacity>
           ))}
 
