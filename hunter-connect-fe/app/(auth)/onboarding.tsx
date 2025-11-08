@@ -398,10 +398,8 @@ export default function OnboardingScreen() {
               items={courseList}
               setOpen={(open) => {
                 setCourseOpen(open);
-                if (open) {
-                  setSkillOpen(false);
-                  setInterestOpen(false);
-                }
+                setSkillOpen(false);
+                setInterestOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(courses, item.value, setCourses)
@@ -438,10 +436,8 @@ export default function OnboardingScreen() {
               items={skillList}
               setOpen={(open) => {
                 setSkillOpen(open);
-                if (open) {
-                  setCourseOpen(false);
-                  setInterestOpen(false);
-                }
+                setCourseOpen(false);
+                setInterestOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(skills, item.value, setSkills)
@@ -478,10 +474,8 @@ export default function OnboardingScreen() {
               items={interestList}
               setOpen={(open) => {
                 setInterestOpen(open);
-                if (open) {
-                  setCourseOpen(false);
-                  setSkillOpen(false);
-                }
+                setCourseOpen(false);
+                setSkillOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(interests, item.value, setInterests)
