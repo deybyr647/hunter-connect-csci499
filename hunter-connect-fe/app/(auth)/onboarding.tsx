@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import { auth, db } from "@/firebase/firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 
 
 export default function OnboardingScreen() {
@@ -347,18 +347,15 @@ export default function OnboardingScreen() {
     setSaving(true);
 
     try {
-      await setDoc(
-        doc(db, "users", user.uid),
-        {
-          preferences: {
-            academicYear,
-            courses,
-            skills,
-            interests,
-          },
-        },
-        { merge: true }
-      );
+      const userRef = doc(db, "users", user.uid);
+
+      await updateDoc(userRef, {
+        "preferences.academicYear": academicYear,
+        "preferences.courses": arrayUnion(...courses),
+        "preferences.skills": arrayUnion(...skills),
+        "preferences.interests": arrayUnion(...interests),
+      });
+
       router.replace("/(tabs)/Landing");
     } catch (error) {
       console.error("Error saving preferences:", error);

@@ -18,6 +18,7 @@ import {
   updateProfile,
   reload,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 
 type AuthMode = "login" | "signup";
@@ -292,7 +293,7 @@ export default function AuthScreen() {
           </TouchableOpacity>
           {/* Forgot password link — visible only in login mode */}
           {mode === "login" && (
-            <TouchableOpacity onPress={() => console.log("Forgot password tapped")}>
+            <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
               <Text style={styles.forgotPassword}>Forgot password?</Text>
             </TouchableOpacity>
           )}
