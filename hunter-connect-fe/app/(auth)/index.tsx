@@ -51,19 +51,19 @@ export default function AuthScreen() {
   const [passwordStrength, setPasswordStrength] = useState("");
   const [matchMessage, setMatchMessage] = useState("");
 
-const evaluatePasswordStrength = (pwd: string) => {
-  if (!pwd) return "";
+  const evaluatePasswordStrength = (pwd: string) => {
+    if (!pwd) return "";
 
-  // Strong: 8+ chars, at least one uppercase, one lowercase, one number, and one special symbol
-  const strongRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+    // Strong: 8+ chars, at least one uppercase, one lowercase, one number, and one special symbol
+    const strongRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
 
-  // Medium: at least 6+ chars with letters and numbers
-  const mediumRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+    // Medium: at least 6+ chars with letters and numbers
+    const mediumRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
 
-  if (strongRegex.test(pwd)) return "Strong";
-  if (mediumRegex.test(pwd)) return "Medium";
-  return "Weak";
-};
+    if (strongRegex.test(pwd)) return "Strong";
+    if (mediumRegex.test(pwd)) return "Medium";
+    return "Weak";
+  };
 
   const handlePasswordChange = (text: string) => {
     setPassword(text);
@@ -98,56 +98,56 @@ const evaluatePasswordStrength = (pwd: string) => {
   };
 
   // handle both login and signup
-const handleAuth = async () => {
-  setErrorMessage("");
+  const handleAuth = async () => {
+    setErrorMessage("");
 
-  if (!email || !password) {
-    setErrorMessage("Please fill in all required fields.");
-    return;
-  }
-
-  if (mode === "signup" && password !== confirmPassword) {
-    setErrorMessage("Passwords do not match.");
-    return;
-  }
-  if (evaluatePasswordStrength(password) === "Weak") {
-    setErrorMessage("Password is too weak. Please make it stronger before continuing.");
-    return;
-  }
-  if (mode === "signup" && !email.endsWith("@myhunter.cuny.edu")) {
-    setErrorMessage("Please use your @myhunter.cuny.edu email to sign up.");
-    return;
-  }
-  try {
-    if (mode === "login") {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
-      if (!userCredential.user.emailVerified) {
-        await auth.signOut();
-        setErrorMessage("Please verify your email before logging in.");
-        return;
-      }
-      router.push("/(tabs)/Landing");
-    } else {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-      // ✅ Save full name to Firebase Auth
-      await updateProfile(userCredential.user, {
-        displayName: `${firstName} ${lastName}`,
-      });
-
-      await sendEmailVerification(userCredential.user);
-  
-      // ✅ Refresh the user object so `onAuthStateChanged` gets updated info
-      await reload(userCredential.user);
-      router.replace("/verify-email");
+    if (!email || !password) {
+      setErrorMessage("Please fill in all required fields.");
+      return;
     }
-  } catch (error: any) {
-    console.log("Firebase error:", error.code);
-    const friendlyMessage = getFriendlyErrorMessage(error.code);
-    setErrorMessage(friendlyMessage);
-  }
-};
+
+    if (mode === "signup" && password !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+    if (evaluatePasswordStrength(password) === "Weak") {
+      setErrorMessage("Password is too weak. Please make it stronger before continuing.");
+      return;
+    }
+    if (mode === "signup" && !email.endsWith("@myhunter.cuny.edu")) {
+      setErrorMessage("Please use your @myhunter.cuny.edu email to sign up.");
+      return;
+    }
+    try {
+      if (mode === "login") {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        if (!userCredential.user.emailVerified) {
+          await auth.signOut();
+          setErrorMessage("Please verify your email before logging in.");
+          return;
+        }
+        router.push("/(tabs)/Landing");
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+        // ✅ Save full name to Firebase Auth
+        await updateProfile(userCredential.user, {
+          displayName: `${firstName} ${lastName}`,
+        });
+
+        await sendEmailVerification(userCredential.user);
+    
+        // ✅ Refresh the user object so `onAuthStateChanged` gets updated info
+        await reload(userCredential.user);
+        router.replace("/verify-email");
+      }
+    } catch (error: any) {
+      console.log("Firebase error:", error.code);
+      const friendlyMessage = getFriendlyErrorMessage(error.code);
+      setErrorMessage(friendlyMessage);
+    }
+  };
 
   // toggle between login and signup
   const toggleMode = () => {

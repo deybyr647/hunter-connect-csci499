@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { auth } from "../../firebase/firebaseConfig";
@@ -7,28 +7,67 @@ import { sendEmailVerification } from "firebase/auth";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
-  useEffect(() => {
-    const interval = setInterval(async () => {
-        if (auth.currentUser) {
-        await auth.currentUser.reload();
-        if (auth.currentUser.emailVerified) {
-            clearInterval(interval);
-            router.replace("/(tabs)/Landing");
-        }
-        }
-    }, 4000); // check every 4 seconds
-
-    return () => clearInterval(interval);
-    }, []);
+  const [verified, setVerified] = useState(false);
+  const [checking, setChecking] = useState(false);
   const user = auth.currentUser;
 
+  // 🔄 periodically check verification status
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (auth.currentUser && !verified) {
+        setChecking(true);
+        await auth.currentUser.reload();
+        setChecking(false);
+
+        if (auth.currentUser.emailVerified) {
+          setVerified(true);
+          clearInterval(interval);
+
+          // wait a moment before redirecting
+          setTimeout(() => router.replace("/onboarding"), 2500);
+        }
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [verified]);
+
+  // 📩 resend verification email
   const handleResend = async () => {
     if (user && !user.emailVerified) {
-      await sendEmailVerification(user);
-      alert("Verification email resent! Check your Hunter inbox.");
+      try {
+        await sendEmailVerification(user);
+        alert("Verification email resent! Check your Hunter inbox.");
+      } catch (error) {
+        console.error("Resend failed:", error);
+        alert("Failed to resend. Please try again later.");
+      }
     }
   };
 
+  // ✅ success screen
+  if (verified) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Image
+            source={require("../../assets/images/hunter_logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>✅ Email Verified!</Text>
+          <Text style={styles.message}>
+            Your email has been successfully verified.
+          </Text>
+          <Text style={styles.instructions}>
+            Redirecting you to onboarding...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // 🕓 waiting screen
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -38,14 +77,20 @@ export default function VerifyEmailScreen() {
           resizeMode="contain"
         />
         <Text style={styles.title}>Verify Your Email</Text>
-        <Text style={styles.message}>
-          A verification email has been sent to:
-        </Text>
+        <Text style={styles.message}>A verification email has been sent to:</Text>
         <Text style={styles.email}>{user?.email || "your email"}</Text>
-
         <Text style={styles.instructions}>
-          Please check your inbox and click the link to verify your account before logging in.
+          Please check your inbox and click the link to verify your account.
         </Text>
+
+        {checking && (
+          <View style={{ alignItems: "center", marginBottom: 10 }}>
+            <ActivityIndicator size="small" color="#2E1759" />
+            <Text style={{ color: "#666", marginTop: 6 }}>
+              Checking verification...
+            </Text>
+          </View>
+        )}
 
         <TouchableOpacity style={styles.button} onPress={handleResend}>
           <Text style={styles.buttonText}>Resend Email</Text>
@@ -55,7 +100,9 @@ export default function VerifyEmailScreen() {
           style={[styles.button, { backgroundColor: "#ddd" }]}
           onPress={() => router.replace("/(auth)")}
         >
-          <Text style={[styles.buttonText, { color: "#333" }]}>Back to Login</Text>
+          <Text style={[styles.buttonText, { color: "#333" }]}>
+            Back to Login
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -88,6 +135,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#2E1759",
     marginBottom: 10,
+    textAlign: "center",
   },
   message: {
     fontSize: 16,
