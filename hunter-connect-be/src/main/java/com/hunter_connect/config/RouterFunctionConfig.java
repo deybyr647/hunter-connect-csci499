@@ -25,12 +25,9 @@ public class RouterFunctionConfig {
                         // Public Routes
                         .POST("", userHandler::createUser)
 
-                        // Protected Routes (filter applied to individual paths/methods)
-                        .path("", protectedBuilder -> protectedBuilder
-                                .before(this::requireAuthentication)
-                                .GET("", userHandler::getAllUsers)
-                                .GET("/{id}", userHandler::getUserById)
-                        )
+                        // Protected Routes
+                        .GET("", userHandler::getAllUsers)
+                        .GET("/{id}", userHandler::getUserById)
                 ).build();
     }
 
@@ -38,24 +35,10 @@ public class RouterFunctionConfig {
     public RouterFunction<ServerResponse> fileRoutes(FileHandler fileHandler) {
         return route()
                 .path("/api/files", builder -> builder
-                        // Filter applied to every route under /api/files/*
-                        .before(this::requireAuthentication) // <-- Filter applied here
-
                         .GET("", fileHandler::getAllFiles)
                         .POST("", fileHandler::createFile)
                         .GET("/{id}", fileHandler::getFileById)
                 ).build();
-    }
-
-    // Authentication Middleware Function
-    private ServerRequest requireAuthentication(ServerRequest request) {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() == null) {
-            throw new SecurityException("Unauthorized: A valid Firebase token is required");
-        }
-
-        return request;
     }
 }
 

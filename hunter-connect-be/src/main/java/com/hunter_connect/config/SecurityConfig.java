@@ -3,6 +3,7 @@ package com.hunter_connect.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod; // Import HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,18 +20,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF (common for stateless REST APIs)
                 .csrf(csrf -> csrf.disable())
-
-                // Make the session stateless
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Add custom Firebase filter before the default Spring Security filter
                 .addFilterBefore(firebaseSecurityFilter, UsernamePasswordAuthenticationFilter.class)
 
-                // Define authorization rules
+                // This is the new, robust security logic
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+
+                        // Public Routes
+                        // Allow "create user" (POST) without auth
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+
+
+                        // Secure Routes
+                        .requestMatchers("/api/users/**").authenticated()
+
+                        .requestMatchers("/api/files/**").authenticated()
+
+                        // Secure all other /api/ routes
+                        .requestMatchers("/api/**").authenticated()
+
+                        // By default, deny any request that doesn't match a rule
+                        .anyRequest().denyAll()
                 );
 
         return http.build();
