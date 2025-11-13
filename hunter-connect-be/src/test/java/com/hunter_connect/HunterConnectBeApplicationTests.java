@@ -1,4 +1,4 @@
-package com.hunter_connect.demo;
+package com.hunter_connect;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
