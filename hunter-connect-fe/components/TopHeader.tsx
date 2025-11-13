@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { auth } from "@/firebase/firebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
-import { styles as styles } from "./TopHeaderStyles"; 
+import { styles as styles } from "./TopHeaderStyles";
 
 
 const TopHeader = () => {
