@@ -1,7 +1,8 @@
 import Colors from "@/constants/Colors";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useRouter, usePathname } from "expo-router";
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ExternalLink } from "./ExternalLink";
@@ -13,26 +14,84 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: "#f8f8f8",
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#e2e2e2",
+  },
+  leftSection: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 20,
+  },
+  centerSection: {
+    flex: 1,
+    alignItems: "center",
+  },
+  rightSection: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 20,
+    paddingRight: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
   },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: "#007AFF",
+  },
 });
 
 const TopHeader = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const isMessagesPage = pathname === "/messages";
+
   return (
     <SafeAreaView>
       <View style={styles.header}>
-        <FontAwesome name={"graduation-cap"} size={24} color="black" />
-        <Text style={styles.title}>Hunter Connect</Text>
-        <FontAwesome name={"bell-o"} size={24} color="black" />
-        <FontAwesome name={"comment-o"} size={24} color="black" />
-        <FontAwesome name={"user-circle-o"} size={24} color="black" />
+        <View style={styles.leftSection}>
+          {isMessagesPage ? (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.push("/(tabs)/Landing")}
+            >
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
+          ) : (
+            <FontAwesome name={"graduation-cap"} size={24} color="black" />
+          )}
+        </View>
+
+        <View style={styles.centerSection}>
+          <Text style={styles.title}>
+            {isMessagesPage ? "Messages" : "Hunter Connect"}
+          </Text>
+        </View>
+
+        <View style={styles.rightSection}>
+          {!isMessagesPage && (
+            <>
+              <FontAwesome name={"bell-o"} size={24} color="black" />
+              <TouchableOpacity onPress={() => router.push("/messages")}>
+                <FontAwesome name={"comment-o"} size={24} color="black" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push("/profile")}>
+                <FontAwesome name={"user-circle-o"} size={24} color="black" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </View>
     </SafeAreaView>
   );
