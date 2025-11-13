@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth } from "../firebase/firebaseConfig";
+import { auth } from "../../firebase/firebaseConfig";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default function ProfileScreen() {
     try {
       await signOut(auth);
       Alert.alert("Logged Out", "You have been successfully logged out.");
-      router.replace("/(auth)/login");
+      router.replace("/(auth)");
     } catch (error: any) {
       Alert.alert("Logout Failed", error.message);
     }
@@ -163,7 +163,7 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require("../assets/images/hunter_logo.png")}
+              source={require("../../assets/images/hunter_logo.png")}
               style={styles.avatar}
               resizeMode="contain"
             />
