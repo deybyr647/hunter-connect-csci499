@@ -1,95 +1,127 @@
 import Colors from "@/constants/Colors";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useRouter, usePathname } from "expo-router";
-import React from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Text,
+  Pressable,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { auth } from "@/firebase/firebaseConfig";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { styles as styles } from "./TopHeaderStyles";
 
-import { ExternalLink } from "./ExternalLink";
-import { MonoText } from "./StyledText";
-import { Text, View } from "./Themed";
-
-const styles = StyleSheet.create({
-  header: {
-    height: 60,
-    backgroundColor: "#f8f8f8",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e2e2",
-  },
-  leftSection: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 20,
-  },
-  centerSection: {
-    flex: 1,
-    alignItems: "center",
-  },
-  rightSection: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 20,
-    paddingRight: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: "#007AFF",
-  },
-});
 
 const TopHeader = () => {
   const router = useRouter();
-  const pathname = usePathname();
-  const isMessagesPage = pathname === "/messages";
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      setMenuVisible(false);
+      router.replace("/(auth)");
+    } catch (error) {
+      console.error("Sign out failed:", error);
+    }
+  };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Mobile overlay (click outside closes dropdown) */}
+      {menuVisible && Platform.OS !== "web" && (
+        <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)} />
+      )}
+
       <View style={styles.header}>
-        <View style={styles.leftSection}>
-          {isMessagesPage ? (
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.push("/(tabs)/Landing")}
+        <FontAwesome name="graduation-cap" size={24} color="black" />
+        <Text style={styles.title}>Hunter Connect</Text>
+        <FontAwesome name="bell-o" size={22} color="black" />
+        <FontAwesome name="comment-o" size={22} color="black" />
+
+        {/* 👤 Profile Icon — hover on web, tap on mobile */}
+        <View
+          {...(Platform.OS === "web"
+            ? {
+                onMouseEnter: () => setMenuVisible(true),
+                onMouseLeave: () => setMenuVisible(false),
+              }
+            : {})}
+          // 👆 this safely adds web-only props
+        >
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              if (Platform.OS !== "web") setMenuVisible(!menuVisible);
+            }}
+          >
+            <FontAwesome name="user-circle-o" size={26} color="black" />
+          </TouchableOpacity>
+
+          {menuVisible && (
+            <View
+              {...(Platform.OS === "web"
+                ? {
+                    onMouseEnter: () => setMenuVisible(true), // keep open
+                    onMouseLeave: () => setMenuVisible(false), // close only after leaving dropdown
+                  }
+                : {})}
+              style={styles.dropdown}
             >
-              <Text style={styles.backButtonText}>← Back</Text>
-            </TouchableOpacity>
-          ) : (
-            <FontAwesome name={"graduation-cap"} size={24} color="black" />
-          )}
-        </View>
+              <View style={styles.dropdownHeader}>
+                <Text style={styles.dropdownName}>
+                  {user?.displayName || "User"}
+                </Text>
+                <Text style={styles.dropdownEmail}>
+                  {user?.email || "No email"}
+                </Text>
+              </View>
 
-        <View style={styles.centerSection}>
-          <Text style={styles.title}>
-            {isMessagesPage ? "Messages" : "Hunter Connect"}
-          </Text>
-        </View>
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={() => router.push("/(tabs)/profile")}
+              >
+                <Text style={styles.dropdownItemText}>Profile Settings</Text>
+              </Pressable>
 
-        <View style={styles.rightSection}>
-          {!isMessagesPage && (
-            <>
-              <FontAwesome name={"bell-o"} size={24} color="black" />
-              <TouchableOpacity onPress={() => router.push("/messages")}>
-                <FontAwesome name={"comment-o"} size={24} color="black" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push("/profile")}>
-                <FontAwesome name={"user-circle-o"} size={24} color="black" />
-              </TouchableOpacity>
-            </>
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={() => router.push("/(tabs)/privacy")}
+              >
+                <Text style={styles.dropdownItemText}>Privacy Settings</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={() => router.push("/(tabs)/help")}
+              >
+                <Text style={styles.dropdownItemText}>Help & Support</Text>
+              </Pressable>
+
+              <View
+                style={{
+                  borderTopWidth: 1,
+                  borderTopColor: "#eee",
+                  marginTop: 5,
+                }}
+              />
+
+              <Pressable style={styles.dropdownItem} onPress={handleSignOut}>
+                <Text style={styles.signOutText}>Sign Out</Text>
+              </Pressable>
+            </View>
           )}
         </View>
       </View>
