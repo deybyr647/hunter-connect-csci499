@@ -6,12 +6,13 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import { auth, db } from "@/firebase/firebaseConfig";
-import { doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 
 
 export default function OnboardingScreen() {
@@ -27,13 +28,22 @@ export default function OnboardingScreen() {
   const [courseOpen, setCourseOpen] = useState(false);
   const [skillOpen, setSkillOpen] = useState(false);
   const [interestOpen, setInterestOpen] = useState(false);
-
+  const [yearOpen, setYearOpen] = useState(false);
   // dummy values (required for controlled components)
+  const [yearValue, setYearValue] = useState<string | null>(null);
   const [courseValue, setCourseValue] = useState<string | null>(null);
   const [skillValue, setSkillValue] = useState<string | null>(null);
   const [interestValue, setInterestValue] = useState<string | null>(null);
 
   // lists
+  const academicYearList = [
+    { label: "Freshman", value: "Freshman" },
+    { label: "Sophomore", value: "Sophomore" },
+    { label: "Junior", value: "Junior" },
+    { label: "Senior", value: "Senior" },
+    { label: "Graduate", value: "Graduate" }
+  ];
+
   const courseList = [
   // 🧩 100-LEVEL COURSES
     { label: "🧩 100-Level Courses", value: "100level", selectable: false },
@@ -333,6 +343,9 @@ export default function OnboardingScreen() {
   ];
 
 
+ const listModeConfig = Platform.OS === "web" ? "FLATLIST" : "MODAL";
+
+  // Utility add/remove
   const addUnique = (array: string[], item: string, setter: Function) => {
     if (!array.includes(item)) setter([...array, item]);
   };
@@ -344,19 +357,43 @@ export default function OnboardingScreen() {
   const handleSubmit = async () => {
     const user = auth.currentUser;
     if (!user) return;
+
     setSaving(true);
 
     try {
       const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
-      await updateDoc(userRef, {
-        "preferences.academicYear": academicYear,
-        "preferences.courses": arrayUnion(...courses),
-        "preferences.skills": arrayUnion(...skills),
-        "preferences.interests": arrayUnion(...interests),
-      });
+      const newPreferences = {
+        academicYear: academicYear,
+        courses: courses,
+        skills: skills,
+        interests: interests,
+      };
+
+      if (userSnap.exists()) {
+        // 👉 User doc exists → update only preferences
+        await updateDoc(userRef, {
+          "preferences.academicYear": newPreferences.academicYear,
+          "preferences.courses": newPreferences.courses,
+          "preferences.skills": newPreferences.skills,
+          "preferences.interests": newPreferences.interests,
+        });
+
+      } else {
+        // 👉 User doc missing → create it
+        await setDoc(
+          userRef,
+          {
+            preferences: newPreferences,
+            createdAt: Date.now(),
+          },
+          { merge: true }
+        );
+      }
 
       router.replace("/(tabs)/Landing");
+
     } catch (error) {
       console.error("Error saving preferences:", error);
       alert("Failed to save preferences.");
@@ -374,23 +411,40 @@ export default function OnboardingScreen() {
         </Text>
 
         <View style={styles.formBox}>
-          {/* 🎓 Academic Year */}
+          
+          {/* 🎓 ACADEMIC YEAR */}
           <Text style={styles.sectionTitle}>🎓 Academic Year</Text>
-          {["Freshman", "Sophomore", "Junior", "Senior", "Graduate"].map((y) => (
-            <TouchableOpacity
-              key={y}
-              style={styles.option}
-              onPress={() => setAcademicYear(y)}
-            >
-              <Text style={{ color: academicYear === y ? "#2E1759" : "#000" }}>
-                {academicYear === y ? "☑️" : "◻️"} {y}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <View style={{ zIndex: 5000, position: "relative", marginBottom: 10 }}>
+            <DropDownPicker
+              open={yearOpen}
+              value={yearValue}
+              setValue={(callback) => {
+                const val = callback(yearValue);
+                setYearValue(val);
+                setAcademicYear(val || "");
+              }}
+              items={academicYearList}
+              setOpen={(open) => {
+                setYearOpen(open);
+                setCourseOpen(false);
+                setSkillOpen(false);
+                setInterestOpen(false);
+              }}
+              placeholder="Select academic year..."
+              listMode={listModeConfig}
+              modalTitle="Select Academic Year"
+              searchable={true}
+              modalAnimationType="slide"
+              modalContentContainerStyle={{ flex: 1 }}
+              flatListProps={{ nestedScrollEnabled: true }}
+              style={styles.dropdown}
+              dropDownContainerStyle={styles.dropdownContainer}
+            />
+          </View>
 
-          {/* 📚 Courses */}
+          {/* 📚 COURSES */}
           <Text style={styles.sectionTitle}>📚 CS Courses</Text>
-          <View style={{ zIndex: 3000, elevation: 3000 }}>
+          <View style={{ zIndex: 4000, position: "relative", marginBottom: 10 }}>
             <DropDownPicker
               open={courseOpen}
               value={courseValue}
@@ -398,16 +452,20 @@ export default function OnboardingScreen() {
               items={courseList}
               setOpen={(open) => {
                 setCourseOpen(open);
+                setYearOpen(false);
                 setSkillOpen(false);
                 setInterestOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(courses, item.value, setCourses)
               }
-              placeholder="Select a course..."
+              listMode={listModeConfig}
+              modalTitle="Select Course"
               searchable={true}
-              closeAfterSelecting={true}
-              maxHeight={250}
+              modalAnimationType="slide"
+              modalContentContainerStyle={{ flex: 1 }}
+              flatListProps={{ nestedScrollEnabled: true }}
+              placeholder="Select a course..."
               style={styles.dropdown}
               dropDownContainerStyle={styles.dropdownContainer}
             />
@@ -415,20 +473,16 @@ export default function OnboardingScreen() {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {courses.map((c, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.tag}
-                onPress={() => removeItem(courses, c, setCourses)}
-              >
+              <TouchableOpacity key={i} style={styles.tag} onPress={() => removeItem(courses, c, setCourses)}>
                 <Text style={styles.tagText}>{c}</Text>
                 <Text style={styles.remove}>✕</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* 💻 Skills */}
+          {/* 💻 SKILLS */}
           <Text style={styles.sectionTitle}>💻 Skills</Text>
-          <View style={{ zIndex: 2000, elevation: 2000 }}>
+          <View style={{ zIndex:3000, position: "relative", marginBottom: 10 }}>
             <DropDownPicker
               open={skillOpen}
               value={skillValue}
@@ -436,16 +490,20 @@ export default function OnboardingScreen() {
               items={skillList}
               setOpen={(open) => {
                 setSkillOpen(open);
+                setYearOpen(false);
                 setCourseOpen(false);
                 setInterestOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(skills, item.value, setSkills)
               }
-              placeholder="Select a skill..."
-              closeAfterSelecting={true}
+              listMode={listModeConfig}
+              modalTitle="Select Skill"
               searchable={true}
-              maxHeight={250}
+              modalAnimationType="slide"
+              modalContentContainerStyle={{ flex: 1 }}
+              flatListProps={{ nestedScrollEnabled: true }}
+              placeholder="Select a skill..."
               style={styles.dropdown}
               dropDownContainerStyle={styles.dropdownContainer}
             />
@@ -453,20 +511,16 @@ export default function OnboardingScreen() {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {skills.map((s, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.tag}
-                onPress={() => removeItem(skills, s, setSkills)}
-              >
+              <TouchableOpacity key={i} style={styles.tag} onPress={() => removeItem(skills, s, setSkills)}>
                 <Text style={styles.tagText}>{s}</Text>
                 <Text style={styles.remove}>✕</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* 💡 Interests */}
+          {/* 💡 INTERESTS */}
           <Text style={styles.sectionTitle}>💡 Interests</Text>
-          <View style={{ zIndex: 1000, elevation: 1000 }}>
+          <View style={{ zIndex: 2000, position: "relative", marginBottom: 10 }}>
             <DropDownPicker
               open={interestOpen}
               value={interestValue}
@@ -474,16 +528,20 @@ export default function OnboardingScreen() {
               items={interestList}
               setOpen={(open) => {
                 setInterestOpen(open);
-                setCourseOpen(false);
                 setSkillOpen(false);
+                setCourseOpen(false);
+                setYearOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(interests, item.value, setInterests)
               }
-              placeholder="Select an interest..."
-              closeAfterSelecting={true}
+              listMode={listModeConfig}
+              modalTitle="Select Interest"
               searchable={true}
-              maxHeight={250}
+              modalAnimationType="slide"
+              modalContentContainerStyle={{ flex: 1 }}
+              flatListProps={{ nestedScrollEnabled: true }}
+              placeholder="Select an interest..."
               style={styles.dropdown}
               dropDownContainerStyle={styles.dropdownContainer}
             />
@@ -491,18 +549,14 @@ export default function OnboardingScreen() {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {interests.map((i, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={styles.tag}
-                onPress={() => removeItem(interests, i, setInterests)}
-              >
+              <TouchableOpacity key={idx} style={styles.tag} onPress={() => removeItem(interests, i, setInterests)}>
                 <Text style={styles.tagText}>{i}</Text>
                 <Text style={styles.remove}>✕</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* Continue Button */}
+          {/* BUTTONS */}
           <TouchableOpacity style={styles.button} onPress={handleSubmit}>
             {saving ? (
               <ActivityIndicator color="white" />
@@ -511,7 +565,6 @@ export default function OnboardingScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Skip */}
           <TouchableOpacity onPress={() => router.replace("/(tabs)/Landing")}>
             <Text style={styles.skipText}>Skip for now</Text>
           </TouchableOpacity>
@@ -524,9 +577,12 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: "center",
-    justifyContent: "center",
     padding: 20,
+    alignItems: "center",
+    justifyContent: Platform.OS === "web" ? "flex-start" : "center",
+    maxWidth: Platform.OS === "web" ? 800 : "100%",
+    alignSelf: "center",
+    width: "100%",
   },
   title: {
     color: "white",
@@ -542,11 +598,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  formBox: {
+    formBox: {
     backgroundColor: "white",
     borderRadius: 15,
     width: "100%",
     padding: 20,
+    maxWidth: Platform.OS === "web" ? 600 : "100%", 
+    alignSelf: "center", 
   },
   sectionTitle: {
     fontWeight: "bold",
@@ -554,12 +612,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 5,
   },
-  option: {
-    marginVertical: 3,
-  },
   dropdown: {
     borderColor: "#ccc",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   dropdownContainer: {
     borderColor: "#ccc",
