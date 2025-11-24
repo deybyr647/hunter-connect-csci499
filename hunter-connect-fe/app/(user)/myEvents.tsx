@@ -72,7 +72,7 @@ export default function EventsScreen() {
           Boolean
         ) as EventData[];
 
-        // 🔥 Sort by date
+        //  Sort by date
         const sortByDate = (arr: EventData[]) =>
           arr.sort(
             (a, b) =>

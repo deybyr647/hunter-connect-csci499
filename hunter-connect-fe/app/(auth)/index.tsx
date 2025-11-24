@@ -131,14 +131,14 @@ export default function AuthScreen() {
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-        // ✅ Save full name to Firebase Auth
+        //  Save full name to Firebase Auth
         await updateProfile(userCredential.user, {
           displayName: `${firstName} ${lastName}`,
         });
 
         await sendEmailVerification(userCredential.user);
     
-        // ✅ Refresh the user object so `onAuthStateChanged` gets updated info
+        //  Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);
         router.replace("/verify-email");
       }

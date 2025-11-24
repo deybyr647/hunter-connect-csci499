@@ -73,7 +73,7 @@ export default function ProfileScreen() {
           {/* POSTS */}
           <TouchableOpacity 
             style={styles.optionItem}
-            onPress={() => router.push("/(user)/posts")}
+            onPress={() => router.push("/(user)/myPosts")}
             >
             <Text style={styles.optionIcon}>📝</Text>
             <Text style={styles.optionText}>My Posts</Text>
@@ -83,7 +83,7 @@ export default function ProfileScreen() {
           {/* EVENTS */}
           <TouchableOpacity 
             style={styles.optionItem}
-            onPress={() => router.push("/(user)/events")}
+            onPress={() => router.push("/(user)/myEvents")}
             >
             <Text style={styles.optionIcon}>📅</Text>
             <Text style={styles.optionText}>My Events</Text>

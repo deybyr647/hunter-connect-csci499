@@ -45,7 +45,7 @@ export default function OnboardingScreen() {
   ];
 
   const courseList = [
-  // 🧩 100-LEVEL COURSES
+  //  100-LEVEL COURSES
     { label: "🧩 100-Level Courses", value: "100level", selectable: false },
     { label: "CSCI 12100: Computers & Money: Quantitative Reasoning in Context", value: "CSCI 12100", parent: "100level" },
     { label: "CSCI 12700: Introduction to Computer Science", value: "CSCI 12700", parent: "100level" },
@@ -60,7 +60,7 @@ export default function OnboardingScreen() {
     { label: "CSCI 18200: Independent Workshop", value: "CSCI 18200", parent: "100level" },
     { label: "CSCI 18300: Independent Workshop", value: "CSCI 18300", parent: "100level" },
 
-    // ⚙️ 200-LEVEL COURSES
+    //  200-LEVEL COURSES
     { label: "⚙️ 200-Level Courses", value: "200level", selectable: false },
     { label: "CSCI 22700: Programming Methods", value: "CSCI 22700", parent: "200level" },
     { label: "CSCI 23200: Relational Databases and SQL Programming with Lab", value: "CSCI 23200", parent: "200level" },
@@ -71,7 +71,7 @@ export default function OnboardingScreen() {
     { label: "CSCI 26700: Microprocessing and Embedded Systems", value: "CSCI 26700", parent: "200level" },
     { label: "CSCI 27500: Symbolic Logic", value: "CSCI 27500", parent: "200level" },
 
-    // 💻 300-LEVEL COURSES
+    //  300-LEVEL COURSES
     { label: "💻 300-Level Courses", value: "300level", selectable: false },
     { label: "CSCI 32000: Artificial Intelligence", value: "CSCI 32000", parent: "300level" },
     { label: "CSCI 33500: Software Analysis and Design III", value: "CSCI 33500", parent: "300level" },
@@ -90,7 +90,7 @@ export default function OnboardingScreen() {
     { label: "CSCI 39300: Independent Study III", value: "CSCI 39300", parent: "300level" },
     { label: "CSCI 39500–39900: Topics in Computer Science", value: "CSCI 39500-39900", parent: "300level" },
 
-    // 🧠 400-LEVEL COURSES
+    //  400-LEVEL COURSES
     { label: "🧠 400-Level Courses", value: "400level", selectable: false },
     { label: "CSCI 40500: Software Engineering", value: "CSCI 40500", parent: "400level" },
     { label: "CSCI 41500: Data Communications and Networks", value: "CSCI 41500", parent: "400level" },
@@ -106,7 +106,7 @@ export default function OnboardingScreen() {
   ];
 
   const skillList = [
-    // 🧠 PROGRAMMING LANGUAGES (parent)
+    //  PROGRAMMING LANGUAGES (parent)
     { label: "🧠 Programming Languages", value: "languages", selectable: false },
     { label: "Python", value: "Python", parent: "languages" },
     { label: "Java", value: "Java", parent: "languages" },
@@ -129,7 +129,7 @@ export default function OnboardingScreen() {
     { label: "Rust", value: "Rust", parent: "languages" },
     { label: "Assembly", value: "Assembly", parent: "languages" },
 
-    // ⚙️ FRAMEWORKS & LIBRARIES
+    //  FRAMEWORKS & LIBRARIES
     { label: "⚙️ Frameworks & Libraries", value: "frameworks", selectable: false },
     { label: "React", value: "React", parent: "frameworks" },
     { label: "React Native", value: "React Native", parent: "frameworks" },
@@ -155,7 +155,7 @@ export default function OnboardingScreen() {
     { label: "PostgreSQL", value: "PostgreSQL", parent: "frameworks" },
     { label: "MySQL", value: "MySQL", parent: "frameworks" },
 
-    // ☁️ CLOUD, DEVOPS & TOOLS
+    //  CLOUD, DEVOPS & TOOLS
     { label: "☁️ Cloud, DevOps & Tools", value: "devops", selectable: false },
     { label: "Git", value: "Git", parent: "devops" },
     { label: "GitHub", value: "GitHub", parent: "devops" },
@@ -181,7 +181,7 @@ export default function OnboardingScreen() {
     { label: "Mocha", value: "Mocha", parent: "devops" },
     { label: "Cypress", value: "Cypress", parent: "devops" },
 
-    // 🧩 CORE CS CONCEPTS
+    //  CORE CS CONCEPTS
     { label: "🧩 Core CS Concepts", value: "csconcepts", selectable: false },
     { label: "Data Structures", value: "Data Structures", parent: "csconcepts" },
     { label: "Algorithms", value: "Algorithms", parent: "csconcepts" },
@@ -203,7 +203,7 @@ export default function OnboardingScreen() {
     { label: "Automation", value: "Automation", parent: "csconcepts" },
     { label: "Data Analytics", value: "Data Analytics", parent: "csconcepts" },
 
-    // 🤖 AI & ADVANCED TOPICS
+    //  AI & ADVANCED TOPICS
     { label: "🤖 AI & Advanced Topics", value: "ai", selectable: false },
     { label: "Machine Learning", value: "Machine Learning", parent: "ai" },
     { label: "Deep Learning", value: "Deep Learning", parent: "ai" },
@@ -216,7 +216,7 @@ export default function OnboardingScreen() {
     { label: "Blockchain", value: "Blockchain", parent: "ai" },
     { label: "Cryptography", value: "Cryptography", parent: "ai" },
 
-    // 🎮 DEVELOPMENT & DESIGN
+    //  DEVELOPMENT & DESIGN
     { label: "🎮 Development & Design", value: "devdesign", selectable: false },
     { label: "Web Development", value: "Web Development", parent: "devdesign" },
     { label: "Mobile App Development", value: "Mobile App Development", parent: "devdesign" },
@@ -226,7 +226,7 @@ export default function OnboardingScreen() {
     { label: "Human-Computer Interaction", value: "Human-Computer Interaction", parent: "devdesign" },
     { label: "Version Control", value: "Version Control", parent: "devdesign" },
 
-    // 🧰 PROFESSIONAL & RESEARCH
+    //  PROFESSIONAL & RESEARCH
     { label: "🧰 Professional & Research", value: "proskills", selectable: false },
     { label: "Technical Writing", value: "Technical Writing", parent: "proskills" },
     { label: "Research", value: "Research", parent: "proskills" },
@@ -240,7 +240,7 @@ export default function OnboardingScreen() {
 
 
   const interestList = [
-    // 🤖 ARTIFICIAL INTELLIGENCE & MACHINE LEARNING
+    //  ARTIFICIAL INTELLIGENCE & MACHINE LEARNING
     { label: "🤖 Artificial Intelligence & Machine Learning", value: "ai", selectable: false },
     { label: "Artificial Intelligence", value: "Artificial Intelligence", parent: "ai" },
     { label: "Machine Learning", value: "Machine Learning", parent: "ai" },
@@ -251,7 +251,7 @@ export default function OnboardingScreen() {
     { label: "Robotics", value: "Robotics", parent: "ai" },
     { label: "AI Ethics", value: "AI Ethics", parent: "ai" },
 
-    // 🌐 WEB & APP DEVELOPMENT
+    //  WEB & APP DEVELOPMENT
     { label: "🌐 Web & App Development", value: "webdev", selectable: false },
     { label: "Frontend Development", value: "Frontend Development", parent: "webdev" },
     { label: "Backend Development", value: "Backend Development", parent: "webdev" },
@@ -262,7 +262,7 @@ export default function OnboardingScreen() {
     { label: "UI/UX Design", value: "UI/UX Design", parent: "webdev" },
     { label: "Accessibility (A11y)", value: "Accessibility (A11y)", parent: "webdev" },
 
-    // 🧠 DATA, ANALYTICS & SCIENCE
+    //  DATA, ANALYTICS & SCIENCE
     { label: "🧠 Data, Analytics & Science", value: "datasci", selectable: false },
     { label: "Data Science", value: "Data Science", parent: "datasci" },
     { label: "Data Analysis", value: "Data Analysis", parent: "datasci" },
@@ -272,7 +272,7 @@ export default function OnboardingScreen() {
     { label: "Data Engineering", value: "Data Engineering", parent: "datasci" },
     { label: "Cloud Data Systems", value: "Cloud Data Systems", parent: "datasci" },
 
-    // 🔐 CYBERSECURITY & PRIVACY
+    //  CYBERSECURITY & PRIVACY
     { label: "🔐 Cybersecurity & Privacy", value: "security", selectable: false },
     { label: "Cybersecurity", value: "Cybersecurity", parent: "security" },
     { label: "Network Security", value: "Network Security", parent: "security" },
@@ -283,7 +283,7 @@ export default function OnboardingScreen() {
     { label: "Privacy Engineering", value: "Privacy Engineering", parent: "security" },
     { label: "Ethical Hacking", value: "Ethical Hacking", parent: "security" },
 
-    // ⚙️ SYSTEMS, HARDWARE & ENGINEERING
+    //  SYSTEMS, HARDWARE & ENGINEERING
     { label: "⚙️ Systems, Hardware & Engineering", value: "systems", selectable: false },
     { label: "Operating Systems", value: "Operating Systems", parent: "systems" },
     { label: "Computer Architecture", value: "Computer Architecture", parent: "systems" },
@@ -294,7 +294,7 @@ export default function OnboardingScreen() {
     { label: "Cloud Computing", value: "Cloud Computing", parent: "systems" },
     { label: "Internet of Things (IoT)", value: "IoT", parent: "systems" },
 
-    // 🎮 GAMES, MEDIA & INTERACTION
+    //  GAMES, MEDIA & INTERACTION
     { label: "🎮 Games, Media & Interaction", value: "games", selectable: false },
     { label: "Game Development", value: "Game Development", parent: "games" },
     { label: "Game Design", value: "Game Design", parent: "games" },
@@ -306,7 +306,7 @@ export default function OnboardingScreen() {
     { label: "Animation", value: "Animation", parent: "games" },
     { label: "Human-Computer Interaction", value: "HCI", parent: "games" },
 
-    // 💼 SOFTWARE DEVELOPMENT & ENGINEERING
+    //  SOFTWARE DEVELOPMENT & ENGINEERING
     { label: "💼 Software Development & Engineering", value: "software", selectable: false },
     { label: "Software Engineering", value: "Software Engineering", parent: "software" },
     { label: "Agile Development", value: "Agile Development", parent: "software" },
@@ -317,7 +317,7 @@ export default function OnboardingScreen() {
     { label: "Open Source Contribution", value: "Open Source Contribution", parent: "software" },
     { label: "Cloud Deployment", value: "Cloud Deployment", parent: "software" },
 
-    // 📊 THEORY, RESEARCH & MATH FOUNDATIONS
+    //  THEORY, RESEARCH & MATH FOUNDATIONS
     { label: "📊 Theory, Research & Math Foundations", value: "theory", selectable: false },
     { label: "Algorithms", value: "Algorithms", parent: "theory" },
     { label: "Data Structures", value: "Data Structures", parent: "theory" },
@@ -328,7 +328,7 @@ export default function OnboardingScreen() {
     { label: "Quantum Computing", value: "Quantum Computing", parent: "theory" },
     { label: "Research & Academia", value: "Research & Academia", parent: "theory" },
 
-    // 💼 CAREER & INDUSTRY FOCUS
+    //  CAREER & INDUSTRY FOCUS
     { label: "💼 Career & Industry Focus", value: "career", selectable: false },
     { label: "Entrepreneurship", value: "Entrepreneurship", parent: "career" },
     { label: "Startups", value: "Startups", parent: "career" },
@@ -372,7 +372,7 @@ export default function OnboardingScreen() {
       };
 
       if (userSnap.exists()) {
-        // 👉 User doc exists → update only preferences
+        //  User doc exists → update only preferences
         await updateDoc(userRef, {
           "preferences.academicYear": newPreferences.academicYear,
           "preferences.courses": newPreferences.courses,
@@ -381,7 +381,7 @@ export default function OnboardingScreen() {
         });
 
       } else {
-        // 👉 User doc missing → create it
+        //  User doc missing → create it
         await setDoc(
           userRef,
           {
@@ -412,7 +412,7 @@ export default function OnboardingScreen() {
 
         <View style={styles.formBox}>
           
-          {/* 🎓 ACADEMIC YEAR */}
+          {/*  ACADEMIC YEAR */}
           <Text style={styles.sectionTitle}>🎓 Academic Year</Text>
           <View style={{ zIndex: 5000, position: "relative", marginBottom: yearOpen ? 200 : 10 }}>
             <DropDownPicker
@@ -441,7 +441,7 @@ export default function OnboardingScreen() {
             />
           </View>
 
-          {/* 📚 COURSES */}
+          {/*  COURSES */}
           <Text style={styles.sectionTitle}>📚 CS Courses</Text>
           <View style={{ zIndex: 4000, position: "relative", marginBottom: courseOpen ? 200 : 10 }}>
             <DropDownPicker
@@ -479,7 +479,7 @@ export default function OnboardingScreen() {
             ))}
           </ScrollView>
 
-          {/* 💻 SKILLS */}
+          {/*  SKILLS */}
           <Text style={styles.sectionTitle}>💻 Skills</Text>
           <View style={{ zIndex:3000, position: "relative", marginBottom: skillOpen ? 200 : 10 }}>
             <DropDownPicker
@@ -517,7 +517,7 @@ export default function OnboardingScreen() {
             ))}
           </ScrollView>
 
-          {/* 💡 INTERESTS */}
+          {/*  INTERESTS */}
           <Text style={styles.sectionTitle}>💡 Interests</Text>
           <View style={{ zIndex: 2000, position: "relative", marginBottom: interestOpen ? 200 : 10 }}>
             <DropDownPicker

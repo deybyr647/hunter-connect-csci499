@@ -11,7 +11,7 @@ export default function VerifyEmailScreen() {
   const [checking, setChecking] = useState(false);
   const user = auth.currentUser;
 
-  // 🔄 periodically check verification status
+  //  periodically check verification status
   useEffect(() => {
     const interval = setInterval(async () => {
       if (auth.currentUser && !verified) {
@@ -32,7 +32,7 @@ export default function VerifyEmailScreen() {
     return () => clearInterval(interval);
   }, [verified]);
 
-  // 📩 resend verification email
+  //  resend verification email
   const handleResend = async () => {
     if (user && !user.emailVerified) {
       try {
@@ -45,7 +45,7 @@ export default function VerifyEmailScreen() {
     }
   };
 
-  // ✅ success screen
+  //  success screen
   if (verified) {
     return (
       <SafeAreaView style={styles.container}>
@@ -67,7 +67,7 @@ export default function VerifyEmailScreen() {
     );
   }
 
-  // 🕓 waiting screen
+  //  waiting screen
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
