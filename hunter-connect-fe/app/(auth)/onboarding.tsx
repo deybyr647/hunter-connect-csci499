@@ -414,7 +414,7 @@ export default function OnboardingScreen() {
           
           {/* 🎓 ACADEMIC YEAR */}
           <Text style={styles.sectionTitle}>🎓 Academic Year</Text>
-          <View style={{ zIndex: 5000, position: "relative", marginBottom: 10 }}>
+          <View style={{ zIndex: 5000, position: "relative", marginBottom: yearOpen ? 200 : 10 }}>
             <DropDownPicker
               open={yearOpen}
               value={yearValue}
@@ -433,7 +433,6 @@ export default function OnboardingScreen() {
               placeholder="Select academic year..."
               listMode={listModeConfig}
               modalTitle="Select Academic Year"
-              searchable={true}
               modalAnimationType="slide"
               modalContentContainerStyle={{ flex: 1 }}
               flatListProps={{ nestedScrollEnabled: true }}
@@ -444,7 +443,7 @@ export default function OnboardingScreen() {
 
           {/* 📚 COURSES */}
           <Text style={styles.sectionTitle}>📚 CS Courses</Text>
-          <View style={{ zIndex: 4000, position: "relative", marginBottom: 10 }}>
+          <View style={{ zIndex: 4000, position: "relative", marginBottom: courseOpen ? 200 : 10 }}>
             <DropDownPicker
               open={courseOpen}
               value={courseValue}
@@ -482,7 +481,7 @@ export default function OnboardingScreen() {
 
           {/* 💻 SKILLS */}
           <Text style={styles.sectionTitle}>💻 Skills</Text>
-          <View style={{ zIndex:3000, position: "relative", marginBottom: 10 }}>
+          <View style={{ zIndex:3000, position: "relative", marginBottom: skillOpen ? 200 : 10 }}>
             <DropDownPicker
               open={skillOpen}
               value={skillValue}
@@ -520,7 +519,7 @@ export default function OnboardingScreen() {
 
           {/* 💡 INTERESTS */}
           <Text style={styles.sectionTitle}>💡 Interests</Text>
-          <View style={{ zIndex: 2000, position: "relative", marginBottom: 10 }}>
+          <View style={{ zIndex: 2000, position: "relative", marginBottom: interestOpen ? 200 : 10 }}>
             <DropDownPicker
               open={interestOpen}
               value={interestValue}
@@ -605,6 +604,7 @@ const styles = StyleSheet.create({
     padding: 20,
     maxWidth: Platform.OS === "web" ? 600 : "100%", 
     alignSelf: "center", 
+    paddingBottom: 100
   },
   sectionTitle: {
     fontWeight: "bold",

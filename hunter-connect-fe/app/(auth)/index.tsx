@@ -18,7 +18,6 @@ import {
   updateProfile,
   reload,
   sendEmailVerification,
-  sendPasswordResetEmail,
 } from "firebase/auth";
 
 type AuthMode = "login" | "signup";
