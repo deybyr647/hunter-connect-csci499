@@ -71,14 +71,20 @@ export default function ProfileScreen() {
         {/* OPTIONS */}
         <View style={styles.optionsContainer}>
           {/* POSTS */}
-          <TouchableOpacity style={styles.optionItem}>
+          <TouchableOpacity 
+            style={styles.optionItem}
+            onPress={() => router.push("/(user)/posts")}
+            >
             <Text style={styles.optionIcon}>📝</Text>
             <Text style={styles.optionText}>My Posts</Text>
             <Text style={styles.optionArrow}>›</Text>
           </TouchableOpacity>
 
           {/* EVENTS */}
-          <TouchableOpacity style={styles.optionItem}>
+          <TouchableOpacity 
+            style={styles.optionItem}
+            onPress={() => router.push("/(user)/events")}
+            >
             <Text style={styles.optionIcon}>📅</Text>
             <Text style={styles.optionText}>My Events</Text>
             <Text style={styles.optionArrow}>›</Text>
