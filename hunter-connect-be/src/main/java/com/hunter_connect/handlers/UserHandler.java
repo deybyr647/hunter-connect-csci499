@@ -1,11 +1,17 @@
 package com.hunter_connect.handlers;
 
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.WriteResult;
+import com.google.firebase.cloud.FirestoreClient;
 import com.hunter_connect.models.User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
 import java.io.IOException;
+import java.net.URI;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,15 +22,15 @@ import java.util.concurrent.atomic.AtomicLong;
  * Handles the business logic for user-related requests.
  * The @Component annotation allows Spring to detect and inject this class.
  */
+
+record UserRegistrationRequest(String uid, String firstName, String lastName, String email) {}
+
 @Component
 public class UserHandler {
 
     private final Map<Long, User> users = new ConcurrentHashMap<>();
-    private final AtomicLong counter = new AtomicLong();
 
     public UserHandler() {
-        users.put(counter.incrementAndGet(), new User(counter.get(), "Alice", "alice@example.com"));
-        users.put(counter.incrementAndGet(), new User(counter.get(), "Bob", "bob@example.com"));
     }
 
     public ServerResponse getAllUsers(ServerRequest request) throws IOException {
@@ -43,15 +49,40 @@ public class UserHandler {
         }
     }
 
-    public ServerResponse createUser(ServerRequest request) throws IOException {
+    public ServerResponse createUser(ServerRequest request) {
         try {
-            User newUserRequest = request.body(User.class);
-            long newId = counter.incrementAndGet();
-            User newUser = new User(newId, newUserRequest.getName(), newUserRequest.getEmail());
-            users.put(newId, newUser);
-            return ServerResponse.status(201).body(newUser);
+            // 1. Get the SECURE uid from the Auth Token (Principal)
+            // This ensures we know exactly who is making the request.
+            Principal principal = request.principal()
+                    .orElseThrow(() -> new SecurityException("No auth token found"));
+            String authenticatedUid = principal.getName();
+
+            // 2. Deserialize the JSON body directly into your User POJO
+            // Spring automatically maps the JSON fields (firstName, etc.) to your class.
+            User newUser = request.body(User.class);
+
+            // 3. SECURITY STEP: Overwrite the UID in the POJO with the secure one.
+            // This prevents a user from sending someone else's UID in the body.
+            newUser.setUid(authenticatedUid);
+
+            // 4. Save directly to Firestore
+            Firestore db = FirestoreClient.getFirestore();
+            
+            // We use .set() to create the document at the specific ID "authenticatedUid"
+            ApiFuture<WriteResult> future = db.collection("users")
+                    .document(authenticatedUid)
+                    .set(newUser);
+
+            // Wait for the write to complete
+            WriteResult result = future.get();
+
+            // 5. Return success response
+            return ServerResponse.created(URI.create("/api/users/" + authenticatedUid))
+                    .body(newUser);
+
         } catch (Exception e) {
-            return ServerResponse.badRequest().body("Invalid user data: " + e.getMessage());
+            e.printStackTrace();
+            return ServerResponse.badRequest().body("Error creating user: " + e.getMessage());
         }
     }
 }

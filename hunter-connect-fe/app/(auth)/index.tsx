@@ -21,6 +21,8 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 
+import {postUserInterface, postUser} from "@/app/(auth)/api/Users";
+
 type AuthMode = "login" | "signup";
 
 export default function AuthScreen() {
@@ -119,6 +121,7 @@ export default function AuthScreen() {
       setErrorMessage("Please use your @myhunter.cuny.edu email to sign up.");
       return;
     }
+
     try {
       if (mode === "login") {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -128,9 +131,11 @@ export default function AuthScreen() {
           setErrorMessage("Please verify your email before logging in.");
           return;
         }
+
         router.push("/(tabs)/Landing");
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
         // ✅ Save full name to Firebase Auth
         await updateProfile(userCredential.user, {
@@ -138,6 +143,24 @@ export default function AuthScreen() {
         });
 
         await sendEmailVerification(userCredential.user);
+
+        // Access UID of user here, along with token to send to backend for authentication
+          const uid = user.uid;
+          const bearerToken = await user.getIdToken();
+
+          const reqBody: postUserInterface = {
+              name: {
+                  firstName: firstName,
+                  lastName: lastName,
+              },
+              email: email,
+              uid: uid,
+              bearerToken: bearerToken,
+          }
+
+          console.log("Request Body: \n", reqBody);
+          console.log("Bearer Token: \n", bearerToken);
+          await postUser(reqBody);
     
         // ✅ Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);
