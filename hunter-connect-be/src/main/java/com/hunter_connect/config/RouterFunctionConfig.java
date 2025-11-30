@@ -26,7 +26,7 @@ public class RouterFunctionConfig {
                         .POST("", userHandler::createUser)
 
                         // Protected Routes
-                        .GET("", userHandler::getAllUsers)
+                        .PUT("", userHandler::updateUser)
                         .GET("/{id}", userHandler::getUserById)
                 ).build();
     }

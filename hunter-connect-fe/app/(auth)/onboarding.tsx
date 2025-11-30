@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import { auth, db } from "@/firebase/firebaseConfig";
 import { doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import {createUser, updateUser, UserInterface} from "@/app/(auth)/api/Users";
 
 
 export default function OnboardingScreen() {
@@ -347,14 +348,38 @@ export default function OnboardingScreen() {
     setSaving(true);
 
     try {
-      const userRef = doc(db, "users", user.uid);
+      /*const userRef = doc(db, "users", user.uid);
+
+
 
       await updateDoc(userRef, {
         "preferences.academicYear": academicYear,
         "preferences.courses": arrayUnion(...courses),
         "preferences.skills": arrayUnion(...skills),
         "preferences.interests": arrayUnion(...interests),
-      });
+      });*/
+
+        const bearerToken = await user.getIdToken();
+
+        const reqBody: UserInterface = {
+            name: {
+                firstName: "",
+                lastName: "",
+            },
+            bearerToken: bearerToken,
+            email: "",
+            uid: "",
+            preferences: {
+                academicYear: academicYear,
+                courses: courses,
+                skills: skills,
+                interests: interests,
+            }
+        }
+
+        console.log("Request Body: \n", reqBody);
+        console.log("Bearer Token: \n", bearerToken);
+        await updateUser(reqBody);
 
       router.replace("/(tabs)/Landing");
     } catch (error) {

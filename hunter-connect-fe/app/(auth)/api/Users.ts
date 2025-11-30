@@ -1,18 +1,24 @@
-interface postUserInterface {
+interface UserInterface {
     uid: string;
     email: string;
     bearerToken: string;
     name: {
         firstName: string;
         lastName: string;
-    }
+    };
+    preferences?: {
+        academicYear: string;
+        courses: string[] | null;
+        interests: string[] | null;
+        skills: string[] | null;
+    };
 }
 
-const postUser = async (body: postUserInterface) => {
+const createUser = async (body: UserInterface) => {
     const {uid, email, bearerToken, name} = body;
     const {firstName, lastName} = name;
 
-    const createUserConfig: RequestInit = {
+    const createUserRequest: RequestInit = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -34,12 +40,12 @@ const postUser = async (body: postUserInterface) => {
 
 
     try {
-        const response = await fetch('http://localhost:8080/api/users', createUserConfig);
-        const json = await response.json();
+        const req = await fetch('http://localhost:8080/api/users', createUserRequest);
+        const json = await req.json();
 
-        if (response.status === 200) {
+        if (req.status === 200) {
             console.log(json);
-            console.log("Successfully posted data to backend");
+            console.log("Successful POST data to backend");
         }
     }
 
@@ -48,40 +54,46 @@ const postUser = async (body: postUserInterface) => {
     }
 }
 
-const updateUserData: RequestInit = {
-    method: 'PUT',
-    headers: {
-        'Content-Type': 'application/json', // Content type of the body
-        'Authorization': 'Bearer YOUR_AUTH_TOKEN', // Example for authorization
-        'Accept': 'application/json' // Expected response content type
-    },
-    body: JSON.stringify({ // Request body, usually for POST/PUT requests
-        name: 'John Doe',
-        email: 'john.doe@example.com'
-    }),
-    mode: 'cors', // Request mode (cors, no-cors, same-origin)
-    credentials: 'omit', // Credentials policy (omit, include, same-origin)
-    cache: 'no-cache', // Cache policy (default, no-store, reload, no-cache, force-cache, only-if-cached)
-    redirect: 'follow', // Redirect policy (manual, follow, error)
-    referrerPolicy: 'no-referrer-when-downgrade' // Referrer policy
-}
+const updateUser = async (body: UserInterface) => {
+    const {uid, email, bearerToken, name, preferences} = body;
+    const {firstName, lastName} = name;
 
-// Example usage with fetch
-async function fetchData() {
+    const updateUserRequest: RequestInit = {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${bearerToken}`,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            uid: uid,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            preferences: preferences
+        }),
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'no-cache',
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer-when-downgrade'
+    };
+
+
     try {
-        const response = await fetch('https://api.example.com/data', fetchOptions);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        const req = await fetch('http://localhost:8080/api/users', updateUserRequest);
+        const json = await req.json();
+
+        if (req.status === 200) {
+            console.log(json);
+            console.log("Successful PUT data to backend");
         }
-        const data = await response.json();
-        console.log(data);
-    } catch (error) {
-        console.error('Error fetching data:', error);
+    }
+
+    catch (error) {
+        console.log(error);
     }
 }
 
-//fetchData();
-
-
-export { postUserInterface, postUser };
+export { UserInterface, createUser, updateUser };
 

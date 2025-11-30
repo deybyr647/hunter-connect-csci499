@@ -21,7 +21,7 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 
-import {postUserInterface, postUser} from "@/app/(auth)/api/Users";
+import {UserInterface, createUser} from "@/app/(auth)/api/Users";
 
 type AuthMode = "login" | "signup";
 
@@ -137,7 +137,7 @@ export default function AuthScreen() {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // ✅ Save full name to Firebase Auth
+        // Save full name to Firebase Auth
         await updateProfile(userCredential.user, {
           displayName: `${firstName} ${lastName}`,
         });
@@ -148,7 +148,7 @@ export default function AuthScreen() {
           const uid = user.uid;
           const bearerToken = await user.getIdToken();
 
-          const reqBody: postUserInterface = {
+          const reqBody: UserInterface = {
               name: {
                   firstName: firstName,
                   lastName: lastName,
@@ -160,9 +160,9 @@ export default function AuthScreen() {
 
           console.log("Request Body: \n", reqBody);
           console.log("Bearer Token: \n", bearerToken);
-          await postUser(reqBody);
+          await createUser(reqBody);
     
-        // ✅ Refresh the user object so `onAuthStateChanged` gets updated info
+        // Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);
         router.replace("/verify-email");
       }
