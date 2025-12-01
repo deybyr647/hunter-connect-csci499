@@ -1,14 +1,23 @@
 import { auth, db } from "@/firebase/firebaseConfig";
 import { useRouter } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDocs,
+  addDoc,
+  collection,
+  serverTimestamp,
+  updateDoc,
+  arrayUnion,
+  query,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  TextInput,
   View,
 } from "react-native";
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
@@ -17,9 +26,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 interface EventData {
   id: string;
   title: string;
-  date: any; // Firestore Timestamp
+  date: any;
   location?: string;
   description?: string;
+  createdBy?: string;
+  attendees?: string[];
 }
 
 export default function EventsScreen() {
@@ -28,58 +39,66 @@ export default function EventsScreen() {
 
   const [loading, setLoading] = useState(true);
 
-  const [upcoming, setUpcoming] = useState<EventData[]>([]);
-  const [registered, setRegistered] = useState<EventData[]>([]);
-  const [past, setPast] = useState<EventData[]>([]);
+  // NEW CATEGORIES
+  const [myEvents, setMyEvents] = useState<EventData[]>([]);
+  const [subscribedEvents, setSubscribedEvents] = useState<EventData[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<EventData[]>([]);
 
+  // CREATE EVENT FORM STATE
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [tags, setTags] = useState("");
+
+  // SAFE DATE FORMATTER
+  const formatDate = (d: any) => {
+    if (!d) return "";
+    if (d?.toDate) return d.toDate().toLocaleDateString();
+    if (typeof d === "string") {
+      const dateObj = new Date(d);
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toLocaleDateString();
+      }
+    }
+    return "";
+  };
+
+  // LOAD ALL EVENTS AND CATEGORY SPLIT
   useEffect(() => {
+    if (!user) return;
+
     const loadEvents = async () => {
-      if (!user) return;
-
       try {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        const eventQuery = query(collection(db, "events"));
+        const snapshot = await getDocs(eventQuery);
 
-        if (!userSnap.exists()) {
-          setLoading(false);
-          return;
-        }
+        const allEvents = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as EventData[];
 
-        const prefs = userSnap.data();
-        const upcomingIds = prefs.upcomingEvents || [];
-        const registeredIds = prefs.registeredEvents || [];
-        const pastIds = prefs.pastEvents || [];
+        const myEv = allEvents.filter((e) => e.createdBy === user.uid);
 
-        const fetchEvent = async (id: string): Promise<EventData | null> => {
-          const eventRef = doc(db, "events", id);
-          const eventSnap = await getDoc(eventRef);
-          if (!eventSnap.exists()) return null;
-          return { id, ...eventSnap.data() } as EventData;
-        };
+        const subscribed = allEvents.filter((e) =>
+          e.attendees?.includes(user.uid)
+        );
 
-        const upcomingData = (
-          await Promise.all(upcomingIds.map(fetchEvent))
-        ).filter(Boolean) as EventData[];
+        const upcoming = allEvents.filter(
+          (e) =>
+            e.createdBy !== user.uid &&
+            !e.attendees?.includes(user.uid)
+        );
 
-        const registeredData = (
-          await Promise.all(registeredIds.map(fetchEvent))
-        ).filter(Boolean) as EventData[];
-
-        const pastData = (await Promise.all(pastIds.map(fetchEvent))).filter(
-          Boolean
-        ) as EventData[];
-
-        //  Sort by date
-        const sortByDate = (arr: EventData[]) =>
-          arr.sort(
-            (a, b) => a.date.toDate().getTime() - b.date.toDate().getTime()
-          );
-
-        setUpcoming(sortByDate(upcomingData));
-        setRegistered(sortByDate(registeredData));
-        setPast(sortByDate(pastData));
-      } catch (err) {
-        console.error("Error fetching events:", err);
+        setMyEvents(myEv);
+        setSubscribedEvents(subscribed);
+        setUpcomingEvents(upcoming);
+      } catch (error) {
+        console.error("Error loading events:", error);
       }
 
       setLoading(false);
@@ -88,15 +107,70 @@ export default function EventsScreen() {
     loadEvents();
   }, []);
 
+  // RENDER EVENT CARD
   const renderEvent = (e: EventData) => (
     <View key={e.id} style={styles.eventCard}>
       <Text style={styles.eventTitle}>{e.title}</Text>
-      <Text style={styles.eventDate}>
-        {e.date.toDate().toLocaleDateString()}
-      </Text>
+      <Text style={styles.eventDate}>{formatDate(e.date)}</Text>
       {e.location && <Text style={styles.eventLocation}>{e.location}</Text>}
     </View>
   );
+
+  // CREATE EVENT
+  const createEvent = async () => {
+    try {
+      const tagArray = tags
+        .split(",")
+        .map((t) => t.trim().toLowerCase())
+        .filter((t) => t !== "");
+
+      const docRef = await addDoc(collection(db, "events"), {
+        title,
+        description,
+        location,
+        date,
+        startTime,
+        endTime,
+        createdAt: serverTimestamp(),
+        createdBy: auth.currentUser?.uid,
+        attendees: [],
+        tags: tagArray,
+      });
+
+      console.log("Event created:", docRef.id);
+
+      // Refresh events list after creating
+      setMyEvents((prev) => [
+        ...prev,
+        {
+          id: docRef.id,
+          title,
+          description,
+          location,
+          date,
+          startTime,
+          endTime,
+          createdBy: auth.currentUser?.uid,
+          attendees: [],
+        },
+      ]);
+
+      alert("Event created!");
+
+      // Reset fields
+      setTitle("");
+      setDescription("");
+      setLocation("");
+      setDate("");
+      setStartTime("");
+      setEndTime("");
+      setTags("");
+
+      setShowCreateEvent(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <Animated.View
@@ -120,28 +194,104 @@ export default function EventsScreen() {
               <ActivityIndicator size="large" color="#2E1759" />
             ) : (
               <>
-                {/* UPCOMING */}
+                {/* SECTION: MY EVENTS */}
+                <Text style={styles.sectionTitle}>My Events</Text>
+                {myEvents.length ? (
+                  myEvents.map(renderEvent)
+                ) : (
+                  <Text style={styles.empty}>You have not created events yet.</Text>
+                )}
+
+                {/* CREATE EVENT DROPDOWN */}
+                <View style={{ marginVertical: 15 }}>
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setShowCreateEvent(!showCreateEvent)}
+                  >
+                    <Text style={styles.dropdownButtonText}>
+                      {showCreateEvent ? "Hide Form ▲" : "Create New Event ▼"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showCreateEvent && (
+                    <View style={styles.createBox}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Title"
+                        value={title}
+                        onChangeText={setTitle}
+                      />
+
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Description"
+                        value={description}
+                        onChangeText={setDescription}
+                      />
+
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Location"
+                        value={location}
+                        onChangeText={setLocation}
+                      />
+
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Date (YYYY-MM-DD)"
+                        value={date}
+                        onChangeText={setDate}
+                      />
+
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Start Time (HH:MM)"
+                        value={startTime}
+                        onChangeText={setStartTime}
+                      />
+
+                      <TextInput
+                        style={styles.input}
+                        placeholder="End Time (HH:MM)"
+                        value={endTime}
+                        onChangeText={setEndTime}
+                      />
+
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Tags (csci135, study)"
+                        value={tags}
+                        onChangeText={setTags}
+                      />
+
+                      <TouchableOpacity
+                        style={styles.createButton}
+                        onPress={createEvent}
+                      >
+                        <Text style={styles.createButtonText}>
+                          Create Event
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                {/* SECTION: UPCOMING EVENTS */}
                 <Text style={styles.sectionTitle}>Upcoming Events</Text>
-                {upcoming.length ? (
-                  upcoming.map(renderEvent)
+                {upcomingEvents.length ? (
+                  upcomingEvents.map(renderEvent)
                 ) : (
-                  <Text style={styles.empty}>No upcoming events.</Text>
+                  <Text style={styles.empty}>No upcoming events available.</Text>
                 )}
 
-                {/* REGISTERED */}
-                <Text style={styles.sectionTitle}>Registered Events</Text>
-                {registered.length ? (
-                  registered.map(renderEvent)
+                {/* SECTION: SUBSCRIBED EVENTS */}
+                <Text style={styles.sectionTitle}>Subscribed Events</Text>
+                {subscribedEvents.length ? (
+                  subscribedEvents.map(renderEvent)
                 ) : (
-                  <Text style={styles.empty}>No registered events yet.</Text>
-                )}
-
-                {/* PAST EVENTS */}
-                <Text style={styles.sectionTitle}>Past Events</Text>
-                {past.length ? (
-                  past.map(renderEvent)
-                ) : (
-                  <Text style={styles.empty}>No past events.</Text>
+                  <Text style={styles.empty}>
+                    You have not subscribed to any events yet.
+                  </Text>
                 )}
               </>
             )}
@@ -198,5 +348,50 @@ const styles = StyleSheet.create({
     color: "#777",
     fontStyle: "italic",
     marginBottom: 10,
+  },
+
+  dropdownButton: {
+    backgroundColor: "#5A31F4",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  dropdownButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+
+  createBox: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+
+  input: {
+    width: "100%",
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+  },
+
+  createButton: {
+    backgroundColor: "#5A31F4",
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+
+  createButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
