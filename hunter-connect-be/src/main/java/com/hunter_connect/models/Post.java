@@ -9,17 +9,19 @@ public class Post {
     private String uid;
     private long userId; // Foreign key to the Post author's user ID
     private String content;
+    private String title;
     private LocalDateTime timestamp;
 
     // No-argument constructor
     public Post() {}
 
     // Parameterized constructor
-    public Post(String uid, long userId, String content, LocalDateTime timestamp) {
+    public Post(String uid, long userId, String content, LocalDateTime timestamp, String title) {
         this.uid = uid;
         this.userId = userId;
         this.content = content;
         this.timestamp = timestamp;
+        this.title = title;
     }
 
     // Getters and Setters
@@ -31,6 +33,9 @@ public class Post {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }

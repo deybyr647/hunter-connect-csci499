@@ -1,24 +1,16 @@
-interface UserInterface {
+interface PostInterface {
     uid: string;
-    email: string;
     bearerToken: string;
-    name: {
-        firstName: string;
-        lastName: string;
-    };
-    preferences?: {
-        academicYear: string;
-        courses: string[] | null;
-        interests: string[] | null;
-        skills: string[] | null;
-    };
+    userID: string;
+    content: string;
+    title: string;
+    timestamp: Date;
 }
 
-const createUser = async (body: UserInterface) => {
-    const {uid, email, bearerToken, name} = body;
-    const {firstName, lastName} = name;
+const createPost = async (body: PostInterface) => {
+    const {uid, userID, bearerToken, content, title, timestamp} = body;
 
-    const createUserRequest: RequestInit = {
+    const createPostRequest: RequestInit = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -27,9 +19,11 @@ const createUser = async (body: UserInterface) => {
         },
         body: JSON.stringify({
             uid: uid,
-            firstName: firstName,
-            lastName: lastName,
-            email: email
+            userID: userID,
+            bearerToken: bearerToken,
+            content: content,
+            title: title,
+            timestamp: timestamp,
         }),
         mode: 'cors',
         credentials: 'omit',
@@ -40,7 +34,7 @@ const createUser = async (body: UserInterface) => {
 
 
     try {
-        const req = await fetch('http://localhost:8080/api/users', createUserRequest);
+        const req = await fetch('http://localhost:8080/api/posts', createPostRequest);
         const json = await req.json();
 
         if (req.status === 200) {
@@ -54,11 +48,10 @@ const createUser = async (body: UserInterface) => {
     }
 }
 
-const updateUser = async (body: UserInterface) => {
-    const {uid, email, bearerToken, name, preferences} = body;
-    const {firstName, lastName} = name;
+const updatePost = async (body: PostInterface) => {
+    const {uid, userID, bearerToken, content, title, timestamp} = body;
 
-    const updateUserRequest: RequestInit = {
+    const updatePostRequest: RequestInit = {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -67,10 +60,11 @@ const updateUser = async (body: UserInterface) => {
         },
         body: JSON.stringify({
             uid: uid,
-            firstName: firstName,
-            lastName: lastName,
-            email: email,
-            preferences: preferences
+            userID: userID,
+            bearerToken: bearerToken,
+            content: content,
+            title: title,
+            timestamp: timestamp,
         }),
         mode: 'cors',
         credentials: 'omit',
@@ -81,7 +75,7 @@ const updateUser = async (body: UserInterface) => {
 
 
     try {
-        const req = await fetch('http://localhost:8080/api/users', updateUserRequest);
+        const req = await fetch('http://localhost:8080/api/posts', updatePostRequest);
         const json = await req.json();
 
         if (req.status === 200) {
@@ -95,10 +89,10 @@ const updateUser = async (body: UserInterface) => {
     }
 }
 
-const getUser = async (body: UserInterface) => {
+const getPost = async (body: PostInterface) => {
     const {uid, bearerToken} = body;
 
-    const getUserRequest: RequestInit = {
+    const getPostRequest: RequestInit = {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -114,7 +108,7 @@ const getUser = async (body: UserInterface) => {
 
 
     try {
-        const req = await fetch(`http://localhost:8080/api/users/${uid}`, getUserRequest);
+        const req = await fetch(`http://localhost:8080/api/users/${uid}`, getPostRequest);
         const json = await req.json();
 
         if (req.status === 200) {
@@ -129,8 +123,8 @@ const getUser = async (body: UserInterface) => {
     }
 }
 
-const getAllUsers = async () => {
-    const getAllUsersRequest: RequestInit = {
+const getAllPosts = async () => {
+    const getAllPostsRequest: RequestInit = {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -144,7 +138,7 @@ const getAllUsers = async () => {
     };
 
     try {
-        const req = await fetch(`http://localhost:8080/api/users/`, getAllUsersRequest);
+        const req = await fetch(`http://localhost:8080/api/users/`, getAllPostsRequest);
         const json = await req.json();
 
         if (req.status === 200) {
@@ -159,5 +153,4 @@ const getAllUsers = async () => {
     }
 }
 
-export { UserInterface, createUser, updateUser, getUser, getAllUsers };
-
+export { PostInterface, createPost, updatePost, getPost, getAllPosts };

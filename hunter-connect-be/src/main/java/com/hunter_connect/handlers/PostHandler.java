@@ -155,6 +155,9 @@ public class PostHandler {
             if (updates.getContent() != null && !updates.getContent().isEmpty()) {
                 dataToUpdate.put("content", updates.getContent());
             }
+            if (updates.getTitle() != null && !updates.getTitle().isEmpty()) {
+                dataToUpdate.put("title", updates.getTitle());
+            }
 
             // Logging for debugging
             System.out.println("Fields being updated: " + dataToUpdate.keySet());
