@@ -6,12 +6,13 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import { auth, db } from "@/firebase/firebaseConfig";
-import { doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import {createUser, updateUser, UserInterface} from "@/app/(auth)/api/Users";
 
 
@@ -28,15 +29,24 @@ export default function OnboardingScreen() {
   const [courseOpen, setCourseOpen] = useState(false);
   const [skillOpen, setSkillOpen] = useState(false);
   const [interestOpen, setInterestOpen] = useState(false);
-
+  const [yearOpen, setYearOpen] = useState(false);
   // dummy values (required for controlled components)
+  const [yearValue, setYearValue] = useState<string | null>(null);
   const [courseValue, setCourseValue] = useState<string | null>(null);
   const [skillValue, setSkillValue] = useState<string | null>(null);
   const [interestValue, setInterestValue] = useState<string | null>(null);
 
   // lists
+  const academicYearList = [
+    { label: "Freshman", value: "Freshman" },
+    { label: "Sophomore", value: "Sophomore" },
+    { label: "Junior", value: "Junior" },
+    { label: "Senior", value: "Senior" },
+    { label: "Graduate", value: "Graduate" }
+  ];
+
   const courseList = [
-  // 🧩 100-LEVEL COURSES
+  //  100-LEVEL COURSES
     { label: "🧩 100-Level Courses", value: "100level", selectable: false },
     { label: "CSCI 12100: Computers & Money: Quantitative Reasoning in Context", value: "CSCI 12100", parent: "100level" },
     { label: "CSCI 12700: Introduction to Computer Science", value: "CSCI 12700", parent: "100level" },
@@ -51,7 +61,7 @@ export default function OnboardingScreen() {
     { label: "CSCI 18200: Independent Workshop", value: "CSCI 18200", parent: "100level" },
     { label: "CSCI 18300: Independent Workshop", value: "CSCI 18300", parent: "100level" },
 
-    // ⚙️ 200-LEVEL COURSES
+    //  200-LEVEL COURSES
     { label: "⚙️ 200-Level Courses", value: "200level", selectable: false },
     { label: "CSCI 22700: Programming Methods", value: "CSCI 22700", parent: "200level" },
     { label: "CSCI 23200: Relational Databases and SQL Programming with Lab", value: "CSCI 23200", parent: "200level" },
@@ -62,7 +72,7 @@ export default function OnboardingScreen() {
     { label: "CSCI 26700: Microprocessing and Embedded Systems", value: "CSCI 26700", parent: "200level" },
     { label: "CSCI 27500: Symbolic Logic", value: "CSCI 27500", parent: "200level" },
 
-    // 💻 300-LEVEL COURSES
+    //  300-LEVEL COURSES
     { label: "💻 300-Level Courses", value: "300level", selectable: false },
     { label: "CSCI 32000: Artificial Intelligence", value: "CSCI 32000", parent: "300level" },
     { label: "CSCI 33500: Software Analysis and Design III", value: "CSCI 33500", parent: "300level" },
@@ -81,7 +91,7 @@ export default function OnboardingScreen() {
     { label: "CSCI 39300: Independent Study III", value: "CSCI 39300", parent: "300level" },
     { label: "CSCI 39500–39900: Topics in Computer Science", value: "CSCI 39500-39900", parent: "300level" },
 
-    // 🧠 400-LEVEL COURSES
+    //  400-LEVEL COURSES
     { label: "🧠 400-Level Courses", value: "400level", selectable: false },
     { label: "CSCI 40500: Software Engineering", value: "CSCI 40500", parent: "400level" },
     { label: "CSCI 41500: Data Communications and Networks", value: "CSCI 41500", parent: "400level" },
@@ -97,7 +107,7 @@ export default function OnboardingScreen() {
   ];
 
   const skillList = [
-    // 🧠 PROGRAMMING LANGUAGES (parent)
+    //  PROGRAMMING LANGUAGES (parent)
     { label: "🧠 Programming Languages", value: "languages", selectable: false },
     { label: "Python", value: "Python", parent: "languages" },
     { label: "Java", value: "Java", parent: "languages" },
@@ -120,7 +130,7 @@ export default function OnboardingScreen() {
     { label: "Rust", value: "Rust", parent: "languages" },
     { label: "Assembly", value: "Assembly", parent: "languages" },
 
-    // ⚙️ FRAMEWORKS & LIBRARIES
+    //  FRAMEWORKS & LIBRARIES
     { label: "⚙️ Frameworks & Libraries", value: "frameworks", selectable: false },
     { label: "React", value: "React", parent: "frameworks" },
     { label: "React Native", value: "React Native", parent: "frameworks" },
@@ -146,7 +156,7 @@ export default function OnboardingScreen() {
     { label: "PostgreSQL", value: "PostgreSQL", parent: "frameworks" },
     { label: "MySQL", value: "MySQL", parent: "frameworks" },
 
-    // ☁️ CLOUD, DEVOPS & TOOLS
+    //  CLOUD, DEVOPS & TOOLS
     { label: "☁️ Cloud, DevOps & Tools", value: "devops", selectable: false },
     { label: "Git", value: "Git", parent: "devops" },
     { label: "GitHub", value: "GitHub", parent: "devops" },
@@ -172,7 +182,7 @@ export default function OnboardingScreen() {
     { label: "Mocha", value: "Mocha", parent: "devops" },
     { label: "Cypress", value: "Cypress", parent: "devops" },
 
-    // 🧩 CORE CS CONCEPTS
+    //  CORE CS CONCEPTS
     { label: "🧩 Core CS Concepts", value: "csconcepts", selectable: false },
     { label: "Data Structures", value: "Data Structures", parent: "csconcepts" },
     { label: "Algorithms", value: "Algorithms", parent: "csconcepts" },
@@ -194,7 +204,7 @@ export default function OnboardingScreen() {
     { label: "Automation", value: "Automation", parent: "csconcepts" },
     { label: "Data Analytics", value: "Data Analytics", parent: "csconcepts" },
 
-    // 🤖 AI & ADVANCED TOPICS
+    //  AI & ADVANCED TOPICS
     { label: "🤖 AI & Advanced Topics", value: "ai", selectable: false },
     { label: "Machine Learning", value: "Machine Learning", parent: "ai" },
     { label: "Deep Learning", value: "Deep Learning", parent: "ai" },
@@ -207,7 +217,7 @@ export default function OnboardingScreen() {
     { label: "Blockchain", value: "Blockchain", parent: "ai" },
     { label: "Cryptography", value: "Cryptography", parent: "ai" },
 
-    // 🎮 DEVELOPMENT & DESIGN
+    //  DEVELOPMENT & DESIGN
     { label: "🎮 Development & Design", value: "devdesign", selectable: false },
     { label: "Web Development", value: "Web Development", parent: "devdesign" },
     { label: "Mobile App Development", value: "Mobile App Development", parent: "devdesign" },
@@ -217,7 +227,7 @@ export default function OnboardingScreen() {
     { label: "Human-Computer Interaction", value: "Human-Computer Interaction", parent: "devdesign" },
     { label: "Version Control", value: "Version Control", parent: "devdesign" },
 
-    // 🧰 PROFESSIONAL & RESEARCH
+    //  PROFESSIONAL & RESEARCH
     { label: "🧰 Professional & Research", value: "proskills", selectable: false },
     { label: "Technical Writing", value: "Technical Writing", parent: "proskills" },
     { label: "Research", value: "Research", parent: "proskills" },
@@ -231,7 +241,7 @@ export default function OnboardingScreen() {
 
 
   const interestList = [
-    // 🤖 ARTIFICIAL INTELLIGENCE & MACHINE LEARNING
+    //  ARTIFICIAL INTELLIGENCE & MACHINE LEARNING
     { label: "🤖 Artificial Intelligence & Machine Learning", value: "ai", selectable: false },
     { label: "Artificial Intelligence", value: "Artificial Intelligence", parent: "ai" },
     { label: "Machine Learning", value: "Machine Learning", parent: "ai" },
@@ -242,7 +252,7 @@ export default function OnboardingScreen() {
     { label: "Robotics", value: "Robotics", parent: "ai" },
     { label: "AI Ethics", value: "AI Ethics", parent: "ai" },
 
-    // 🌐 WEB & APP DEVELOPMENT
+    //  WEB & APP DEVELOPMENT
     { label: "🌐 Web & App Development", value: "webdev", selectable: false },
     { label: "Frontend Development", value: "Frontend Development", parent: "webdev" },
     { label: "Backend Development", value: "Backend Development", parent: "webdev" },
@@ -253,7 +263,7 @@ export default function OnboardingScreen() {
     { label: "UI/UX Design", value: "UI/UX Design", parent: "webdev" },
     { label: "Accessibility (A11y)", value: "Accessibility (A11y)", parent: "webdev" },
 
-    // 🧠 DATA, ANALYTICS & SCIENCE
+    //  DATA, ANALYTICS & SCIENCE
     { label: "🧠 Data, Analytics & Science", value: "datasci", selectable: false },
     { label: "Data Science", value: "Data Science", parent: "datasci" },
     { label: "Data Analysis", value: "Data Analysis", parent: "datasci" },
@@ -263,7 +273,7 @@ export default function OnboardingScreen() {
     { label: "Data Engineering", value: "Data Engineering", parent: "datasci" },
     { label: "Cloud Data Systems", value: "Cloud Data Systems", parent: "datasci" },
 
-    // 🔐 CYBERSECURITY & PRIVACY
+    //  CYBERSECURITY & PRIVACY
     { label: "🔐 Cybersecurity & Privacy", value: "security", selectable: false },
     { label: "Cybersecurity", value: "Cybersecurity", parent: "security" },
     { label: "Network Security", value: "Network Security", parent: "security" },
@@ -274,7 +284,7 @@ export default function OnboardingScreen() {
     { label: "Privacy Engineering", value: "Privacy Engineering", parent: "security" },
     { label: "Ethical Hacking", value: "Ethical Hacking", parent: "security" },
 
-    // ⚙️ SYSTEMS, HARDWARE & ENGINEERING
+    //  SYSTEMS, HARDWARE & ENGINEERING
     { label: "⚙️ Systems, Hardware & Engineering", value: "systems", selectable: false },
     { label: "Operating Systems", value: "Operating Systems", parent: "systems" },
     { label: "Computer Architecture", value: "Computer Architecture", parent: "systems" },
@@ -285,7 +295,7 @@ export default function OnboardingScreen() {
     { label: "Cloud Computing", value: "Cloud Computing", parent: "systems" },
     { label: "Internet of Things (IoT)", value: "IoT", parent: "systems" },
 
-    // 🎮 GAMES, MEDIA & INTERACTION
+    //  GAMES, MEDIA & INTERACTION
     { label: "🎮 Games, Media & Interaction", value: "games", selectable: false },
     { label: "Game Development", value: "Game Development", parent: "games" },
     { label: "Game Design", value: "Game Design", parent: "games" },
@@ -297,7 +307,7 @@ export default function OnboardingScreen() {
     { label: "Animation", value: "Animation", parent: "games" },
     { label: "Human-Computer Interaction", value: "HCI", parent: "games" },
 
-    // 💼 SOFTWARE DEVELOPMENT & ENGINEERING
+    //  SOFTWARE DEVELOPMENT & ENGINEERING
     { label: "💼 Software Development & Engineering", value: "software", selectable: false },
     { label: "Software Engineering", value: "Software Engineering", parent: "software" },
     { label: "Agile Development", value: "Agile Development", parent: "software" },
@@ -308,7 +318,7 @@ export default function OnboardingScreen() {
     { label: "Open Source Contribution", value: "Open Source Contribution", parent: "software" },
     { label: "Cloud Deployment", value: "Cloud Deployment", parent: "software" },
 
-    // 📊 THEORY, RESEARCH & MATH FOUNDATIONS
+    //  THEORY, RESEARCH & MATH FOUNDATIONS
     { label: "📊 Theory, Research & Math Foundations", value: "theory", selectable: false },
     { label: "Algorithms", value: "Algorithms", parent: "theory" },
     { label: "Data Structures", value: "Data Structures", parent: "theory" },
@@ -319,7 +329,7 @@ export default function OnboardingScreen() {
     { label: "Quantum Computing", value: "Quantum Computing", parent: "theory" },
     { label: "Research & Academia", value: "Research & Academia", parent: "theory" },
 
-    // 💼 CAREER & INDUSTRY FOCUS
+    //  CAREER & INDUSTRY FOCUS
     { label: "💼 Career & Industry Focus", value: "career", selectable: false },
     { label: "Entrepreneurship", value: "Entrepreneurship", parent: "career" },
     { label: "Startups", value: "Startups", parent: "career" },
@@ -334,6 +344,9 @@ export default function OnboardingScreen() {
   ];
 
 
+ const listModeConfig = Platform.OS === "web" ? "FLATLIST" : "MODAL";
+
+  // Utility add/remove
   const addUnique = (array: string[], item: string, setter: Function) => {
     if (!array.includes(item)) setter([...array, item]);
   };
@@ -345,20 +358,10 @@ export default function OnboardingScreen() {
   const handleSubmit = async () => {
     const user = auth.currentUser;
     if (!user) return;
+
     setSaving(true);
 
     try {
-      /*const userRef = doc(db, "users", user.uid);
-
-
-
-      await updateDoc(userRef, {
-        "preferences.academicYear": academicYear,
-        "preferences.courses": arrayUnion(...courses),
-        "preferences.skills": arrayUnion(...skills),
-        "preferences.interests": arrayUnion(...interests),
-      });*/
-
         const bearerToken = await user.getIdToken();
 
         const reqBody: UserInterface = {
@@ -382,6 +385,7 @@ export default function OnboardingScreen() {
         await updateUser(reqBody);
 
       router.replace("/(tabs)/Landing");
+
     } catch (error) {
       console.error("Error saving preferences:", error);
       alert("Failed to save preferences.");
@@ -399,23 +403,39 @@ export default function OnboardingScreen() {
         </Text>
 
         <View style={styles.formBox}>
-          {/* 🎓 Academic Year */}
-          <Text style={styles.sectionTitle}>🎓 Academic Year</Text>
-          {["Freshman", "Sophomore", "Junior", "Senior", "Graduate"].map((y) => (
-            <TouchableOpacity
-              key={y}
-              style={styles.option}
-              onPress={() => setAcademicYear(y)}
-            >
-              <Text style={{ color: academicYear === y ? "#2E1759" : "#000" }}>
-                {academicYear === y ? "☑️" : "◻️"} {y}
-              </Text>
-            </TouchableOpacity>
-          ))}
 
-          {/* 📚 Courses */}
+          {/*  ACADEMIC YEAR */}
+          <Text style={styles.sectionTitle}>🎓 Academic Year</Text>
+          <View style={{ zIndex: 5000, position: "relative", marginBottom: yearOpen ? 200 : 10 }}>
+            <DropDownPicker
+              open={yearOpen}
+              value={yearValue}
+              setValue={(callback) => {
+                const val = callback(yearValue);
+                setYearValue(val);
+                setAcademicYear(val || "");
+              }}
+              items={academicYearList}
+              setOpen={(open) => {
+                setYearOpen(open);
+                setCourseOpen(false);
+                setSkillOpen(false);
+                setInterestOpen(false);
+              }}
+              placeholder="Select academic year..."
+              listMode={listModeConfig}
+              modalTitle="Select Academic Year"
+              modalAnimationType="slide"
+              modalContentContainerStyle={{ flex: 1 }}
+              flatListProps={{ nestedScrollEnabled: true }}
+              style={styles.dropdown}
+              dropDownContainerStyle={styles.dropdownContainer}
+            />
+          </View>
+
+          {/*  COURSES */}
           <Text style={styles.sectionTitle}>📚 CS Courses</Text>
-          <View style={{ zIndex: 3000, elevation: 3000 }}>
+          <View style={{ zIndex: 4000, position: "relative", marginBottom: courseOpen ? 200 : 10 }}>
             <DropDownPicker
               open={courseOpen}
               value={courseValue}
@@ -423,16 +443,20 @@ export default function OnboardingScreen() {
               items={courseList}
               setOpen={(open) => {
                 setCourseOpen(open);
+                setYearOpen(false);
                 setSkillOpen(false);
                 setInterestOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(courses, item.value, setCourses)
               }
-              placeholder="Select a course..."
+              listMode={listModeConfig}
+              modalTitle="Select Course"
               searchable={true}
-              closeAfterSelecting={true}
-              maxHeight={250}
+              modalAnimationType="slide"
+              modalContentContainerStyle={{ flex: 1 }}
+              flatListProps={{ nestedScrollEnabled: true }}
+              placeholder="Select a course..."
               style={styles.dropdown}
               dropDownContainerStyle={styles.dropdownContainer}
             />
@@ -440,20 +464,16 @@ export default function OnboardingScreen() {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {courses.map((c, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.tag}
-                onPress={() => removeItem(courses, c, setCourses)}
-              >
+              <TouchableOpacity key={i} style={styles.tag} onPress={() => removeItem(courses, c, setCourses)}>
                 <Text style={styles.tagText}>{c}</Text>
                 <Text style={styles.remove}>✕</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* 💻 Skills */}
+          {/*  SKILLS */}
           <Text style={styles.sectionTitle}>💻 Skills</Text>
-          <View style={{ zIndex: 2000, elevation: 2000 }}>
+          <View style={{ zIndex:3000, position: "relative", marginBottom: skillOpen ? 200 : 10 }}>
             <DropDownPicker
               open={skillOpen}
               value={skillValue}
@@ -461,15 +481,21 @@ export default function OnboardingScreen() {
               items={skillList}
               setOpen={(open) => {
                 setSkillOpen(open);
+                setYearOpen(false);
                 setCourseOpen(false);
                 setInterestOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(skills, item.value, setSkills)
               }
+              listMode={listModeConfig}
+              modalTitle="Select Skill"
+              searchable={true}
+              modalAnimationType="slide"
+              modalContentContainerStyle={{ flex: 1 }}
+              flatListProps={{ nestedScrollEnabled: true }}
               placeholder="Select a skill..."
               closeAfterSelecting={true}
-              searchable={true}
               maxHeight={250}
               style={styles.dropdown}
               dropDownContainerStyle={styles.dropdownContainer}
@@ -478,20 +504,16 @@ export default function OnboardingScreen() {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {skills.map((s, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.tag}
-                onPress={() => removeItem(skills, s, setSkills)}
-              >
+              <TouchableOpacity key={i} style={styles.tag} onPress={() => removeItem(skills, s, setSkills)}>
                 <Text style={styles.tagText}>{s}</Text>
                 <Text style={styles.remove}>✕</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* 💡 Interests */}
+          {/*  INTERESTS */}
           <Text style={styles.sectionTitle}>💡 Interests</Text>
-          <View style={{ zIndex: 1000, elevation: 1000 }}>
+          <View style={{ zIndex: 2000, position: "relative", marginBottom: interestOpen ? 200 : 10 }}>
             <DropDownPicker
               open={interestOpen}
               value={interestValue}
@@ -499,15 +521,21 @@ export default function OnboardingScreen() {
               items={interestList}
               setOpen={(open) => {
                 setInterestOpen(open);
-                setCourseOpen(false);
                 setSkillOpen(false);
+                setCourseOpen(false);
+                setYearOpen(false);
               }}
               onSelectItem={(item) =>
                 item?.value && addUnique(interests, item.value, setInterests)
               }
+              listMode={listModeConfig}
+              modalTitle="Select Interest"
+              searchable={true}
+              modalAnimationType="slide"
+              modalContentContainerStyle={{ flex: 1 }}
+              flatListProps={{ nestedScrollEnabled: true }}
               placeholder="Select an interest..."
               closeAfterSelecting={true}
-              searchable={true}
               maxHeight={250}
               style={styles.dropdown}
               dropDownContainerStyle={styles.dropdownContainer}
@@ -516,18 +544,14 @@ export default function OnboardingScreen() {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {interests.map((i, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={styles.tag}
-                onPress={() => removeItem(interests, i, setInterests)}
-              >
+              <TouchableOpacity key={idx} style={styles.tag} onPress={() => removeItem(interests, i, setInterests)}>
                 <Text style={styles.tagText}>{i}</Text>
                 <Text style={styles.remove}>✕</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* Continue Button */}
+          {/* BUTTONS */}
           <TouchableOpacity style={styles.button} onPress={handleSubmit}>
             {saving ? (
               <ActivityIndicator color="white" />
@@ -549,9 +573,12 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: "center",
-    justifyContent: "center",
     padding: 20,
+    alignItems: "center",
+    justifyContent: Platform.OS === "web" ? "flex-start" : "center",
+    maxWidth: Platform.OS === "web" ? 800 : "100%",
+    alignSelf: "center",
+    width: "100%",
   },
   title: {
     color: "white",
@@ -567,11 +594,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-  formBox: {
+    formBox: {
     backgroundColor: "white",
     borderRadius: 15,
     width: "100%",
     padding: 20,
+    maxWidth: Platform.OS === "web" ? 600 : "100%",
+    alignSelf: "center",
+    paddingBottom: 100
   },
   sectionTitle: {
     fontWeight: "bold",
@@ -579,12 +609,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 5,
   },
-  option: {
-    marginVertical: 3,
-  },
   dropdown: {
     borderColor: "#ccc",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   dropdownContainer: {
     borderColor: "#ccc",

@@ -18,7 +18,6 @@ import {
   updateProfile,
   reload,
   sendEmailVerification,
-  sendPasswordResetEmail,
 } from "firebase/auth";
 
 import {UserInterface, createUser} from "@/app/(auth)/api/Users";
@@ -161,7 +160,7 @@ export default function AuthScreen() {
           console.log("Request Body: \n", reqBody);
           console.log("Bearer Token: \n", bearerToken);
           await createUser(reqBody);
-    
+
         // Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);
         router.replace("/verify-email");

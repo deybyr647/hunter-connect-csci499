@@ -37,7 +37,7 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  // ✅ Confirmation Screen
+  //  Confirmation Screen
   if (sent) {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
@@ -57,7 +57,7 @@ export default function ForgotPasswordScreen() {
                 {
                 alignItems: "center",
                 width: "90%",
-                maxWidth: 420, // ✅ prevents full stretch
+                maxWidth: 420, 
                 alignSelf: "center",
                 },
             ]}
@@ -117,7 +117,7 @@ export default function ForgotPasswordScreen() {
     );
   }
 
-  // 📨 Input Screen
+  //  Input Screen
   return (
     <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
       <ScrollView
