@@ -23,6 +23,7 @@ public class RouterFunctionConfig {
         return route()
                 .path("/api/users", builder -> builder
                         // Public Routes
+                        .GET("", userHandler::getAllUsers)
                         .POST("", userHandler::createUser)
 
                         // Protected Routes

@@ -1,30 +1,25 @@
 package com.hunter_connect.handlers;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.SetOptions;
-import com.google.cloud.firestore.WriteResult;
+import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import com.hunter_connect.models.User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
-import java.io.IOException;
 import java.net.URI;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Handles the business logic for user-related requests.
  * The @Component annotation allows Spring to detect and inject this class.
  */
-
-record UserRegistrationRequest(String uid, String firstName, String lastName, String email) {}
 
 @Component
 public class UserHandler {
@@ -34,19 +29,68 @@ public class UserHandler {
     public UserHandler() {
     }
 
-    public ServerResponse getAllUsers(ServerRequest request) throws IOException {
-        List<User> userList = new ArrayList<>(users.values());
-        return ServerResponse.ok().body(userList);
+    /**
+     * Handles GET /api/users
+     * Fetches ALL users from the Firestore collection.
+     */
+    public ServerResponse getAllUsers(ServerRequest request) {
+        try {
+            Firestore db = FirestoreClient.getFirestore();
+
+            // 1. Get the entire collection
+            // NOTE: In production, consider adding .limit(50) here!
+            ApiFuture<QuerySnapshot> future = db.collection("users").limit(50).get();
+
+            // 2. Wait for the query to complete
+            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+            // 3. Convert Firestore documents to User objects
+            List<User> userList = documents.stream()
+                    .map(document -> document.toObject(User.class))
+                    .collect(Collectors.toList());
+
+            // 4. Return the list (Spring will serialize this as a JSON Array)
+            return ServerResponse.ok().body(userList);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServerResponse.badRequest().body("Error fetching users: " + e.getMessage());
+        }
     }
 
-    public ServerResponse getUserById(ServerRequest request) throws IOException {
-        long userId = Long.parseLong(request.pathVariable("id"));
-        User user = users.get(userId);
+    /**
+     * Handles GET /api/users/{id}
+     * Fetches a single user document by UID.
+     */
+    public ServerResponse getUserById(ServerRequest request) {
+        try {
+            // 1. Extract the UID from the URL path parameter
+            String targetUid = request.pathVariable("id");
 
-        if (user != null) {
-            return ServerResponse.ok().body(user);
-        } else {
-            return ServerResponse.notFound().build();
+            // 2. Get Firestore instance
+            Firestore db = FirestoreClient.getFirestore();
+
+            // 3. Create a query to get the document
+            ApiFuture<DocumentSnapshot> future = db.collection("users").document(targetUid).get();
+
+            // 4. Wait for the result (synchronously)
+            DocumentSnapshot document = future.get();
+
+            // 5. Check if the document exists
+            if (document.exists()) {
+                // Convert the Firestore document directly into your User POJO
+                User user = document.toObject(User.class);
+
+                // Return user object
+                assert user != null;
+                return ServerResponse.ok().body(user);
+            } else {
+                return ServerResponse.notFound().build();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServerResponse.badRequest().body("Error fetching user: " + e.getMessage());
         }
     }
 

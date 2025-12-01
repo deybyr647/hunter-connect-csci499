@@ -35,8 +35,8 @@ public class SecurityConfig {
 
                         // Public Routes
                         // Allow "create user" (POST) without auth
+                        .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-
 
                         // Secure Routes
                         .requestMatchers("/api/users/**").authenticated()
@@ -57,7 +57,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow your React Native app's origin.
+        // Allow React Native app's origin.
         // For dev, you can use "*" to allow all, or specify "http://localhost:8081" etc.
         configuration.setAllowedOrigins(List.of("*"));
 

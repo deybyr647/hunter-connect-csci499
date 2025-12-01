@@ -50,7 +50,7 @@ const createUser = async (body: UserInterface) => {
     }
 
     catch (error) {
-        console.log(error);
+        return Promise.reject(error);
     }
 }
 
@@ -91,9 +91,73 @@ const updateUser = async (body: UserInterface) => {
     }
 
     catch (error) {
-        console.log(error);
+        return Promise.reject(error);
     }
 }
 
-export { UserInterface, createUser, updateUser };
+const getUser = async (body: UserInterface) => {
+    const {uid, bearerToken} = body;
+
+    const getUserRequest: RequestInit = {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${bearerToken}`,
+            'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'no-cache',
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer-when-downgrade'
+    };
+
+
+    try {
+        const req = await fetch(`http://localhost:8080/api/users/${uid}`, getUserRequest);
+        const json = await req.json();
+
+        if (req.status === 200) {
+            console.log(json);
+            console.log("Successful GET data from backend");
+            return json;
+        }
+    }
+
+    catch (error) {
+        return Promise.reject(error);
+    }
+}
+
+const getAllUsers = async () => {
+    const getUserRequest: RequestInit = {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'no-cache',
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer-when-downgrade'
+    };
+
+    try {
+        const req = await fetch(`http://localhost:8080/api/users/`, getUserRequest);
+        const json = await req.json();
+
+        if (req.status === 200) {
+            console.log(json);
+            console.log("Successful GET data from backend");
+            return json;
+        }
+    }
+
+    catch (error) {
+        return Promise.reject(error);
+    }
+}
+
+export { UserInterface, createUser, updateUser, getUser, getAllUsers };
 
