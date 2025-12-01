@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { auth, db } from "../../firebase/firebaseConfig";
 
 export default function ProfileScreen() {
@@ -59,9 +60,7 @@ export default function ProfileScreen() {
             />
           </View>
 
-          <Text style={styles.userName}>
-            {user?.displayName || "John Doe"}
-          </Text>
+          <Text style={styles.userName}>{user?.displayName || "John Doe"}</Text>
 
           <Text style={styles.academicYearText}>
             {academicYear ? academicYear : "No Year Selected"}
@@ -71,20 +70,20 @@ export default function ProfileScreen() {
         {/* OPTIONS */}
         <View style={styles.optionsContainer}>
           {/* POSTS */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.optionItem}
             onPress={() => router.push("/(user)/myPosts")}
-            >
+          >
             <Text style={styles.optionIcon}>📝</Text>
             <Text style={styles.optionText}>My Posts</Text>
             <Text style={styles.optionArrow}>›</Text>
           </TouchableOpacity>
 
           {/* EVENTS */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.optionItem}
             onPress={() => router.push("/(user)/myEvents")}
-            >
+          >
             <Text style={styles.optionIcon}>📅</Text>
             <Text style={styles.optionText}>My Events</Text>
             <Text style={styles.optionArrow}>›</Text>

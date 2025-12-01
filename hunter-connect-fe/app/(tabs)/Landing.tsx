@@ -34,17 +34,16 @@ const styles = StyleSheet.create({
   },
 });
 */
-
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import React from "react";
 import {
-  View,
-  Text,
+  FlatList,
   Image,
   Pressable,
-  FlatList,
   StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 const dummyPosts = [
   {
@@ -118,7 +117,6 @@ const dummyPosts = [
     likes: 6,
   },
 ];
-
 
 export default function Landing() {
   return (

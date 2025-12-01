@@ -1,21 +1,18 @@
+import { auth, db } from "@/firebase/firebaseConfig";
+import { useRouter } from "expo-router";
+import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
   ActivityIndicator,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import Animated, {
-  SlideInRight,
-  SlideOutRight,
-} from "react-native-reanimated";
-import { auth, db } from "@/firebase/firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
 
 interface EventData {
   id: string;
@@ -60,9 +57,9 @@ export default function EventsScreen() {
           return { id, ...eventSnap.data() } as EventData;
         };
 
-        const upcomingData = (await Promise.all(upcomingIds.map(fetchEvent))).filter(
-          Boolean
-        ) as EventData[];
+        const upcomingData = (
+          await Promise.all(upcomingIds.map(fetchEvent))
+        ).filter(Boolean) as EventData[];
 
         const registeredData = (
           await Promise.all(registeredIds.map(fetchEvent))
@@ -75,14 +72,12 @@ export default function EventsScreen() {
         //  Sort by date
         const sortByDate = (arr: EventData[]) =>
           arr.sort(
-            (a, b) =>
-              a.date.toDate().getTime() - b.date.toDate().getTime()
+            (a, b) => a.date.toDate().getTime() - b.date.toDate().getTime()
           );
 
         setUpcoming(sortByDate(upcomingData));
         setRegistered(sortByDate(registeredData));
         setPast(sortByDate(pastData));
-
       } catch (err) {
         console.error("Error fetching events:", err);
       }
@@ -111,7 +106,6 @@ export default function EventsScreen() {
     >
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-
           {/* HEADER */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()}>
@@ -128,25 +122,30 @@ export default function EventsScreen() {
               <>
                 {/* UPCOMING */}
                 <Text style={styles.sectionTitle}>Upcoming Events</Text>
-                {upcoming.length
-                  ? upcoming.map(renderEvent)
-                  : <Text style={styles.empty}>No upcoming events.</Text>}
+                {upcoming.length ? (
+                  upcoming.map(renderEvent)
+                ) : (
+                  <Text style={styles.empty}>No upcoming events.</Text>
+                )}
 
                 {/* REGISTERED */}
                 <Text style={styles.sectionTitle}>Registered Events</Text>
-                {registered.length
-                  ? registered.map(renderEvent)
-                  : <Text style={styles.empty}>No registered events yet.</Text>}
+                {registered.length ? (
+                  registered.map(renderEvent)
+                ) : (
+                  <Text style={styles.empty}>No registered events yet.</Text>
+                )}
 
                 {/* PAST EVENTS */}
                 <Text style={styles.sectionTitle}>Past Events</Text>
-                {past.length
-                  ? past.map(renderEvent)
-                  : <Text style={styles.empty}>No past events.</Text>}
+                {past.length ? (
+                  past.map(renderEvent)
+                ) : (
+                  <Text style={styles.empty}>No past events.</Text>
+                )}
               </>
             )}
           </View>
-
         </ScrollView>
       </SafeAreaView>
     </Animated.View>

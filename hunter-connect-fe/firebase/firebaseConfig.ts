@@ -2,8 +2,6 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-
-
 const firebaseConfig = {
   apiKey: "AIzaSyADhQn9EHEt3N5OmMMpm0N3ccjr-HyfjOA",
   authDomain: "hunterconnect-80634.firebaseapp.com",

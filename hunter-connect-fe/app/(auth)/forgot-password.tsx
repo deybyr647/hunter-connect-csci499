@@ -1,17 +1,18 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  ScrollView,
-  Alert,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { auth } from "@/firebase/firebaseConfig";
 import { useRouter } from "expo-router";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/firebase/firebaseConfig";
+import React, { useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { AuthStyles as styles } from "./AuthStyles";
 
 export default function ForgotPasswordScreen() {
@@ -52,15 +53,15 @@ export default function ForgotPasswordScreen() {
         </View>
 
         <View
-            style={[
-                styles.loginFormContainer,
-                {
-                alignItems: "center",
-                width: "90%",
-                maxWidth: 420, 
-                alignSelf: "center",
-                },
-            ]}
+          style={[
+            styles.loginFormContainer,
+            {
+              alignItems: "center",
+              width: "90%",
+              maxWidth: 420,
+              alignSelf: "center",
+            },
+          ]}
         >
           <Text
             style={{

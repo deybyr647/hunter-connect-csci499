@@ -1,31 +1,30 @@
-import React, { useState, useEffect } from "react";
+import { auth, db } from "@/firebase/firebaseConfig";
+import { useRouter } from "expo-router";
 import {
-  View,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  signOut,
+  updatePassword,
+  updateProfile,
+} from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { auth, db } from "@/firebase/firebaseConfig";
-import {
-  EmailAuthProvider,
-  updateProfile,
-  updatePassword,
-  reauthenticateWithCredential,
-  signOut,
-} from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-
 // 🔥 ANIMATION IMPORTS
 import Animated, {
   SlideInRight,
   SlideOutLeft,
   SlideOutRight,
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -122,23 +121,39 @@ export default function SettingsScreen() {
             <Text style={styles.section}>Personal Info</Text>
 
             <Text style={styles.label}>First Name</Text>
-            <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} />
+            <TextInput
+              style={styles.input}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
 
             <Text style={styles.label}>Last Name</Text>
-            <TextInput style={styles.input} value={lastName} onChangeText={setLastName} />
+            <TextInput
+              style={styles.input}
+              value={lastName}
+              onChangeText={setLastName}
+            />
 
             <Text style={styles.label}>Email</Text>
-            <TextInput style={[styles.input, styles.disabled]} value={email} editable={false} />
+            <TextInput
+              style={[styles.input, styles.disabled]}
+              value={email}
+              editable={false}
+            />
 
             <Text style={styles.label}>Major</Text>
             <TextInput
-                style={[styles.input, styles.disabled]}
-                value= "Computer Science"
-                editable={false}
+              style={[styles.input, styles.disabled]}
+              value="Computer Science"
+              editable={false}
             />
 
             <Text style={styles.label}>Academic Year</Text>
-            <TextInput style={[styles.input, styles.disabled]} value={academicYear} editable={false} />
+            <TextInput
+              style={[styles.input, styles.disabled]}
+              value={academicYear}
+              editable={false}
+            />
 
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
               <Text style={styles.saveText}>Save Changes</Text>
@@ -170,7 +185,10 @@ export default function SettingsScreen() {
               onChangeText={setConfirmPassword}
             />
 
-            <TouchableOpacity style={styles.updatePassBtn} onPress={handlePasswordChange}>
+            <TouchableOpacity
+              style={styles.updatePassBtn}
+              onPress={handlePasswordChange}
+            >
               <Text style={styles.updatePassText}>Update Password</Text>
             </TouchableOpacity>
 
@@ -208,32 +226,38 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   disabled: { backgroundColor: "#eee" },
-  saveBtn: { 
+  saveBtn: {
     borderWidth: 2,
     borderColor: "#2E1759",
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
     marginTop: 10,
-   },
-  saveText: { 
+  },
+  saveText: {
     color: "#2E1759",
     fontSize: 16,
     fontWeight: "600",
-   },
-  updatePassBtn: { 
+  },
+  updatePassBtn: {
     borderWidth: 2,
     borderColor: "#2E1759",
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
     marginTop: 10,
-   },
-  updatePassText: { 
+  },
+  updatePassText: {
     color: "#2E1759",
     fontSize: 16,
     fontWeight: "600",
-   },
-  logoutBtn: { borderWidth: 1, borderColor: "#FF3B30", padding: 12, borderRadius: 10, marginTop: 25 },
+  },
+  logoutBtn: {
+    borderWidth: 1,
+    borderColor: "#FF3B30",
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 25,
+  },
   logoutText: { color: "#FF3B30", textAlign: "center", fontWeight: "600" },
 });

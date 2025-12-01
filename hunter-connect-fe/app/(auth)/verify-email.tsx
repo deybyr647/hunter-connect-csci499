@@ -1,9 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { auth } from "../../firebase/firebaseConfig";
 import { sendEmailVerification } from "firebase/auth";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { auth } from "../../firebase/firebaseConfig";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
@@ -77,7 +85,9 @@ export default function VerifyEmailScreen() {
           resizeMode="contain"
         />
         <Text style={styles.title}>Verify Your Email</Text>
-        <Text style={styles.message}>A verification email has been sent to:</Text>
+        <Text style={styles.message}>
+          A verification email has been sent to:
+        </Text>
         <Text style={styles.email}>{user?.email || "your email"}</Text>
         <Text style={styles.instructions}>
           Please check your inbox and click the link to verify your account.

@@ -1,12 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { auth, db } from "@/firebase/firebaseConfig";
+import { useRouter } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
-
+import React, { useEffect, useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 // 🔥 ANIMATION IMPORTS
-import Animated, { SlideInRight, SlideOutLeft, SlideOutRight } from "react-native-reanimated";
+import Animated, {
+  SlideInRight,
+  SlideOutLeft,
+  SlideOutRight,
+} from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TagsScreen() {
   const router = useRouter();
@@ -54,7 +63,9 @@ export default function TagsScreen() {
         <ScrollView contentContainerStyle={{ padding: 20 }}>
           <View style={styles.box}>
             <Text style={styles.section}>Academic Year</Text>
-            <Text style={styles.infoText}>{academicYear || "Not selected"}</Text>
+            <Text style={styles.infoText}>
+              {academicYear || "Not selected"}
+            </Text>
 
             <Text style={styles.section}>Courses</Text>
             {courses.length ? (

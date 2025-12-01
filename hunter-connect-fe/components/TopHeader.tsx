@@ -1,20 +1,20 @@
 import Colors from "@/constants/Colors";
+import { auth } from "@/firebase/firebaseConfig";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import React, { useState, useEffect } from "react";
+import { useRouter } from "expo-router";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import React, { useEffect, useState } from "react";
 import {
+  Platform,
+  Pressable,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
-  Text,
-  Pressable,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { auth } from "@/firebase/firebaseConfig";
-import { signOut, onAuthStateChanged } from "firebase/auth";
-import { styles as styles } from "./TopHeaderStyles";
 
+import { styles } from "./TopHeaderStyles";
 
 const TopHeader = () => {
   const router = useRouter();
@@ -42,7 +42,10 @@ const TopHeader = () => {
     <SafeAreaView style={{ flex: 1 }}>
       {/* Mobile overlay (click outside closes dropdown) */}
       {menuVisible && Platform.OS !== "web" && (
-        <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)} />
+        <Pressable
+          style={styles.overlay}
+          onPress={() => setMenuVisible(false)}
+        />
       )}
 
       <View style={styles.header}>

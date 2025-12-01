@@ -1,18 +1,19 @@
-import React, { useState, useRef } from "react";
+import { FontAwesome } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useRef, useState } from "react";
 import {
-  StyleSheet,
   FlatList,
-  View,
-  TextInput,
-  TouchableOpacity,
   Image,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+
 import { Text } from "@/components/Themed";
-import { FontAwesome } from "@expo/vector-icons";
 
 interface Conversation {
   id: string;
@@ -65,7 +66,10 @@ function ConversationCard({
     >
       <View style={conversationStyles.avatarContainer}>
         {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={conversationStyles.avatar} />
+          <Image
+            source={{ uri: avatarUrl }}
+            style={conversationStyles.avatar}
+          />
         ) : (
           <View style={conversationStyles.avatarPlaceholder}>
             <FontAwesome name="user" size={24} color="#8E8E93" />
@@ -265,7 +269,7 @@ export default function MessagesScreen() {
   const flatListRef = useRef<FlatList>(null);
 
   const filteredConversations = conversations.filter((conv) =>
-    conv.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleConversationPress = (conversationId: string) => {
@@ -301,7 +305,7 @@ export default function MessagesScreen() {
   };
 
   const selectedConversation = conversations.find(
-    (c) => c.id === selectedConversationId,
+    (c) => c.id === selectedConversationId
   );
 
   // Chat View

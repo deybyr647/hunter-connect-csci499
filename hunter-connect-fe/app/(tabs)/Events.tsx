@@ -34,15 +34,8 @@ const styles = StyleSheet.create({
   },
 });
 */
-
 import React from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  StyleSheet,
-} from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
 const dummyEvents = [
   {

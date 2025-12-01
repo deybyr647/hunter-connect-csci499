@@ -42,7 +42,7 @@ export const AuthStyles = StyleSheet.create({
     letterSpacing: 1,
   },
   errorText: {
-    color: "#FF3B30", 
+    color: "#FF3B30",
     fontSize: 14,
     textAlign: "center",
     marginVertical: 6,
@@ -61,7 +61,7 @@ export const AuthStyles = StyleSheet.create({
     elevation: 5,
     marginTop: 10,
   },
-    signupFormContainer: {
+  signupFormContainer: {
     backgroundColor: "#fff",
     borderRadius: 12,
     width: "70%",

@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from "react";
+import { UserInterface, createUser } from "@/app/(auth)/api/Users";
+import { useRouter } from "expo-router";
 import {
-  View,
+  createUserWithEmailAndPassword,
+  reload,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
+import React, { useEffect, useState } from "react";
+import {
+  Image,
+  Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
-  ScrollView,
-  Platform,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { AuthStyles as styles } from "./AuthStyles";
-import { auth } from "../../firebase/firebaseConfig";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  reload,
-  sendEmailVerification,
-} from "firebase/auth";
 
-import {UserInterface, createUser} from "@/app/(auth)/api/Users";
+import { auth } from "../../firebase/firebaseConfig";
+import { AuthStyles as styles } from "./AuthStyles";
 
 type AuthMode = "login" | "signup";
 
@@ -31,10 +31,10 @@ export default function AuthScreen() {
   useEffect(() => {
     // only run on web to avoid affecting mobile keyboards
     if (Platform.OS === "web") {
-      const listener = (e : KeyboardEvent) => {
+      const listener = (e: KeyboardEvent) => {
         if (e.key === "Enter") {
-          e.preventDefault(); 
-          handleAuth(); 
+          e.preventDefault();
+          handleAuth();
         }
       };
 
@@ -113,7 +113,9 @@ export default function AuthScreen() {
       return;
     }
     if (evaluatePasswordStrength(password) === "Weak") {
-      setErrorMessage("Password is too weak. Please make it stronger before continuing.");
+      setErrorMessage(
+        "Password is too weak. Please make it stronger before continuing."
+      );
       return;
     }
     if (mode === "signup" && !email.endsWith("@myhunter.cuny.edu")) {
@@ -123,8 +125,12 @@ export default function AuthScreen() {
 
     try {
       if (mode === "login") {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
         if (!userCredential.user.emailVerified) {
           await auth.signOut();
           setErrorMessage("Please verify your email before logging in.");
@@ -133,7 +139,11 @@ export default function AuthScreen() {
 
         router.push("/(tabs)/Landing");
       } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         const user = userCredential.user;
 
         // Save full name to Firebase Auth
@@ -144,22 +154,22 @@ export default function AuthScreen() {
         await sendEmailVerification(userCredential.user);
 
         // Access UID of user here, along with token to send to backend for authentication
-          const uid = user.uid;
-          const bearerToken = await user.getIdToken();
+        const uid = user.uid;
+        const bearerToken = await user.getIdToken();
 
-          const reqBody: UserInterface = {
-              name: {
-                  firstName: firstName,
-                  lastName: lastName,
-              },
-              email: email,
-              uid: uid,
-              bearerToken: bearerToken,
-          }
+        const reqBody: UserInterface = {
+          name: {
+            firstName: firstName,
+            lastName: lastName,
+          },
+          email: email,
+          uid: uid,
+          bearerToken: bearerToken,
+        };
 
-          console.log("Request Body: \n", reqBody);
-          console.log("Bearer Token: \n", bearerToken);
-          await createUser(reqBody);
+        console.log("Request Body: \n", reqBody);
+        console.log("Bearer Token: \n", bearerToken);
+        await createUser(reqBody);
 
         // Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);
@@ -186,7 +196,6 @@ export default function AuthScreen() {
   };
 
   return (
-    
     <SafeAreaView style={[styles.container, { justifyContent: "center" }]}>
       <ScrollView
         contentContainerStyle={{
@@ -211,7 +220,9 @@ export default function AuthScreen() {
         {/* Auth Form */}
         <View
           style={
-            mode === "login" ? styles.loginFormContainer : styles.signupFormContainer
+            mode === "login"
+              ? styles.loginFormContainer
+              : styles.signupFormContainer
           }
         >
           {/* Signup-only name fields */}
@@ -252,7 +263,7 @@ export default function AuthScreen() {
             value={password}
             onChangeText={handlePasswordChange}
             secureTextEntry
-            returnKeyType="done" 
+            returnKeyType="done"
             onSubmitEditing={handleAuth}
           />
 
@@ -265,8 +276,8 @@ export default function AuthScreen() {
                   passwordStrength === "Strong"
                     ? "green"
                     : passwordStrength === "Medium"
-                    ? "orange"
-                    : "red",
+                      ? "orange"
+                      : "red",
                 marginBottom: 6,
               }}
             >
@@ -315,7 +326,9 @@ export default function AuthScreen() {
           </TouchableOpacity>
           {/* Forgot password link — visible only in login mode */}
           {mode === "login" && (
-            <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")}>
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/forgot-password")}
+            >
               <Text style={styles.forgotPassword}>Forgot password?</Text>
             </TouchableOpacity>
           )}
@@ -326,18 +339,16 @@ export default function AuthScreen() {
               <>
                 <Text style={styles.haveAccount}>Don’t have an account? </Text>
                 <TouchableOpacity onPress={toggleMode}>
-                  <Text style={styles.link}>
-                    Sign Up
-                  </Text>
+                  <Text style={styles.link}>Sign Up</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
-                <Text style={styles.haveAccount}>Already have an account? </Text>
+                <Text style={styles.haveAccount}>
+                  Already have an account?{" "}
+                </Text>
                 <TouchableOpacity onPress={toggleMode}>
-                  <Text style={styles.link}>
-                    Sign In
-                  </Text>
+                  <Text style={styles.link}>Sign In</Text>
                 </TouchableOpacity>
               </>
             )}

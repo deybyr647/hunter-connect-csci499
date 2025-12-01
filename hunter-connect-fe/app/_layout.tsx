@@ -34,7 +34,10 @@ function RootLayoutNav() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ header: () => <TopHeader /> }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
-        <Stack.Screen name="messages" options={{ header: () => <TopHeader /> }} />
+        <Stack.Screen
+          name="messages"
+          options={{ header: () => <TopHeader /> }}
+        />
       </Stack>
     </ThemeProvider>
   );
