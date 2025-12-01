@@ -1,6 +1,6 @@
 package com.hunter_connect.config;
 
-import com.hunter_connect.handlers.FileHandler;
+import com.hunter_connect.handlers.PostHandler;
 import com.hunter_connect.handlers.UserHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,13 +33,15 @@ public class RouterFunctionConfig {
     }
 
     @Bean
-    public RouterFunction<ServerResponse> fileRoutes(FileHandler fileHandler) {
+    public RouterFunction<ServerResponse> postRoutes(PostHandler postHandler) {
         return route()
-                .path("/api/files", builder -> builder
-                        .GET("", fileHandler::getAllFiles)
-                        .POST("", fileHandler::createFile)
-                        .GET("/{id}", fileHandler::getFileById)
+                .path("/api/posts", builder -> builder
+                        .GET("", postHandler::getAllPosts)
+                        .GET("/{id}", postHandler::getPostById)
+                        .POST("", postHandler::createPost)
+                        .PUT("", postHandler::updatePost)
                 ).build();
     }
+
 }
 
