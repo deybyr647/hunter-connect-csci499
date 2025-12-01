@@ -20,6 +20,8 @@ import {
   sendEmailVerification,
 } from "firebase/auth";
 
+import {UserInterface, createUser} from "@/app/(auth)/api/Users";
+
 type AuthMode = "login" | "signup";
 
 export default function AuthScreen() {
@@ -118,6 +120,7 @@ export default function AuthScreen() {
       setErrorMessage("Please use your @myhunter.cuny.edu email to sign up.");
       return;
     }
+
     try {
       if (mode === "login") {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -127,18 +130,38 @@ export default function AuthScreen() {
           setErrorMessage("Please verify your email before logging in.");
           return;
         }
+
         router.push("/(tabs)/Landing");
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-        //  Save full name to Firebase Auth
+        // Save full name to Firebase Auth
         await updateProfile(userCredential.user, {
           displayName: `${firstName} ${lastName}`,
         });
 
         await sendEmailVerification(userCredential.user);
-    
-        //  Refresh the user object so `onAuthStateChanged` gets updated info
+
+        // Access UID of user here, along with token to send to backend for authentication
+          const uid = user.uid;
+          const bearerToken = await user.getIdToken();
+
+          const reqBody: UserInterface = {
+              name: {
+                  firstName: firstName,
+                  lastName: lastName,
+              },
+              email: email,
+              uid: uid,
+              bearerToken: bearerToken,
+          }
+
+          console.log("Request Body: \n", reqBody);
+          console.log("Bearer Token: \n", bearerToken);
+          await createUser(reqBody);
+
+        // Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);
         router.replace("/verify-email");
       }

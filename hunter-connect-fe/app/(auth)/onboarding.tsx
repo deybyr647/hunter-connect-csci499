@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
 import { auth, db } from "@/firebase/firebaseConfig";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
+import {createUser, updateUser, UserInterface} from "@/app/(auth)/api/Users";
 
 
 export default function OnboardingScreen() {
@@ -361,36 +362,27 @@ export default function OnboardingScreen() {
     setSaving(true);
 
     try {
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+        const bearerToken = await user.getIdToken();
 
-      const newPreferences = {
-        academicYear: academicYear,
-        courses: courses,
-        skills: skills,
-        interests: interests,
-      };
+        const reqBody: UserInterface = {
+            name: {
+                firstName: "",
+                lastName: "",
+            },
+            bearerToken: bearerToken,
+            email: "",
+            uid: "",
+            preferences: {
+                academicYear: academicYear,
+                courses: courses,
+                skills: skills,
+                interests: interests,
+            }
+        }
 
-      if (userSnap.exists()) {
-        //  User doc exists → update only preferences
-        await updateDoc(userRef, {
-          "preferences.academicYear": newPreferences.academicYear,
-          "preferences.courses": newPreferences.courses,
-          "preferences.skills": newPreferences.skills,
-          "preferences.interests": newPreferences.interests,
-        });
-
-      } else {
-        //  User doc missing → create it
-        await setDoc(
-          userRef,
-          {
-            preferences: newPreferences,
-            createdAt: Date.now(),
-          },
-          { merge: true }
-        );
-      }
+        console.log("Request Body: \n", reqBody);
+        console.log("Bearer Token: \n", bearerToken);
+        await updateUser(reqBody);
 
       router.replace("/(tabs)/Landing");
 
@@ -411,7 +403,7 @@ export default function OnboardingScreen() {
         </Text>
 
         <View style={styles.formBox}>
-          
+
           {/*  ACADEMIC YEAR */}
           <Text style={styles.sectionTitle}>🎓 Academic Year</Text>
           <View style={{ zIndex: 5000, position: "relative", marginBottom: yearOpen ? 200 : 10 }}>
@@ -503,6 +495,8 @@ export default function OnboardingScreen() {
               modalContentContainerStyle={{ flex: 1 }}
               flatListProps={{ nestedScrollEnabled: true }}
               placeholder="Select a skill..."
+              closeAfterSelecting={true}
+              maxHeight={250}
               style={styles.dropdown}
               dropDownContainerStyle={styles.dropdownContainer}
             />
@@ -541,6 +535,8 @@ export default function OnboardingScreen() {
               modalContentContainerStyle={{ flex: 1 }}
               flatListProps={{ nestedScrollEnabled: true }}
               placeholder="Select an interest..."
+              closeAfterSelecting={true}
+              maxHeight={250}
               style={styles.dropdown}
               dropDownContainerStyle={styles.dropdownContainer}
             />
@@ -564,6 +560,7 @@ export default function OnboardingScreen() {
             )}
           </TouchableOpacity>
 
+          {/* Skip */}
           <TouchableOpacity onPress={() => router.replace("/(tabs)/Landing")}>
             <Text style={styles.skipText}>Skip for now</Text>
           </TouchableOpacity>
@@ -602,8 +599,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     width: "100%",
     padding: 20,
-    maxWidth: Platform.OS === "web" ? 600 : "100%", 
-    alignSelf: "center", 
+    maxWidth: Platform.OS === "web" ? 600 : "100%",
+    alignSelf: "center",
     paddingBottom: 100
   },
   sectionTitle: {
