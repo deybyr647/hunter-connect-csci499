@@ -49,7 +49,12 @@ const TopHeader = () => {
         <FontAwesome name="graduation-cap" size={24} color="black" />
         <Text style={styles.title}>Hunter Connect</Text>
         <FontAwesome name="bell-o" size={22} color="black" />
-        <FontAwesome name="comment-o" size={22} color="black" />
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => router.push("/(messages)/messages")}
+        >
+          <FontAwesome name="comment-o" size={22} color="black" />
+        </TouchableOpacity>
 
         {/* 👤 Profile Icon — hover on web, tap on mobile */}
         <View
@@ -91,7 +96,7 @@ const TopHeader = () => {
 
               <Pressable
                 style={styles.dropdownItem}
-                onPress={() => router.push("/(tabs)/profile")}
+                onPress={() => router.push("/(user)/profile")}
               >
                 <Text style={styles.dropdownItemText}>Profile Settings</Text>
               </Pressable>
