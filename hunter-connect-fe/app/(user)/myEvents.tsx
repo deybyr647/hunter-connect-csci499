@@ -1,5 +1,8 @@
+// FULL PREMIUM UI + TAG SYSTEM + DATE PICKERS + SAFE TIMESTAMPS
+
 import { auth, db } from "@/firebase/firebaseConfig";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import {
   getDocs,
   addDoc,
@@ -28,21 +31,27 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
 
 /* -------------------------------------------------------------------------- */
-/*                                EVENT TYPES                                */
+/*                                 EVENT TYPES                                */
 /* -------------------------------------------------------------------------- */
 
 interface EventData {
   id: string;
   title: string;
   date: any;
+  startTime?: any;
+  endTime?: any;
   location?: string;
   description?: string;
   createdBy?: string;
   attendees?: string[];
+  tags?: {
+    general: string[];
+    courses: string[];
+  };
 }
 
 /* -------------------------------------------------------------------------- */
-/*                          DROPDOWN: GENERAL TAG LIST                        */
+/*                               TAG LISTS                                     */
 /* -------------------------------------------------------------------------- */
 
 const generalTagList = [
@@ -60,12 +69,7 @@ const generalTagList = [
   { label: "Office Hours", value: "Office Hours" },
 ];
 
-/* -------------------------------------------------------------------------- */
-/*                         DROPDOWN: FULL COURSE LIST                         */
-/* -------------------------------------------------------------------------- */
-
 const courseTagList = [
-  /* ---------------------------- 100 LEVEL ---------------------------- */
   { label: "🧩 100-Level Courses", value: "100level", selectable: false },
   { label: "CSCI 12100", value: "CSCI 12100", parent: "100level" },
   { label: "CSCI 12700", value: "CSCI 12700", parent: "100level" },
@@ -75,9 +79,7 @@ const courseTagList = [
   { label: "CSCI 13600", value: "CSCI 13600", parent: "100level" },
   { label: "CSCI 15000", value: "CSCI 15000", parent: "100level" },
   { label: "CSCI 16000", value: "CSCI 16000", parent: "100level" },
-  { label: "CSCI 17200", value: "CSCI 17200", parent: "100level" },
 
-  /* ---------------------------- 200 LEVEL ---------------------------- */
   { label: "⚙️ 200-Level Courses", value: "200level", selectable: false },
   { label: "CSCI 22700", value: "CSCI 22700", parent: "200level" },
   { label: "CSCI 23200", value: "CSCI 23200", parent: "200level" },
@@ -85,71 +87,48 @@ const courseTagList = [
   { label: "CSCI 23500", value: "CSCI 23500", parent: "200level" },
   { label: "CSCI 26000", value: "CSCI 26000", parent: "200level" },
   { label: "CSCI 26500", value: "CSCI 26500", parent: "200level" },
-  { label: "CSCI 26700", value: "CSCI 26700", parent: "200level" },
-  { label: "CSCI 27500", value: "CSCI 27500", parent: "200level" },
 
-  /* ---------------------------- 300 LEVEL ---------------------------- */
   { label: "💻 300-Level Courses", value: "300level", selectable: false },
   { label: "CSCI 32000", value: "CSCI 32000", parent: "300level" },
   { label: "CSCI 33500", value: "CSCI 33500", parent: "300level" },
   { label: "CSCI 34000", value: "CSCI 34000", parent: "300level" },
-  { label: "CSCI 35000", value: "CSCI 35000", parent: "300level" },
-  { label: "CSCI 35300", value: "CSCI 35300", parent: "300level" },
-  { label: "CSCI 35500", value: "CSCI 35500", parent: "300level" },
-  { label: "CSCI 36000", value: "CSCI 36000", parent: "300level" },
-  { label: "CSCI 36500", value: "CSCI 36500", parent: "300level" },
-  { label: "CSCI 37100", value: "CSCI 37100", parent: "300level" },
 
-  /* ---------------------------- 400 LEVEL ---------------------------- */
   { label: "🧠 400-Level Courses", value: "400level", selectable: false },
-  { label: "CSCI 40500", value: "CSCI 40500", parent: "400level" },
-  { label: "CSCI 41500", value: "CSCI 41500", parent: "400level" },
-  { label: "CSCI 43500", value: "CSCI 43500", parent: "400level" },
   { label: "CSCI 46000", value: "CSCI 46000", parent: "400level" },
-  { label: "CSCI 49101", value: "CSCI 49101", parent: "400level" },
   { label: "CSCI 49201", value: "CSCI 49201", parent: "400level" },
-  { label: "CSCI 49300", value: "CSCI 49300", parent: "400level" },
-  { label: "CSCI 49600", value: "CSCI 49600", parent: "400level" },
-  { label: "CSCI 49700", value: "CSCI 49700", parent: "400level" },
-  { label: "CSCI 49800", value: "CSCI 49800", parent: "400level" },
   { label: "CSCI 49900", value: "CSCI 49900", parent: "400level" },
 ];
 
 /* -------------------------------------------------------------------------- */
-/*                               COMPONENT START                              */
+/*                              MAIN COMPONENT                                 */
 /* -------------------------------------------------------------------------- */
 
 export default function EventsScreen() {
   const router = useRouter();
   const user = auth.currentUser;
-
   const [loading, setLoading] = useState(true);
 
-  /* ------------------------------- Event Groups ------------------------------ */
   const [myEvents, setMyEvents] = useState<EventData[]>([]);
   const [subscribedEvents, setSubscribedEvents] = useState<EventData[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<EventData[]>([]);
 
-  /* ---------------------------- Creation Form State --------------------------- */
   const [showCreateEvent, setShowCreateEvent] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
 
-  /* -------- Tag state: two separate arrays (general + courses) -------- */
   const [generalTags, setGeneralTags] = useState<string[]>([]);
   const [courseTags, setCourseTags] = useState<string[]>([]);
 
-  /* ----------------------------- Tag dropdowns ----------------------------- */
   const [generalOpen, setGeneralOpen] = useState(false);
   const [courseOpen, setCourseOpen] = useState(false);
   const listModeConfig = Platform.OS === "web" ? "FLATLIST" : "MODAL";
 
-  /* --------------------------- Date / Time Pickers --------------------------- */
   const [date, setDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
+
   const [pickerMode, setPickerMode] =
     useState<null | "date" | "start" | "end">(null);
 
@@ -157,24 +136,33 @@ export default function EventsScreen() {
   const [tempStart, setTempStart] = useState(new Date());
   const [tempEnd, setTempEnd] = useState(new Date());
 
-  /* ------------------------------- Format Date ------------------------------- */
-  const formatDate = (d: any) => {
-    if (!d) return "";
-    if (d?.toDate) return d.toDate().toLocaleDateString();
-    if (d instanceof Date) return d.toLocaleDateString();
-    const parsed = new Date(d);
-    return !isNaN(parsed.getTime()) ? parsed.toLocaleDateString() : "";
+  /* ------------------------------- Open Picker ------------------------------- */
+  const openPicker = (mode: "date" | "start" | "end") => {
+    setPickerMode(mode);
+
+    if (mode === "date") setTempDate(new Date(date));
+    if (mode === "start") setTempStart(new Date(startTime));
+    if (mode === "end") setTempEnd(new Date(endTime));
   };
 
-  /* ------------------------------- Load Events ------------------------------- */
+  /* ------------------------------- Helpers ------------------------------- */
+
+  const safeDate = (x: any) =>
+    x?.toDate ? x.toDate() : x instanceof Date ? x : new Date(x);
+
+  const formatDate = (d: any) => {
+    const real = safeDate(d);
+    return real.toLocaleDateString();
+  };
+
+  /* ------------------------------ Load Events ----------------------------- */
+
   useEffect(() => {
     if (!user) return;
 
     const loadEvents = async () => {
       try {
-        const eventQuery = query(collection(db, "events"));
-        const snapshot = await getDocs(eventQuery);
-
+        const snapshot = await getDocs(query(collection(db, "events")));
         const allEvents = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -189,25 +177,17 @@ export default function EventsScreen() {
             (e) => e.createdBy !== user.uid && !e.attendees?.includes(user.uid)
           )
         );
-      } catch (error) {
-        console.error("Event load error:", error);
+      } catch (err) {
+        console.error(err);
       }
-
       setLoading(false);
     };
 
     loadEvents();
   }, []);
 
-  /* ------------------------------- Open Picker ------------------------------- */
-  const openPicker = (mode: "date" | "start" | "end") => {
-    setPickerMode(mode);
-    if (mode === "date") setTempDate(new Date(date));
-    if (mode === "start") setTempStart(new Date(startTime));
-    if (mode === "end") setTempEnd(new Date(endTime));
-  };
+  /* ----------------------------- Create Event ------------------------------ */
 
-  /* ------------------------------- Create Event ------------------------------ */
   const createEvent = async () => {
     try {
       const docRef = await addDoc(collection(db, "events"), {
@@ -241,32 +221,73 @@ export default function EventsScreen() {
         },
       ]);
 
-      alert("Event Created!");
-
       setTitle("");
       setDescription("");
       setLocation("");
       setGeneralTags([]);
       setCourseTags([]);
+
       setDate(new Date());
       setStartTime(new Date());
       setEndTime(new Date());
+
       setShowCreateEvent(false);
+      alert("Event Created!");
     } catch (err) {
       console.error(err);
     }
   };
 
-  /* ------------------------------- Event Card ------------------------------- */
-  const renderEvent = (e: EventData) => (
-    <View key={e.id} style={styles.eventCard}>
-      <Text style={styles.eventTitle}>{e.title}</Text>
-      <Text style={styles.eventDate}>{formatDate(e.date)}</Text>
-      {e.location && <Text style={styles.eventLocation}>{e.location}</Text>}
-    </View>
-  );
+  /* ----------------------------- Event Card UI ----------------------------- */
 
-  /* ----------------------------- Render Web Picker ---------------------------- */
+  const renderEvent = (e: EventData) => {
+    const d = safeDate(e.date).toLocaleDateString();
+    const s = safeDate(e.startTime).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const ed = safeDate(e.endTime).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    return (
+      <View key={e.id} style={styles.eventCard}>
+        <Text style={styles.cardTitle}>{e.title}</Text>
+
+        {/* Date + Time */}
+        <View style={styles.row}>
+          <Ionicons name="calendar-outline" size={17} color="#555" />
+          <Text style={styles.cardDate}>{d}</Text>
+
+          <Text style={{ color: "#bbb", marginHorizontal: 6 }}>|</Text>
+
+          <Ionicons name="time-outline" size={17} color="#555" />
+          <Text style={styles.cardDate}>
+            {s} - {ed}
+          </Text>
+        </View>
+
+        {/* Location */}
+        {e.location && (
+          <View style={styles.row}>
+            <Ionicons name="location-outline" size={17} color="#e34d4d" />
+            <Text style={styles.cardLocation}>{e.location}</Text>
+          </View>
+        )}
+
+        {/* Register Button */}
+        {e.createdBy !== user?.uid && (
+          <TouchableOpacity style={styles.registerButton}>
+            <Text style={styles.registerText}>Register</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
+  /* ------------------------ Web vs Mobile Picker ------------------------ */
+
   const renderWebPicker = () => {
     if (pickerMode === "date") {
       return (
@@ -282,18 +303,17 @@ export default function EventsScreen() {
       );
     }
 
-    const getTimeValue = (dt: Date) => {
-      return dt.toLocaleTimeString("en-GB", {
+    const formatTime = (d: Date) =>
+      d.toLocaleTimeString("en-GB", {
         hour: "2-digit",
         minute: "2-digit",
       });
-    };
 
     if (pickerMode === "start") {
       return (
         <input
           type="time"
-          value={getTimeValue(tempStart)}
+          value={formatTime(tempStart)}
           onChange={(e) => {
             const [h, m] = e.target.value.split(":");
             const t = new Date(tempStart);
@@ -310,7 +330,7 @@ export default function EventsScreen() {
       return (
         <input
           type="time"
-          value={getTimeValue(tempEnd)}
+          value={formatTime(tempEnd)}
           onChange={(e) => {
             const [h, m] = e.target.value.split(":");
             const t = new Date(tempEnd);
@@ -326,49 +346,33 @@ export default function EventsScreen() {
     return null;
   };
 
-  /* --------------------------- Render Mobile Picker -------------------------- */
   const renderMobilePicker = () => {
     if (!pickerMode) return null;
 
-    if (pickerMode === "date") {
-      return (
-        <DateTimePicker
-          value={tempDate}
-          mode="date"
-          display={Platform.OS === "ios" ? "inline" : "spinner"}
-          onChange={(e, selected) => selected && setTempDate(selected)}
-        />
-      );
-    }
+    const mode = pickerMode === "date" ? "date" : "time";
 
-    if (pickerMode === "start") {
-      return (
-        <DateTimePicker
-          value={tempStart}
-          mode="time"
-          display="spinner"
-          onChange={(e, selected) => selected && setTempStart(selected)}
-        />
-      );
-    }
-
-    if (pickerMode === "end") {
-      return (
-        <DateTimePicker
-          value={tempEnd}
-          mode="time"
-          display="spinner"
-          onChange={(e, selected) => selected && setTempEnd(selected)}
-        />
-      );
-    }
-
-    return null;
+    return (
+      <DateTimePicker
+        value={
+          pickerMode === "date"
+            ? tempDate
+            : pickerMode === "start"
+            ? tempStart
+            : tempEnd
+        }
+        mode={mode}
+        display="spinner"
+        onChange={(e, selected) => {
+          if (!selected) return;
+          if (pickerMode === "date") setTempDate(selected);
+          if (pickerMode === "start") setTempStart(selected);
+          if (pickerMode === "end") setTempEnd(selected);
+        }}
+      />
+    );
   };
 
-  /* -------------------------------------------------------------------------- */
-  /*                               MAIN UI RETURN                               */
-  /* -------------------------------------------------------------------------- */
+  /* ------------------------------ RETURN UI ------------------------------ */
 
   return (
     <Animated.View
@@ -394,11 +398,9 @@ export default function EventsScreen() {
               <>
                 {/* MY EVENTS */}
                 <Text style={styles.sectionTitle}>My Events</Text>
-                {myEvents.length ? (
-                  myEvents.map(renderEvent)
-                ) : (
-                  <Text style={styles.empty}>You have not created events yet.</Text>
-                )}
+                {myEvents.length
+                  ? myEvents.map(renderEvent)
+                  : <Text style={styles.empty}>You have not created events yet.</Text>}
 
                 {/* CREATE EVENT BUTTON */}
                 <TouchableOpacity
@@ -437,7 +439,7 @@ export default function EventsScreen() {
                       onChangeText={setLocation}
                     />
 
-                    {/* ------------------------ GENERAL TAGS ------------------------ */}
+                    {/* GENERAL TAGS */}
                     <Text style={styles.label}>General Tags</Text>
                     <View
                       style={{
@@ -455,27 +457,23 @@ export default function EventsScreen() {
                         }}
                         setValue={() => {}}
                         onSelectItem={(item) => {
-                          if (!item?.value) return; 
-
-                          if (!generalTags.includes(item.value)) {
+                          if (item.value && !generalTags.includes(item.value)) {
                             setGeneralTags([...generalTags, item.value]);
                           }
                         }}
                         placeholder="Select general tags..."
                         listMode={listModeConfig}
-                        modalTitle="Select Tags"
                         modalAnimationType="slide"
-                        modalContentContainerStyle={{ flex: 1 }}
                         style={styles.dropdown}
                         dropDownContainerStyle={styles.dropdownContainer}
-                        flatListProps={{ nestedScrollEnabled: true }}
                       />
                     </View>
-                    {/* General Tag Chips */}
+
+                    {/* GENERAL TAG CHIPS */}
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      {generalTags.map((tag, index) => (
+                      {generalTags.map((tag, idx) => (
                         <TouchableOpacity
-                          key={index}
+                          key={idx}
                           style={styles.tag}
                           onPress={() =>
                             setGeneralTags(generalTags.filter((t) => t !== tag))
@@ -487,12 +485,12 @@ export default function EventsScreen() {
                       ))}
                     </ScrollView>
 
-                    {/* ------------------------ COURSE TAGS ------------------------ */}
+                    {/* COURSE TAGS */}
                     <Text style={styles.label}>Course Tags</Text>
                     <View
                       style={{
                         zIndex: courseOpen ? 2000 : 1,
-                        marginBottom: 10,
+                        marginBottom: courseOpen ? 200 : 10,
                       }}
                     >
                       <DropDownPicker
@@ -505,30 +503,29 @@ export default function EventsScreen() {
                         }}
                         setValue={() => {}}
                         onSelectItem={(item) => {
-                          if (!item?.value) return;
-                          if (item.selectable === false) return;
-
-                          if (!courseTags.includes(item.value)) {
-                            setCourseTags([...courseTags, item.value]);
+                          if (item.value && item.selectable !== false) {
+                            if (!courseTags.includes(item.value)) {
+                              setCourseTags([...courseTags, item.value]);
+                            }
                           }
                         }}
                         placeholder="Select course tags..."
                         listMode={listModeConfig}
-                        modalTitle="Select Course"
-                        modalAnimationType="slide"
-                        modalContentContainerStyle={{ flex: 1 }}
-                        style={styles.dropdown}
-                        dropDownContainerStyle={{ ...styles.dropdownContainer, maxHeight: 400 }}
                         searchable
-                        flatListProps={{ nestedScrollEnabled: true }}
+                        modalAnimationType="slide"
+                        style={styles.dropdown}
+                        dropDownContainerStyle={{
+                          ...styles.dropdownContainer,
+                          maxHeight: 400,
+                        }}
                       />
                     </View>
 
-                    {/* Course Tag Chips */}
+                    {/* COURSE TAG CHIPS */}
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      {courseTags.map((tag, index) => (
+                      {courseTags.map((tag, idx) => (
                         <TouchableOpacity
-                          key={index}
+                          key={idx}
                           style={styles.tag}
                           onPress={() =>
                             setCourseTags(courseTags.filter((t) => t !== tag))
@@ -540,8 +537,7 @@ export default function EventsScreen() {
                       ))}
                     </ScrollView>
 
-                    {/* ------------------------ DATE PICKERS ------------------------ */}
-
+                    {/* DATE / TIME */}
                     <Text style={styles.label}>Event Date</Text>
                     <TouchableOpacity
                       style={styles.selector}
@@ -576,8 +572,11 @@ export default function EventsScreen() {
                       </Text>
                     </TouchableOpacity>
 
-                    {/* Create Button */}
-                    <TouchableOpacity style={styles.createButton} onPress={createEvent}>
+                    {/* CREATE BUTTON */}
+                    <TouchableOpacity
+                      style={styles.createButton}
+                      onPress={createEvent}
+                    >
                       <Text style={styles.createButtonText}>Create Event</Text>
                     </TouchableOpacity>
                   </View>
@@ -585,26 +584,22 @@ export default function EventsScreen() {
 
                 {/* UPCOMING EVENTS */}
                 <Text style={styles.sectionTitle}>Upcoming Events</Text>
-                {upcomingEvents.length ? (
-                  upcomingEvents.map(renderEvent)
-                ) : (
-                  <Text style={styles.empty}>No events found.</Text>
-                )}
+                {upcomingEvents.length
+                  ? upcomingEvents.map(renderEvent)
+                  : <Text style={styles.empty}>No events found.</Text>}
 
                 {/* SUBSCRIBED EVENTS */}
                 <Text style={styles.sectionTitle}>Subscribed Events</Text>
-                {subscribedEvents.length ? (
-                  subscribedEvents.map(renderEvent)
-                ) : (
-                  <Text style={styles.empty}>You have no subscribed events.</Text>
-                )}
+                {subscribedEvents.length
+                  ? subscribedEvents.map(renderEvent)
+                  : <Text style={styles.empty}>You have no subscribed events.</Text>}
               </>
             )}
           </View>
         </ScrollView>
       </SafeAreaView>
 
-      {/* ---------------------------- Modal Picker ---------------------------- */}
+      {/* MODAL PICKER */}
       <Modal visible={pickerMode !== null} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
@@ -662,6 +657,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
   },
+
   back: { fontSize: 16, color: "#007AFF" },
   headerTitle: { fontSize: 18, fontWeight: "bold" },
 
@@ -681,17 +677,61 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  eventCard: {
-    backgroundColor: "#f0eef7",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  eventTitle: { fontSize: 16, fontWeight: "700" },
-  eventDate: { color: "#555", marginTop: 4 },
-  eventLocation: { color: "#777", marginTop: 2 },
-
   empty: { color: "#777", fontStyle: "italic", marginBottom: 10 },
+
+  /* EVENT CARD — PREMIUM DESIGN */
+  eventCard: {
+    backgroundColor: "#f8f8fb",
+    padding: 20,
+    borderRadius: 18,
+    marginBottom: 18,
+    width: "100%",
+
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 10,
+    color: "#222",
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+
+  cardDate: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: "#555",
+  },
+
+  cardLocation: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: "#444",
+  },
+
+  registerButton: {
+    backgroundColor: "#007bff",
+    marginTop: 14,
+    paddingVertical: 11,
+    alignItems: "center",
+    borderRadius: 12,
+  },
+
+  registerText: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "600",
+  },
 
   dropdownButton: {
     backgroundColor: "#5A31F4",
@@ -709,8 +749,8 @@ const styles = StyleSheet.create({
   createBox: {
     marginTop: 10,
     padding: 15,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
+    backgroundColor: "#fafafa",
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#ddd",
   },
@@ -721,7 +761,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: "#fff",
   },
 
@@ -731,20 +771,23 @@ const styles = StyleSheet.create({
   },
 
   selector: {
-    padding: 12,
+    padding: 13,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: "#fff",
     marginBottom: 12,
   },
 
   dropdown: {
     borderColor: "#ccc",
-    marginBottom: 5,
+    borderRadius: 10,
+    minHeight: 50,
+    paddingHorizontal: 6,
   },
   dropdownContainer: {
     borderColor: "#ccc",
+    borderRadius: 10,
   },
 
   tag: {
@@ -771,9 +814,9 @@ const styles = StyleSheet.create({
   createButton: {
     backgroundColor: "#5A31F4",
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 12,
   },
   createButtonText: {
     color: "#fff",
@@ -797,8 +840,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
+    fontWeight: "700",
+    marginBottom: 13,
   },
 
   modalButtons: {
@@ -812,7 +855,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     backgroundColor: "#ddd",
-    borderRadius: 8,
+    borderRadius: 10,
     marginRight: 10,
     alignItems: "center",
   },
@@ -822,17 +865,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     backgroundColor: "#5A31F4",
-    borderRadius: 8,
+    borderRadius: 10,
     marginLeft: 10,
     alignItems: "center",
   },
   saveText: { fontWeight: "600", color: "#fff" },
 
-  /* Web Inputs */
   webInput: {
     width: "100%",
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#ccc",
     fontSize: 16,
