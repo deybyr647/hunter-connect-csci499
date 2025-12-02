@@ -132,10 +132,16 @@ export default function AuthScreen() {
         );
 
         if (!userCredential.user.emailVerified) {
-          await auth.signOut();
-          setErrorMessage("Please verify your email before logging in.");
-          return;
+          // DEV BYPASS — allows fake accounts to log in during development
+          if (__DEV__) {
+            console.log("DEV MODE: Skipping email verification check.");
+          } else {
+            await auth.signOut();
+            setErrorMessage("Please verify your email before logging in.");
+            return;
+          }
         }
+
 
         router.push("/(tabs)/Landing");
       } else {
