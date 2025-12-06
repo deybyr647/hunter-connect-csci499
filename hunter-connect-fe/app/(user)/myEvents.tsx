@@ -1,5 +1,3 @@
-// FULL PREMIUM UI + TAG SYSTEM + DATE PICKERS + SAFE TIMESTAMPS
-
 import { auth, db } from "@/firebase/firebaseConfig";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -157,26 +155,37 @@ export default function EventsScreen() {
 
   /* ------------------------------- Helpers ------------------------------- */
 
-  const safeDate = (x: any) =>
-    x?.toDate ? x.toDate() : x instanceof Date ? x : new Date(x);
-
-  const formatDate = (d: any) => {
-    const real = safeDate(d);
-    return real.toLocaleDateString();
+  const safeDate = (x: any) => {
+    if (!x) return new Date();                    // prevents NaN
+    if (x.toDate) return x.toDate();             // Firestore Timestamp
+    if (x instanceof Date) return x;             // JS Date
+    const d = new Date(x);
+    return isNaN(d.getTime()) ? new Date() : d;   // fallback if invalid
   };
 
-  const getUserName = async (uid: string) => {
-    try {
-      const ref = doc(db, "users", uid);
-      const snap = await getDoc(ref);
-      const data = snap.data();
-      return data?.name?.firstName
-        ? `${data.name.firstName} ${data.name.lastName}`
-        : "Unknown User";
-    } catch {
-      return "Unknown User";
-    }
+  const isMine = (e: EventData): boolean => {
+    return e.createdBy === user?.uid;
   };
+
+  const isSubscribed = (e: EventData): boolean => {
+    if (!user?.uid) return false;  
+    return e.attendees?.includes(user.uid) ?? false;
+  };
+
+  const toJsDate = (d: any): Date => {
+    return d?.toDate ? d.toDate() : new Date(d);
+  };
+
+  const isExpired = (e: EventData): boolean => {
+    const end = toJsDate(e.endTime);
+    return !(end instanceof Date && !isNaN(end.getTime())) || end < new Date();
+  };
+
+  const isUpcoming = (e: EventData): boolean => {
+    return !isExpired(e);
+  };
+
+
 
   /* ------------------------------ Load Events ----------------------------- */
 
@@ -201,78 +210,58 @@ export default function EventsScreen() {
 
             if (event.createdBy) {
               const userDoc = await getDoc(doc(db, "users", event.createdBy));
+
               if (userDoc.exists()) {
                 const data = userDoc.data();
-                creatorName = `${data.name.firstName} ${data.name.lastName}`;
+                
+                creatorName = `${data.firstName ?? ""} ${data.lastName ?? ""}`.trim();
               }
             }
 
             return {
               ...event,
               creatorName,
-              createdAt:
-                event.createdAt?.toDate?.() ?? new Date(), // fallback if missing
+              createdAt: event.createdAt?.toDate?.() ?? new Date(),
             };
           })
         );
 
-        /* -------------------------------------------------
-          2. Convert Firestore timestamps → JS dates safely
-        ------------------------------------------------- */
-        const now = new Date();
-        const toJsDate = (d: any) => (d?.toDate ? d.toDate() : new Date(d));
 
         /* -------------------------------------------------
-          3. Determine upcoming vs expired events
+          2. Split events into upcoming + expired
         ------------------------------------------------- */
-        const upcoming = eventsWithNames.filter(
-          (e) => toJsDate(e.endTime) >= now
-        );
-
-        const expired = eventsWithNames.filter(
-          (e) => toJsDate(e.endTime) < now
-        );
+        const upcoming = eventsWithNames.filter(isUpcoming);
+        const expired = eventsWithNames.filter(isExpired);
 
         /* -------------------------------------------------
-          4. My Events (only upcoming)
+          3. Assign event categories
         ------------------------------------------------- */
-        setMyEvents(upcoming.filter((e) => e.createdBy === user.uid));
+        setMyEvents(upcoming.filter(isMine));
 
-        /* -------------------------------------------------
-          5. Subscribed Events (only upcoming)
-        ------------------------------------------------- */
-        setSubscribedEvents(
-          upcoming.filter((e) => e.attendees?.includes(user.uid))
-        );
+        setSubscribedEvents(upcoming.filter(isSubscribed));
 
-        /* -------------------------------------------------
-          6. Upcoming events (NOT mine + NOT subscribed)
-        ------------------------------------------------- */
         setUpcomingEvents(
-          upcoming.filter(
-            (e) =>
-              e.createdBy !== user.uid &&
-              !e.attendees?.includes(user.uid)
-          )
+          upcoming.filter((e) => !isMine(e) && !isSubscribed(e))
         );
 
-        /* -------------------------------------------------
-          7. Expired events (mine OR subscribed)
-        ------------------------------------------------- */
         setExpiredEvents(
-          expired.filter(
-            (e) =>
-              e.createdBy === user.uid ||
-              e.attendees?.includes(user.uid)
-          )
+          expired.filter((e) => isMine(e) || isSubscribed(e))
         );
+        
+        console.log("All events:", allEvents);
+        console.log("Events With Names:", eventsWithNames);
+        console.log("Upcoming:", upcoming);
+        console.log("Expired:", expired);
+        console.log("Final upcomingEvents shown:", upcoming.filter(
+            (e) => e.createdBy !== user.uid && !e.attendees?.includes(user.uid)
+        ));
+
       } catch (err) {
         console.error(err);
       }
 
       setLoading(false);
     };
-
 
     loadEvents();
   }, []);
@@ -282,86 +271,88 @@ export default function EventsScreen() {
   /* ----------------------------- Create Event ------------------------------ */
 
   const createEvent = async () => {
-    try {
-      if (!user) return;
+  try {
+    if (!user) return;
 
-      // 1) Fetch the creator's name from Firestore
-      const userDocRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userDocRef);
+    // 1) Fetch the creator's name from Firestore correctly
+    const userDocRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userDocRef);
 
-      // Adjust field name depending on your users collection
-      const creatorName =
-        userSnap.exists() && userSnap.data().displayName
-          ? userSnap.data().displayName
-          : "Unknown User";
+    let creatorName = "Unknown User";
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      creatorName = `${data.firstName ?? ""} ${data.lastName ?? ""}`.trim();
+    }
 
-      // 2) Create Firestore event with creatorName attached
-      const docRef = await addDoc(collection(db, "events"), {
+    // 2) Create the Firestore event
+    const docRef = await addDoc(collection(db, "events"), {
+      title,
+      description,
+      location,
+      date: Timestamp.fromDate(date),
+      startTime: Timestamp.fromDate(startTime),
+      endTime: Timestamp.fromDate(endTime),
+      createdAt: serverTimestamp(),
+      createdBy: user.uid,
+      creatorName: creatorName,  // ← stored correctly
+      attendees: [],
+      tags: {
+        general: generalTags,
+        courses: courseTags,
+      },
+    });
+
+    // 3) Update UI immediately so the event shows instantly
+    setMyEvents((prev) => [
+      ...prev,
+      {
+        id: docRef.id,
         title,
         description,
         location,
-        date: Timestamp.fromDate(date),
-        startTime: Timestamp.fromDate(startTime),
-        endTime: Timestamp.fromDate(endTime),
-        createdAt: serverTimestamp(),
+        date,
+        startTime,
+        endTime,
         createdBy: user.uid,
-        creatorName: creatorName,        // ← NEW FIELD!
+        creatorName,   // ← include correct name
         attendees: [],
-        tags: {
-          general: generalTags,
-          courses: courseTags,
-        },
-      });
+      },
+    ]);
 
-      // 3) Update UI immediately with creatorName included
-      setMyEvents((prev) => [
-        ...prev,
-        {
-          id: docRef.id,
-          title,
-          description,
-          location,
-          date,
-          startTime,
-          endTime,
-          createdBy: user.uid,
-          creatorName: creatorName,      // ← ADD HERE TOO
-          attendees: [],
-        },
-      ]);
+    // 4) Reset all form fields
+    setTitle("");
+    setDescription("");
+    setLocation("");
+    setGeneralTags([]);
+    setCourseTags([]);
 
-      // 4) Reset fields
-      setTitle("");
-      setDescription("");
-      setLocation("");
-      setGeneralTags([]);
-      setCourseTags([]);
-      setDate(new Date());
-      setStartTime(new Date());
-      setEndTime(new Date());
+    setDate(new Date());
+    setStartTime(new Date());
+    setEndTime(new Date());
 
-      setShowCreateEvent(false);
-      alert("Event Created!");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+    setShowCreateEvent(false);
+    alert("Event Created!");
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   /* ----------------------------- Event Card UI ----------------------------- */
 
   const renderEvent = (e: EventData) => {
-    const d = safeDate(e.date).toLocaleDateString();
-    const s = safeDate(e.startTime).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const ed = safeDate(e.endTime).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const eventDate = safeDate(e.date);
+    const d = eventDate.toLocaleDateString();
 
-    const createdAtString = safeDate(e.createdAt).toLocaleString([], {
+    const s = e.startTime
+      ? safeDate(e.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "--";
+
+    const ed = e.endTime
+      ? safeDate(e.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "--";
+
+    const createdAtDate = safeDate(e.createdAt);
+    const createdAtString = createdAtDate.toLocaleString([], {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -371,10 +362,8 @@ export default function EventsScreen() {
 
     return (
       <View key={e.id} style={styles.eventCard}>
-        {/* Title */}
         <Text style={styles.cardTitle}>{e.title}</Text>
 
-        {/* Creator */}
         {e.creatorName && (
           <View style={styles.row}>
             <Ionicons name="person-circle-outline" size={18} color="#666" />
@@ -382,28 +371,19 @@ export default function EventsScreen() {
           </View>
         )}
 
-        {/* Created Timestamp */}
-        {e.createdAt && (
-          <View style={styles.row}>
-            <Ionicons name="time-outline" size={17} color="#777" />
-            <Text style={styles.createdAtText}>Created on {createdAtString}</Text>
-          </View>
-        )}
+        <View style={styles.row}>
+          <Ionicons name="time-outline" size={17} color="#777" />
+          <Text style={styles.createdAtText}>Created on {createdAtString}</Text>
+        </View>
 
-        {/* Date + Time */}
         <View style={styles.row}>
           <Ionicons name="calendar-outline" size={17} color="#555" />
           <Text style={styles.cardDate}>{d}</Text>
-
           <Text style={{ color: "#bbb", marginHorizontal: 6 }}>|</Text>
-
           <Ionicons name="time-outline" size={17} color="#555" />
-          <Text style={styles.cardDate}>
-            {s} - {ed}
-          </Text>
+          <Text style={styles.cardDate}>{s} - {ed}</Text>
         </View>
 
-        {/* Location */}
         {e.location && (
           <View style={styles.row}>
             <Ionicons name="location-outline" size={17} color="#e34d4d" />
@@ -411,7 +391,6 @@ export default function EventsScreen() {
           </View>
         )}
 
-        {/* Register Button — only for events NOT created by the user */}
         {e.createdBy !== user?.uid && (
           <TouchableOpacity style={styles.registerButton}>
             <Text style={styles.registerText}>Register</Text>
@@ -420,6 +399,7 @@ export default function EventsScreen() {
       </View>
     );
   };
+
 
 
   /* ------------------------ Web vs Mobile Picker ------------------------ */
