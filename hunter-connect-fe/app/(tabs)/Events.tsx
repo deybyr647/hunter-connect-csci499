@@ -26,6 +26,7 @@ import {
   View,
   Modal,
   Platform,
+  TouchableWithoutFeedback,
 } from "react-native";
 
 import Animated, {
@@ -140,6 +141,12 @@ export default function EventsScreen() {
 
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
+  // Search + Filter state
+  const [showFilter, setShowFilter] = useState(false);
+  const [filterGeneral, setFilterGeneral] = useState<string[]>([]);
+  const [filterCourses, setFilterCourses] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
 
   /* ------------------ Picker Helpers ------------------ */
   const openPicker = (mode: "date" | "start" | "end") => {
@@ -153,11 +160,17 @@ export default function EventsScreen() {
   /* ------------------ Helpers ------------------ */
   const safeDate = (x: any) => {
     if (!x) return new Date();
-    if (x.toDate) return x.toDate();
-    if (x instanceof Date) return x;
+
+    // Firestore Timestamp
+    if (x.toDate) return new Date(x.toDate().getTime());
+
+    // Already a JS Date
+    if (x instanceof Date) return new Date(x.getTime());
+
     const d = new Date(x);
-    return isNaN(d.getTime()) ? new Date() : d;
+    return isNaN(d.getTime()) ? new Date() : new Date(d.getTime());
   };
+
 
   const normalizeTags = (tags: any) => ({
     general: Array.isArray(tags?.general)
@@ -171,6 +184,19 @@ export default function EventsScreen() {
 
   const isSubscribed = (e: EventData) =>
     e.attendees?.includes(user?.uid ?? "") ?? false;
+
+  function normalizeDateOnly(d: Date) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function mergeDateAndTime(dateOnly: Date, timeOnly: Date) {
+    const d = new Date(dateOnly);
+    d.setHours(timeOnly.getHours());
+    d.setMinutes(timeOnly.getMinutes());
+    d.setSeconds(0);
+    d.setMilliseconds(0);
+    return d;
+  }
 
   /* ------------------ Load Events ------------------ */
   useEffect(() => {
@@ -230,13 +256,17 @@ export default function EventsScreen() {
         creatorName = `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim();
       }
 
+      const normalizedDate = normalizeDateOnly(date);
+      const finalStart = mergeDateAndTime(date, startTime);
+      const finalEnd = mergeDateAndTime(date, endTime);
+
       const docRef = await addDoc(collection(db, "events"), {
         title,
         description,
         location,
-        date: Timestamp.fromDate(date),
-        startTime: Timestamp.fromDate(startTime),
-        endTime: Timestamp.fromDate(endTime),
+        startTime: Timestamp.fromDate(finalStart),
+        endTime: Timestamp.fromDate(finalEnd),
+        date: Timestamp.fromDate(normalizedDate),  
         createdAt: serverTimestamp(),
         createdBy: user.uid,
         creatorName,
@@ -247,12 +277,13 @@ export default function EventsScreen() {
         },
       });
 
+
       const newEvent: EventData = {
         id: docRef.id,
         title,
         description,
         location,
-        date,
+        date: normalizedDate,  // FIXED
         startTime,
         endTime,
         createdBy: user.uid,
@@ -315,6 +346,32 @@ export default function EventsScreen() {
     }));
   };
 
+  const filteredEvents = upcomingEvents.filter((e) => {
+    const q = searchQuery.toLowerCase();
+
+    const matchesSearch =
+      e.title.toLowerCase().includes(q) ||
+      (e.description ?? "").toLowerCase().includes(q) ||
+      (e.location ?? "").toLowerCase().includes(q);
+
+    if (!matchesSearch) return false;
+
+    // GENERAL TAGS: require match if ANY selected
+    if (filterGeneral.length > 0) {
+      if (!e.tags?.general?.some((tag) => filterGeneral.includes(tag)))
+        return false;
+    }
+
+    // COURSE TAGS
+    if (filterCourses.length > 0) {
+      if (!e.tags?.courses?.some((tag) => filterCourses.includes(tag)))
+        return false;
+    }
+
+    return true;
+  });
+
+
   /* ------------------ Event Card ------------------ */
   const renderEvent = (e: EventData) => {
     const d = safeDate(e.date);
@@ -362,9 +419,10 @@ export default function EventsScreen() {
           ))}
         </View>
 
-        {/* DESCRIPTION TOGGLE */}
+        {/* DESCRIPTION SECTION */}
         {e.description ? (
           <>
+            {/* HEADER BUTTON */}
             <TouchableOpacity
               onPress={() => toggleDescription(e.id)}
               style={styles.descriptionHeader}
@@ -374,13 +432,15 @@ export default function EventsScreen() {
               </Text>
             </TouchableOpacity>
 
+            {/* COLLAPSIBLE AREA */}
             {isExpanded && (
-              <Text style={styles.descriptionFull}>
-                {e.description}
-              </Text>
+              <View style={styles.descriptionBox}>
+                <Text style={styles.descriptionFull}>{e.description}</Text>
+              </View>
             )}
           </>
         ) : null}
+
 
 
         {/* SUBSCRIBE BUTTON */}
@@ -684,11 +744,30 @@ export default function EventsScreen() {
             </View>
           )}
 
+          {/* SEARCH + FILTER ROW */}
+          <View style={styles.searchRow}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search events..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={() => setShowFilter(true)}
+            >
+              <Ionicons name="settings-outline" size={18} color="#5A31F4" />
+            </TouchableOpacity>
+          </View>
+
+
+
           {/* UPCOMING EVENTS */}
           {loading ? (
             <ActivityIndicator size="large" color="#5A31F4" />
           ) : (
-            upcomingEvents.map(renderEvent)
+            filteredEvents.map(renderEvent)
           )}
         </ScrollView>
       </SafeAreaView>
@@ -730,6 +809,89 @@ export default function EventsScreen() {
           </View>
         </View>
       </Modal>
+      {/* FILTER MODAL */}
+      <Modal visible={showFilter} animationType="fade" transparent>
+        <TouchableWithoutFeedback onPress={() => setShowFilter(false)}>
+          <View style={styles.filterModalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.filterModal}>
+                <Text style={styles.filterTitle}>Filter Events</Text>
+
+                {/* GENERAL TAGS */}
+                <Text style={styles.filterSectionTitle}>General Tags</Text>
+                <View style={styles.chipWrap}>
+                  {generalTagList.map((t) => {
+                    const active = filterGeneral.includes(t.value);
+                    return (
+                      <TouchableOpacity
+                        key={t.value}
+                        onPress={() => {
+                          setFilterGeneral((prev) =>
+                            active ? prev.filter((x) => x !== t.value) : [...prev, t.value]
+                          );
+                        }}
+                        style={[styles.chip, active && styles.chipActive]}
+                      >
+                        <Text style={active ? styles.chipTextActive : styles.chipText}>
+                          {t.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* COURSE TAGS */}
+                <Text style={styles.filterSectionTitle}>Course Tags</Text>
+                <ScrollView style={{ maxHeight: 200 }}>
+                  <View style={styles.chipWrap}>
+                    {courseTagList
+                      .filter((c) => c.selectable !== false)
+                      .map((t) => {
+                        const active = filterCourses.includes(t.value);
+                        return (
+                          <TouchableOpacity
+                            key={t.value}
+                            onPress={() => {
+                              setFilterCourses((prev) =>
+                                active ? prev.filter((x) => x !== t.value) : [...prev, t.value]
+                              );
+                            }}
+                            style={[styles.chip, active && styles.chipActive]}
+                          >
+                            <Text style={active ? styles.chipTextActive : styles.chipText}>
+                              {t.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                  </View>
+                </ScrollView>
+
+                {/* FOOTER BUTTONS */}
+                <View style={styles.filterButtonsRow}>
+                  <TouchableOpacity
+                    style={styles.clearFilterBtn}
+                    onPress={() => {
+                      setFilterGeneral([]);
+                      setFilterCourses([]);
+                    }}
+                  >
+                    <Text style={styles.clearFilterText}>Clear All</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.applyFilterBtn}
+                    onPress={() => setShowFilter(false)}
+                  >
+                    <Text style={styles.applyFilterText}>Apply</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
     </Animated.View>
   );
 }
@@ -1020,23 +1182,180 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: "#FFF",
   },
-  
+
   descriptionHeader: {
     marginTop: 10,
-    marginBottom: 4,
+    marginBottom: 6,
   },
 
   descriptionHeaderText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#6B4CF6",
+    color: "#5A31F4",
+  },
+
+  descriptionBox: {
+    backgroundColor: "#F7F5FF",   
+    borderWidth: 1,
+    borderColor: "#E3DAFF",      
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
   },
 
   descriptionFull: {
     fontSize: 14,
     color: "#444",
     lineHeight: 20,
-    marginBottom: 10,
+  },
+
+  filterChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: "#EEE",
+    borderRadius: 16,
+    marginRight: 8,
+  },
+
+  filterChipActive: {
+    backgroundColor: "#6B4CF6",
+  },
+
+  filterChipText: {
+    color: "#444",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+
+  filterChipTextActive: {
+    color: "#FFF",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  filterButtonText: {
+    marginLeft: 6,
+    color: "#5A31F4",
+    fontWeight: "600",
+  },
+
+  filterModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+
+  filterModal: {
+    backgroundColor: "#FFF",
+    padding: 20,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    maxHeight: "80%",
+  },
+
+  filterTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+
+  filterSectionTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginTop: 10,
+    marginBottom: 6,
+  },
+
+  chipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 12,
+  },
+
+  chip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: "#EEE",
+    borderRadius: 16,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+
+  chipActive: {
+    backgroundColor: "#6B4CF6",
+  },
+
+  chipText: {
+    color: "#444",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+
+  chipTextActive: {
+    color: "white",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  filterButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+
+  clearFilterBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+
+  clearFilterText: {
+    color: "#777",
+    fontSize: 14,
+  },
+
+  applyFilterBtn: {
+    backgroundColor: "#5A31F4",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+
+  applyFilterText: {
+    color: "#FFF",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+
+  searchRow: {
+    width: "100%",
+    maxWidth: 700,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    gap: 10,
+  },
+
+  searchInput: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#CCC",
+    backgroundColor: "#FFF",
+  },
+
+  filterButton: {
+    backgroundColor: "#EFE9FF",
+    padding: 10,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
 
