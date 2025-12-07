@@ -153,11 +153,17 @@ export default function EventsScreen() {
   /* ------------------ Helpers ------------------ */
   const safeDate = (x: any) => {
     if (!x) return new Date();
-    if (x.toDate) return x.toDate();
-    if (x instanceof Date) return x;
+
+    // Firestore Timestamp
+    if (x.toDate) return new Date(x.toDate().getTime());
+
+    // Already a JS Date
+    if (x instanceof Date) return new Date(x.getTime());
+
     const d = new Date(x);
-    return isNaN(d.getTime()) ? new Date() : d;
+    return isNaN(d.getTime()) ? new Date() : new Date(d.getTime());
   };
+
 
   const normalizeTags = (tags: any) => ({
     general: Array.isArray(tags?.general)
@@ -171,6 +177,10 @@ export default function EventsScreen() {
 
   const isSubscribed = (e: EventData) =>
     e.attendees?.includes(user?.uid ?? "") ?? false;
+
+  function normalizeDateOnly(d: Date) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
 
   /* ------------------ Load Events ------------------ */
   useEffect(() => {
@@ -230,13 +240,19 @@ export default function EventsScreen() {
         creatorName = `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim();
       }
 
+      const normalizedDate = normalizeDateOnly(date);
+
       const docRef = await addDoc(collection(db, "events"), {
         title,
         description,
         location,
-        date: Timestamp.fromDate(date),
+
+        // FIXED: date-only, no timezone shifts
+        date: Timestamp.fromDate(normalizedDate),
+
         startTime: Timestamp.fromDate(startTime),
         endTime: Timestamp.fromDate(endTime),
+
         createdAt: serverTimestamp(),
         createdBy: user.uid,
         creatorName,
@@ -247,12 +263,13 @@ export default function EventsScreen() {
         },
       });
 
+
       const newEvent: EventData = {
         id: docRef.id,
         title,
         description,
         location,
-        date,
+        date: normalizedDate,  // FIXED
         startTime,
         endTime,
         createdBy: user.uid,
@@ -362,9 +379,10 @@ export default function EventsScreen() {
           ))}
         </View>
 
-        {/* DESCRIPTION TOGGLE */}
+        {/* DESCRIPTION SECTION */}
         {e.description ? (
           <>
+            {/* HEADER BUTTON */}
             <TouchableOpacity
               onPress={() => toggleDescription(e.id)}
               style={styles.descriptionHeader}
@@ -374,13 +392,15 @@ export default function EventsScreen() {
               </Text>
             </TouchableOpacity>
 
+            {/* COLLAPSIBLE AREA */}
             {isExpanded && (
-              <Text style={styles.descriptionFull}>
-                {e.description}
-              </Text>
+              <View style={styles.descriptionBox}>
+                <Text style={styles.descriptionFull}>{e.description}</Text>
+              </View>
             )}
           </>
         ) : null}
+
 
 
         {/* SUBSCRIBE BUTTON */}
@@ -1020,24 +1040,33 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: "#FFF",
   },
-  
+
   descriptionHeader: {
     marginTop: 10,
-    marginBottom: 4,
+    marginBottom: 6,
   },
 
   descriptionHeaderText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#6B4CF6",
+    color: "#5A31F4",
+  },
+
+  descriptionBox: {
+    backgroundColor: "#F7F5FF",   
+    borderWidth: 1,
+    borderColor: "#E3DAFF",      
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
   },
 
   descriptionFull: {
     fontSize: 14,
     color: "#444",
     lineHeight: 20,
-    marginBottom: 10,
   },
+
 
 
 });

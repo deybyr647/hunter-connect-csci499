@@ -147,6 +147,7 @@ export default function MyEventsScreen() {
         {/* DESCRIPTION TOGGLE */}
         {e.description ? (
           <>
+            {/* HEADER BUTTON */}
             <TouchableOpacity
               onPress={() => toggleDescription(e.id)}
               style={styles.descriptionHeader}
@@ -156,10 +157,11 @@ export default function MyEventsScreen() {
               </Text>
             </TouchableOpacity>
 
+            {/* COLLAPSIBLE AREA */}
             {isExpanded && (
-              <Text style={styles.descriptionFull}>
-                {e.description}
-              </Text>
+              <View style={styles.descriptionBox}>
+                <Text style={styles.descriptionFull}>{e.description}</Text>
+              </View>
             )}
           </>
         ) : null}
@@ -459,22 +461,32 @@ const styles = StyleSheet.create({
     color: "#666",
     fontWeight: "600",
   },
-  
+
   descriptionHeader: {
     marginTop: 10,
-    marginBottom: 4,
+    marginBottom: 6,
   },
 
   descriptionHeaderText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#6B4CF6",
+    color: "#5A31F4",
+  },
+
+  descriptionBox: {
+    backgroundColor: "#F7F5FF",   
+    borderWidth: 1,
+    borderColor: "#E3DAFF",      
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
   },
 
   descriptionFull: {
     fontSize: 14,
     color: "#444",
     lineHeight: 20,
-    marginBottom: 10,
   },
+
+
 });
