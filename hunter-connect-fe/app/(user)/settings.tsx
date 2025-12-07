@@ -1,4 +1,4 @@
-import { auth, db } from "@/firebase/firebaseConfig";
+import { auth } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
 import {
   EmailAuthProvider,
@@ -7,7 +7,6 @@ import {
   updatePassword,
   updateProfile,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -18,13 +17,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-// 🔥 ANIMATION IMPORTS
+
 import Animated, {
   SlideInRight,
   SlideOutLeft,
   SlideOutRight,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {getUser, UserInterface} from "@/api/Users";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -40,25 +40,23 @@ export default function SettingsScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    const load = async () => {
-      if (!user) return;
+      (async() => {
 
-      setEmail(user.email || "");
+          try {
+              const bearerToken = await user?.getIdToken();
+              const userData: UserInterface | undefined = await getUser(user?.uid, bearerToken);
 
-      const nameSplit = (user.displayName || "User").split(" ");
-      setFirstName(nameSplit[0]);
-      setLastName(nameSplit.slice(1).join(" "));
+              const { firstName, lastName, email, preferences } = userData;
 
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
+              setFirstName(firstName || "Unknown First Name");
+              setLastName(lastName || "Unknown Last Name");
+              setEmail(email || "Unknown Email Address");
+              setAcademicYear(preferences.academicYear);
+          } catch (error) {
+              console.error(error);
+          }
 
-      if (snap.exists()) {
-        const prefs = snap.data().preferences || {};
-        setAcademicYear(prefs.academicYear || "");
-      }
-    };
-
-    load();
+      })();
   }, []);
 
   const handleSave = async () => {

@@ -1,4 +1,4 @@
-import { UserInterface, createUser } from "@/app/(auth)/api/Users";
+import { UserInterface, createUser } from "@/api/Users";
 import { useRouter } from "expo-router";
 import {
   createUserWithEmailAndPassword,
@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth } from "../../firebase/firebaseConfig";
+import { auth } from "../../api/firebaseConfig";
 import { AuthStyles as styles } from "./AuthStyles";
 
 type AuthMode = "login" | "signup";
@@ -170,12 +170,9 @@ export default function AuthScreen() {
           },
           email: email,
           uid: uid,
-          bearerToken: bearerToken,
         };
 
-        console.log("Request Body: \n", reqBody);
-        console.log("Bearer Token: \n", bearerToken);
-        await createUser(reqBody);
+        await createUser(reqBody, bearerToken);
 
         // Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);

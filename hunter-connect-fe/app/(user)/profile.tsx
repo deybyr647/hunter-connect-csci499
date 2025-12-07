@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -11,7 +10,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth, db } from "../../firebase/firebaseConfig";
+import { auth } from "@/api/firebaseConfig";
+import {getUser, UserInterface} from "@/api/Users";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -20,19 +20,20 @@ export default function ProfileScreen() {
   const [academicYear, setAcademicYear] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
+      (async() => {
 
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
+          try {
+              const bearerToken = await user?.getIdToken();
+              const userData: UserInterface | undefined = await getUser(user?.uid, bearerToken);
 
-      if (snap.exists()) {
-        const prefs = snap.data().preferences;
-        if (prefs?.academicYear) setAcademicYear(prefs.academicYear);
-      }
-    };
+              const year = userData?.preferences?.academicYear ?? "Unknown Academic Year";
+              setAcademicYear(year);
+          } catch (error) {
+              console.error(error);
+          }
 
-    fetchData();
+      })();
+
   }, []);
 
   return (

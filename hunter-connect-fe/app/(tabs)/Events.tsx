@@ -1,4 +1,4 @@
-import { auth, db } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -36,6 +36,8 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
+import {getUser, UserInterface} from "@/api/Users";
+import {EventInterface, getAllEvents, timestampToDate} from "@/api/Events";
 
 /* ----------------------------- EVENT TYPES ----------------------------- */
 
@@ -113,7 +115,7 @@ export default function EventsScreen() {
   const user = auth.currentUser;
 
   const [loading, setLoading] = useState(true);
-  const [upcomingEvents, setUpcomingEvents] = useState<EventData[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<EventInterface[] | undefined>([]);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -182,7 +184,7 @@ export default function EventsScreen() {
       : Object.values(tags?.courses ?? {}),
   });
 
-  const isSubscribed = (e: EventData) =>
+  const isSubscribed = (e: EventInterface) =>
     e.attendees?.includes(user?.uid ?? "") ?? false;
 
   function normalizeDateOnly(d: Date) {
@@ -201,46 +203,29 @@ export default function EventsScreen() {
   /* ------------------ Load Events ------------------ */
   useEffect(() => {
     if (!user) return;
+      (async () => {
+          try {
+              const bearerToken = await user?.getIdToken();
+              const events: EventInterface[] | undefined = await getAllEvents(bearerToken);
 
-    const loadEvents = async () => {
-      try {
-        const snapshot = await getDocs(query(collection(db, "events")));
+              const upcomingEvents: EventInterface[] | undefined =
+                  events?.map(arr => arr)
+                      .filter(event => {
+                        //@ts-ignore
+                        event.createdAt = timestampToDate(event.createdAt); //@ts-ignore
+                        event.startTime = timestampToDate(event.startTime); //@ts-ignore
+                        event.endTime = timestampToDate(event.endTime);
+                        event.tags = normalizeTags(event.tags);
 
-        const allEvents = await Promise.all(
-          snapshot.docs.map(async (docSnap) => {
-            const data = docSnap.data();
-            let creatorName = "Unknown";
+                        return event.endTime >= new Date ();
+                      });
 
-            if (data.createdBy) {
-              const u = await getDoc(doc(db, "users", data.createdBy));
-              if (u.exists()) {
-                const d = u.data();
-                creatorName = `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim();
-              }
-            }
-
-            return {
-              id: docSnap.id,
-              ...data,
-              creatorName,
-              createdAt: data.createdAt?.toDate?.() ?? new Date(),
-              tags: normalizeTags(data.tags),
-            } as EventData;
-          })
-        );
-
-        const upcoming = allEvents.filter(
-          (e) => safeDate(e.endTime) >= new Date()
-        );
-        setUpcomingEvents(upcoming);
-      } catch (e) {
-        console.error(e);
-      }
-
-      setLoading(false);
-    };
-
-    loadEvents();
+              setUpcomingEvents(upcomingEvents);
+              setLoading(false);
+          } catch (error) {
+              console.error(error);
+          }
+      })()
   }, []);
 
   /* ------------------ Create Event ------------------ */
@@ -278,7 +263,7 @@ export default function EventsScreen() {
       });
 
 
-      const newEvent: EventData = {
+      const newEvent: EventInterface = {
         id: docRef.id,
         title,
         description,
@@ -312,7 +297,7 @@ export default function EventsScreen() {
   };
 
   /* ------------------ Subscribe / Unsubscribe ------------------ */
-  const toggleSubscribe = async (event: EventData) => {
+  const toggleSubscribe = async (event: EventInterface) => {
     if (!user) return;
 
     try {
@@ -373,7 +358,7 @@ export default function EventsScreen() {
 
 
   /* ------------------ Event Card ------------------ */
-  const renderEvent = (e: EventData) => {
+  const renderEvent = (e: EventInterface) => {
     const d = safeDate(e.date);
     const s = safeDate(e.startTime);
     const ed = safeDate(e.endTime);

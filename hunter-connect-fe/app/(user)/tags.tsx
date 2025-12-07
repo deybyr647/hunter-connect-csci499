@@ -1,6 +1,5 @@
-import { auth, db } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   ScrollView,
@@ -9,13 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-// 🔥 ANIMATION IMPORTS
+
 import Animated, {
   SlideInRight,
-  SlideOutLeft,
   SlideOutRight,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {getUser, UserInterface} from "@/api/Users";
 
 export default function TagsScreen() {
   const router = useRouter();
@@ -27,22 +26,24 @@ export default function TagsScreen() {
   const [academicYear, setAcademicYear] = useState("");
 
   useEffect(() => {
-    const load = async () => {
-      if (!user) return;
+      (async() => {
 
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
+          try {
+              const bearerToken = await user?.getIdToken();
+              const userData: UserInterface | undefined = await getUser(user?.uid, bearerToken);
 
-      if (snap.exists()) {
-        const prefs = snap.data().preferences || {};
-        setCourses(prefs.courses || []);
-        setSkills(prefs.skills || []);
-        setInterests(prefs.interests || []);
-        setAcademicYear(prefs.academicYear || "");
-      }
-    };
+              const { preferences } = userData;
+              const { academicYear, courses, skills, interests } = preferences;
 
-    load();
+              setCourses(courses || []);
+              setSkills(skills || []);
+              setInterests(interests || []);
+              setAcademicYear(academicYear || "Unknown Academic Year");
+          } catch (error) {
+              console.error(error);
+          }
+
+      })();
   }, []);
 
   return (

@@ -1,4 +1,4 @@
-import { auth, db } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
