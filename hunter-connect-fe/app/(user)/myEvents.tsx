@@ -60,7 +60,7 @@ export default function MyEventsScreen() {
   const [myEvents, setMyEvents] = useState<EventData[]>([]);
   const [subscribedEvents, setSubscribedEvents] = useState<EventData[]>([]);
   const [expiredEvents, setExpiredEvents] = useState<EventData[]>([]);
-
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   /* ------------------------------ HELPERS ------------------------------ */
 
   const safeDate = (x: any) => {
@@ -91,13 +91,19 @@ export default function MyEventsScreen() {
       : Object.values(tags?.courses ?? {}),
   });
 
+  const toggleDescription = (id: string) => {
+    setExpandedCards((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
   /* -------------------------- RENDER EVENT CARD ------------------------- */
 
   const renderEvent = (e: EventData) => {
     const date = safeDate(e.date);
     const start = safeDate(e.startTime);
     const end = safeDate(e.endTime);
-
+    const isExpanded = expandedCards[e.id] ?? false;
     return (
       <View key={e.id} style={styles.eventCard}>
         <Text style={styles.cardTitle}>{e.title}</Text>
@@ -137,6 +143,26 @@ export default function MyEventsScreen() {
             </View>
           ))}
         </View>
+
+        {/* DESCRIPTION TOGGLE */}
+        {e.description ? (
+          <>
+            <TouchableOpacity
+              onPress={() => toggleDescription(e.id)}
+              style={styles.descriptionHeader}
+            >
+              <Text style={styles.descriptionHeaderText}>
+                Description {isExpanded ? "▲" : "▼"}
+              </Text>
+            </TouchableOpacity>
+
+            {isExpanded && (
+              <Text style={styles.descriptionFull}>
+                {e.description}
+              </Text>
+            )}
+          </>
+        ) : null}
 
         {/* Subscribe / Unsubscribe */}
         {e.createdBy !== user?.uid && (
@@ -432,5 +458,23 @@ const styles = StyleSheet.create({
   unsubButtonText: {
     color: "#666",
     fontWeight: "600",
+  },
+  
+  descriptionHeader: {
+    marginTop: 10,
+    marginBottom: 4,
+  },
+
+  descriptionHeaderText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#6B4CF6",
+  },
+
+  descriptionFull: {
+    fontSize: 14,
+    color: "#444",
+    lineHeight: 20,
+    marginBottom: 10,
   },
 });

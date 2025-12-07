@@ -138,6 +138,9 @@ export default function EventsScreen() {
   const [tempStart, setTempStart] = useState(new Date());
   const [tempEnd, setTempEnd] = useState(new Date());
 
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+
+
   /* ------------------ Picker Helpers ------------------ */
   const openPicker = (mode: "date" | "start" | "end") => {
     setPickerMode(mode);
@@ -305,34 +308,35 @@ export default function EventsScreen() {
     }
   };
 
+  const toggleDescription = (id: string) => {
+    setExpandedCards((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   /* ------------------ Event Card ------------------ */
   const renderEvent = (e: EventData) => {
     const d = safeDate(e.date);
     const s = safeDate(e.startTime);
     const ed = safeDate(e.endTime);
 
+    const isExpanded = expandedCards[e.id] ?? false;
+
     return (
       <View key={e.id} style={styles.eventCard}>
         <Text style={styles.cardTitle}>{e.title}</Text>
 
         <Text style={styles.metaText}>
-          Created by {e.creatorName} •{" "}
-          {safeDate(e.createdAt).toLocaleDateString()}
+          Created by {e.creatorName} • {safeDate(e.createdAt).toLocaleDateString()}
         </Text>
 
         <View style={styles.row}>
           <Ionicons name="calendar-outline" size={16} color="#555" />
           <Text style={styles.cardDetail}>
             {d.toLocaleDateString()} •{" "}
-            {s.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}{" "}
-            -{" "}
-            {ed.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            {s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
+            {ed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </Text>
         </View>
 
@@ -358,30 +362,50 @@ export default function EventsScreen() {
           ))}
         </View>
 
-        {/* Subscribe Button */}
-        {e.createdBy !== user?.uid && (
-          <TouchableOpacity
-            style={
-              isSubscribed(e)
-                ? styles.unsubscribeBtn
-                : styles.subscribeBtn
-            }
-            onPress={() => toggleSubscribe(e)}
-          >
-            <Text
-              style={
-                isSubscribed(e)
-                  ? styles.unsubscribeText
-                  : styles.subscribeText
-              }
+        {/* DESCRIPTION TOGGLE */}
+        {e.description ? (
+          <>
+            <TouchableOpacity
+              onPress={() => toggleDescription(e.id)}
+              style={styles.descriptionHeader}
             >
-              {isSubscribed(e) ? "Unsubscribe" : "Subscribe"}
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.descriptionHeaderText}>
+                Description {isExpanded ? "▲" : "▼"}
+              </Text>
+            </TouchableOpacity>
+
+            {isExpanded && (
+              <Text style={styles.descriptionFull}>
+                {e.description}
+              </Text>
+            )}
+          </>
+        ) : null}
+
+
+        {/* SUBSCRIBE BUTTON */}
+        {e.createdBy !== user?.uid && (
+          isSubscribed(e) ? (
+            <TouchableOpacity
+              style={styles.unsubscribeBtn}
+              onPress={() => toggleSubscribe(e)}
+            >
+              <Text style={styles.unsubscribeText}>Unsubscribe</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.subscribeBtn}
+              onPress={() => toggleSubscribe(e)}
+            >
+              <Text style={styles.subscribeText}>Subscribe</Text>
+            </TouchableOpacity>
+          )
         )}
+
       </View>
     );
   };
+
 
   /* ------------------ Web/Mobile Picker ------------------ */
 
@@ -503,11 +527,13 @@ export default function EventsScreen() {
               />
 
               <TextInput
-                style={styles.input}
+                style={[styles.input, { height: 80 }]}
+                multiline
                 placeholder="Description"
                 value={description}
                 onChangeText={setDescription}
               />
+
 
               <TextInput
                 style={styles.input}
@@ -994,4 +1020,24 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: "#FFF",
   },
+  
+  descriptionHeader: {
+    marginTop: 10,
+    marginBottom: 4,
+  },
+
+  descriptionHeaderText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#6B4CF6",
+  },
+
+  descriptionFull: {
+    fontSize: 14,
+    color: "#444",
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+
+
 });
