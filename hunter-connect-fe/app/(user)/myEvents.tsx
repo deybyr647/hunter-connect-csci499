@@ -1,17 +1,16 @@
 import { auth, db } from "@/api/firebaseConfig";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import {
-  doc,
-  getDocs,
-  getDoc,
-  collection,
-  query,
-  arrayUnion,
   arrayRemove,
+  arrayUnion,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
   updateDoc,
 } from "firebase/firestore";
-
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -21,11 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-import Animated, {
-  SlideInRight,
-  SlideOutRight,
-} from "react-native-reanimated";
+import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 /* ----------------------------- EVENT TYPES ----------------------------- */
@@ -60,7 +55,9 @@ export default function MyEventsScreen() {
   const [myEvents, setMyEvents] = useState<EventData[]>([]);
   const [subscribedEvents, setSubscribedEvents] = useState<EventData[]>([]);
   const [expiredEvents, setExpiredEvents] = useState<EventData[]>([]);
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>(
+    {}
+  );
   /* ------------------------------ HELPERS ------------------------------ */
 
   const safeDate = (x: any) => {
@@ -75,11 +72,9 @@ export default function MyEventsScreen() {
   const isSubscribed = (e: EventData) =>
     e.attendees?.includes(user?.uid ?? "") ?? false;
 
-  const isUpcoming = (e: EventData) =>
-    safeDate(e.endTime) >= new Date();
+  const isUpcoming = (e: EventData) => safeDate(e.endTime) >= new Date();
 
-  const isExpired = (e: EventData) =>
-    safeDate(e.endTime) < new Date();
+  const isExpired = (e: EventData) => safeDate(e.endTime) < new Date();
 
   const normalizeTags = (tags: any) => ({
     general: Array.isArray(tags?.general)
@@ -117,7 +112,10 @@ export default function MyEventsScreen() {
           <Ionicons name="calendar-outline" size={16} color="#555" />
           <Text style={styles.cardDetail}>
             {date.toLocaleDateString()} •{" "}
-            {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
+            {start.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}{" "}
             -{" "}
             {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </Text>
@@ -174,9 +172,7 @@ export default function MyEventsScreen() {
           >
             <Text
               style={
-                isSubscribed(e)
-                  ? styles.unsubButtonText
-                  : styles.subButtonText
+                isSubscribed(e) ? styles.unsubButtonText : styles.subButtonText
               }
             >
               {isSubscribed(e) ? "Unsubscribe" : "Subscribe"}
@@ -251,7 +247,10 @@ export default function MyEventsScreen() {
       setSubscribedEvents((prev) =>
         isSubscribed(event)
           ? prev.filter((e) => e.id !== event.id)
-          : [...prev, { ...event, attendees: [...(event.attendees ?? []), user.uid] }]
+          : [
+              ...prev,
+              { ...event, attendees: [...(event.attendees ?? []), user.uid] },
+            ]
       );
     } catch (err) {
       console.error("Subscribe error:", err);
@@ -294,7 +293,9 @@ export default function MyEventsScreen() {
           {subscribedEvents.length ? (
             subscribedEvents.map(renderEvent)
           ) : (
-            <Text style={styles.empty}>You are not subscribed to any events.</Text>
+            <Text style={styles.empty}>
+              You are not subscribed to any events.
+            </Text>
           )}
 
           {/* EXPIRED */}
@@ -474,9 +475,9 @@ const styles = StyleSheet.create({
   },
 
   descriptionBox: {
-    backgroundColor: "#F7F5FF",   
+    backgroundColor: "#F7F5FF",
     borderWidth: 1,
-    borderColor: "#E3DAFF",      
+    borderColor: "#E3DAFF",
     padding: 12,
     borderRadius: 10,
     marginBottom: 10,
@@ -487,6 +488,4 @@ const styles = StyleSheet.create({
     color: "#444",
     lineHeight: 20,
   },
-
-
 });

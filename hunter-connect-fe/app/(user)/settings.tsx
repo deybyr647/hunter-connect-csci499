@@ -1,3 +1,4 @@
+import { UserInterface, getUser } from "@/api/Users";
 import { auth } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
 import {
@@ -17,14 +18,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import Animated, {
   SlideInRight,
   SlideOutLeft,
   SlideOutRight,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {getUser, UserInterface} from "@/api/Users";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -40,23 +39,24 @@ export default function SettingsScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-      (async() => {
+    (async () => {
+      try {
+        const bearerToken = await user?.getIdToken();
+        const userData: UserInterface | undefined = await getUser(
+          user?.uid,
+          bearerToken
+        );
 
-          try {
-              const bearerToken = await user?.getIdToken();
-              const userData: UserInterface | undefined = await getUser(user?.uid, bearerToken);
+        const { firstName, lastName, email, preferences } = userData;
 
-              const { firstName, lastName, email, preferences } = userData;
-
-              setFirstName(firstName || "Unknown First Name");
-              setLastName(lastName || "Unknown Last Name");
-              setEmail(email || "Unknown Email Address");
-              setAcademicYear(preferences.academicYear);
-          } catch (error) {
-              console.error(error);
-          }
-
-      })();
+        setFirstName(firstName || "Unknown First Name");
+        setLastName(lastName || "Unknown Last Name");
+        setEmail(email || "Unknown Email Address");
+        setAcademicYear(preferences.academicYear);
+      } catch (error) {
+        console.error(error);
+      }
+    })();
   }, []);
 
   const handleSave = async () => {

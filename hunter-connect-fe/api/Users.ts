@@ -96,8 +96,10 @@ const updateUser = async (body: UserInterface, bearerToken: string) => {
   }
 };
 
-const getUser = async (uid: string | undefined, bearerToken: string | undefined) => {
-
+const getUser = async (
+  uid: string | undefined,
+  bearerToken: string | undefined
+) => {
   const getUserRequest: RequestInit = {
     method: "GET",
     headers: {
@@ -134,9 +136,9 @@ const getAllUsers = async (bearerToken: string) => {
   const getAllUsersRequest: RequestInit = {
     method: "GET",
     headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${bearerToken}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${bearerToken}`,
     },
     mode: "cors",
     credentials: "omit",

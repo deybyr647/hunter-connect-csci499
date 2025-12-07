@@ -26,18 +26,20 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-
   return (
     <ThemeProvider value={DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ header: () => <TopHeader />, headerShown: true }} />
+        <Stack.Screen
+          name="(tabs)"
+          options={{ header: () => <TopHeader />, headerShown: true }}
+        />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen
           name="messages"
           options={{
-              header: () => <TopHeader />,
-              headerShown: true
-        }}
+            header: () => <TopHeader />,
+            headerShown: true,
+          }}
         />
       </Stack>
     </ThemeProvider>

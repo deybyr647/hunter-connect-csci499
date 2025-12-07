@@ -1,43 +1,38 @@
+import { EventInterface, getAllEvents, timestampToDate } from "@/api/Events";
+import { UserInterface, getUser } from "@/api/Users";
 import { auth, db } from "@/api/firebaseConfig";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useRouter } from "expo-router";
 import {
-  doc,
-  getDocs,
-  getDoc,
-  addDoc,
-  collection,
-  serverTimestamp,
-  query,
   Timestamp,
-  arrayUnion,
+  addDoc,
   arrayRemove,
+  arrayUnion,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
-
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   TextInput,
-  View,
-  Modal,
-  Platform,
+  TouchableOpacity,
   TouchableWithoutFeedback,
+  View,
 } from "react-native";
-
-import Animated, {
-  SlideInRight,
-  SlideOutRight,
-} from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
-import {getUser, UserInterface} from "@/api/Users";
-import {EventInterface, getAllEvents, timestampToDate} from "@/api/Events";
+import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 /* ----------------------------- EVENT TYPES ----------------------------- */
 
@@ -115,7 +110,9 @@ export default function EventsScreen() {
   const user = auth.currentUser;
 
   const [loading, setLoading] = useState(true);
-  const [upcomingEvents, setUpcomingEvents] = useState<EventInterface[] | undefined>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<
+    EventInterface[] | undefined
+  >([]);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -134,21 +131,23 @@ export default function EventsScreen() {
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
 
-  const [pickerMode, setPickerMode] =
-    useState<null | "date" | "start" | "end">(null);
+  const [pickerMode, setPickerMode] = useState<null | "date" | "start" | "end">(
+    null
+  );
 
   const [tempDate, setTempDate] = useState(new Date());
   const [tempStart, setTempStart] = useState(new Date());
   const [tempEnd, setTempEnd] = useState(new Date());
 
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>(
+    {}
+  );
 
   // Search + Filter state
   const [showFilter, setShowFilter] = useState(false);
   const [filterGeneral, setFilterGeneral] = useState<string[]>([]);
   const [filterCourses, setFilterCourses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
 
   /* ------------------ Picker Helpers ------------------ */
   const openPicker = (mode: "date" | "start" | "end") => {
@@ -172,7 +171,6 @@ export default function EventsScreen() {
     const d = new Date(x);
     return isNaN(d.getTime()) ? new Date() : new Date(d.getTime());
   };
-
 
   const normalizeTags = (tags: any) => ({
     general: Array.isArray(tags?.general)
@@ -203,29 +201,30 @@ export default function EventsScreen() {
   /* ------------------ Load Events ------------------ */
   useEffect(() => {
     if (!user) return;
-      (async () => {
-          try {
-              const bearerToken = await user?.getIdToken();
-              const events: EventInterface[] | undefined = await getAllEvents(bearerToken);
+    (async () => {
+      try {
+        const bearerToken = await user?.getIdToken();
+        const events: EventInterface[] | undefined =
+          await getAllEvents(bearerToken);
 
-              const upcomingEvents: EventInterface[] | undefined =
-                  events?.map(arr => arr)
-                      .filter(event => {
-                        //@ts-ignore
-                        event.createdAt = timestampToDate(event.createdAt); //@ts-ignore
-                        event.startTime = timestampToDate(event.startTime); //@ts-ignore
-                        event.endTime = timestampToDate(event.endTime);
-                        event.tags = normalizeTags(event.tags);
+        const upcomingEvents: EventInterface[] | undefined = events
+          ?.map((arr) => arr)
+          .filter((event) => {
+            //@ts-ignore
+            event.createdAt = timestampToDate(event.createdAt); //@ts-ignore
+            event.startTime = timestampToDate(event.startTime); //@ts-ignore
+            event.endTime = timestampToDate(event.endTime);
+            event.tags = normalizeTags(event.tags);
 
-                        return event.endTime >= new Date ();
-                      });
+            return event.endTime >= new Date();
+          });
 
-              setUpcomingEvents(upcomingEvents);
-              setLoading(false);
-          } catch (error) {
-              console.error(error);
-          }
-      })()
+        setUpcomingEvents(upcomingEvents);
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+      }
+    })();
   }, []);
 
   /* ------------------ Create Event ------------------ */
@@ -251,7 +250,7 @@ export default function EventsScreen() {
         location,
         startTime: Timestamp.fromDate(finalStart),
         endTime: Timestamp.fromDate(finalEnd),
-        date: Timestamp.fromDate(normalizedDate),  
+        date: Timestamp.fromDate(normalizedDate),
         createdAt: serverTimestamp(),
         createdBy: user.uid,
         creatorName,
@@ -262,13 +261,12 @@ export default function EventsScreen() {
         },
       });
 
-
       const newEvent: EventInterface = {
         id: docRef.id,
         title,
         description,
         location,
-        date: normalizedDate,  // FIXED
+        date: normalizedDate, // FIXED
         startTime,
         endTime,
         createdBy: user.uid,
@@ -356,7 +354,6 @@ export default function EventsScreen() {
     return true;
   });
 
-
   /* ------------------ Event Card ------------------ */
   const renderEvent = (e: EventInterface) => {
     const d = safeDate(e.date);
@@ -370,7 +367,8 @@ export default function EventsScreen() {
         <Text style={styles.cardTitle}>{e.title}</Text>
 
         <Text style={styles.metaText}>
-          Created by {e.creatorName} • {safeDate(e.createdAt).toLocaleDateString()}
+          Created by {e.creatorName} •{" "}
+          {safeDate(e.createdAt).toLocaleDateString()}
         </Text>
 
         <View style={styles.row}>
@@ -426,11 +424,9 @@ export default function EventsScreen() {
           </>
         ) : null}
 
-
-
         {/* SUBSCRIBE BUTTON */}
-        {e.createdBy !== user?.uid && (
-          isSubscribed(e) ? (
+        {e.createdBy !== user?.uid &&
+          (isSubscribed(e) ? (
             <TouchableOpacity
               style={styles.unsubscribeBtn}
               onPress={() => toggleSubscribe(e)}
@@ -444,13 +440,10 @@ export default function EventsScreen() {
             >
               <Text style={styles.subscribeText}>Subscribe</Text>
             </TouchableOpacity>
-          )
-        )}
-
+          ))}
       </View>
     );
   };
-
 
   /* ------------------ Web/Mobile Picker ------------------ */
 
@@ -523,8 +516,8 @@ export default function EventsScreen() {
           pickerMode === "date"
             ? tempDate
             : pickerMode === "start"
-            ? tempStart
-            : tempEnd
+              ? tempStart
+              : tempEnd
         }
         mode={mode}
         display="spinner"
@@ -578,7 +571,6 @@ export default function EventsScreen() {
                 value={description}
                 onChangeText={setDescription}
               />
-
 
               <TextInput
                 style={styles.input}
@@ -723,7 +715,10 @@ export default function EventsScreen() {
               </TouchableOpacity>
 
               {/* CREATE BUTTON */}
-              <TouchableOpacity style={styles.createButton} onPress={createEvent}>
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={createEvent}
+              >
                 <Text style={styles.createButtonText}>Create Event</Text>
               </TouchableOpacity>
             </View>
@@ -746,8 +741,6 @@ export default function EventsScreen() {
             </TouchableOpacity>
           </View>
 
-
-
           {/* UPCOMING EVENTS */}
           {loading ? (
             <ActivityIndicator size="large" color="#5A31F4" />
@@ -765,8 +758,8 @@ export default function EventsScreen() {
               {pickerMode === "date"
                 ? "Select Event Date"
                 : pickerMode === "start"
-                ? "Select Start Time"
-                : "Select End Time"}
+                  ? "Select Start Time"
+                  : "Select End Time"}
             </Text>
 
             {Platform.OS === "web" ? renderWebPicker() : renderMobilePicker()}
@@ -812,12 +805,18 @@ export default function EventsScreen() {
                         key={t.value}
                         onPress={() => {
                           setFilterGeneral((prev) =>
-                            active ? prev.filter((x) => x !== t.value) : [...prev, t.value]
+                            active
+                              ? prev.filter((x) => x !== t.value)
+                              : [...prev, t.value]
                           );
                         }}
                         style={[styles.chip, active && styles.chipActive]}
                       >
-                        <Text style={active ? styles.chipTextActive : styles.chipText}>
+                        <Text
+                          style={
+                            active ? styles.chipTextActive : styles.chipText
+                          }
+                        >
                           {t.label}
                         </Text>
                       </TouchableOpacity>
@@ -838,12 +837,18 @@ export default function EventsScreen() {
                             key={t.value}
                             onPress={() => {
                               setFilterCourses((prev) =>
-                                active ? prev.filter((x) => x !== t.value) : [...prev, t.value]
+                                active
+                                  ? prev.filter((x) => x !== t.value)
+                                  : [...prev, t.value]
                               );
                             }}
                             style={[styles.chip, active && styles.chipActive]}
                           >
-                            <Text style={active ? styles.chipTextActive : styles.chipText}>
+                            <Text
+                              style={
+                                active ? styles.chipTextActive : styles.chipText
+                              }
+                            >
                               {t.label}
                             </Text>
                           </TouchableOpacity>
@@ -876,7 +881,6 @@ export default function EventsScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-
     </Animated.View>
   );
 }
@@ -1180,9 +1184,9 @@ const styles = StyleSheet.create({
   },
 
   descriptionBox: {
-    backgroundColor: "#F7F5FF",   
+    backgroundColor: "#F7F5FF",
     borderWidth: 1,
-    borderColor: "#E3DAFF",      
+    borderColor: "#E3DAFF",
     padding: 12,
     borderRadius: 10,
     marginBottom: 10,
@@ -1342,6 +1346,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
-
 });

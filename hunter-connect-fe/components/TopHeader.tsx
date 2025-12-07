@@ -1,5 +1,5 @@
-import Colors from "@/constants/Colors";
 import { auth } from "@/api/firebaseConfig";
+import Colors from "@/constants/Colors";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -50,7 +50,7 @@ const TopHeader = () => {
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push("/(tabs)/Landing")}>
-            <Text style={styles.title}>Hunter Connect</Text>
+          <Text style={styles.title}>Hunter Connect</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

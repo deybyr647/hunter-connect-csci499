@@ -142,7 +142,6 @@ export default function AuthScreen() {
           }
         }
 
-
         router.push("/(tabs)/Landing");
       } else {
         const userCredential = await createUserWithEmailAndPassword(
