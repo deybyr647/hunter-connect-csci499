@@ -1,144 +1,1026 @@
-/* import { StyleSheet } from "react-native";
+// -----------------------------------------------------------
+//  EVENTS.TSX — CLEAN MODERN UI VERSION
+// -----------------------------------------------------------
 
-import EditScreenInfo from "@/components/EditScreenInfo";
-import { Text, View } from "@/components/Themed";
+import { auth, db } from "@/firebase/firebaseConfig";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  doc,
+  getDocs,
+  getDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
+  query,
+  Timestamp,
+  arrayUnion,
+  arrayRemove,
+  updateDoc,
+} from "firebase/firestore";
 
-export default function EventScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Events</Text>
-      <View
-        style={styles.separator}
-        lightColor="#eee"
-        darkColor="rgba(255,255,255,0.1)"
-      />
-      <EditScreenInfo path="app/(tabs)/Events.tsx" />
-    </View>
-  );
-}
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  View,
+  Modal,
+  Platform,
+} from "react-native";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: "80%",
-  },
-});
-*/
-import React from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import DropDownPicker from "react-native-dropdown-picker";
 
-const dummyEvents = [
-  {
-    id: "1",
-    name: "Girls Who Code Python Workshop",
-    date: "Nov 20, 2025",
-    time: "3:00 PM - 5:00 PM",
-    location: "Hunter College, Room 204",
-  },
-  {
-    id: "2",
-    name: "ACM Club Meetup",
-    date: "Nov 22, 2025",
-    time: "4:00 PM - 6:00 PM",
-    location: "Hunter College, Room N702",
-  },
-  {
-    id: "3",
-    name: "Hunter Career Fair Prep",
-    date: "Nov 25, 2025",
-    time: "1:00 PM - 3:00 PM",
-    location: "Hunter College, Career Center",
-  },
-  {
-    id: "4",
-    name: "Google Networking Event",
-    date: "Nov 28, 2025",
-    time: "6:00 PM - 9:00 PM",
-    location: "Hunter College, Cafeteria",
-  },
-];
 
-export default function Events() {
-  const handleRegister = (eventName: string) => {
-    // This can later link to a registration form or API
-    alert(`Registered for ${eventName}! 🎉`);
+// -----------------------------------------------------------
+// EVENT TYPES
+// -----------------------------------------------------------
+interface EventData {
+  id: string;
+  title: string;
+  date: any;
+  startTime?: any;
+  endTime?: any;
+  location?: string;
+  description?: string;
+  createdBy?: string;
+  attendees?: string[];
+
+  tags?: {
+    general: string[];
+    courses: string[];
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Upcoming Events</Text>
+  createdAt?: any;
+  creatorName?: string;
+}
 
-      <FlatList
-        data={dummyEvents}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.eventCard}>
-            <Text style={styles.eventName}>{item.name}</Text>
-            <Text style={styles.eventInfo}>
-              📅 {item.date} | ⏰ {item.time}
-            </Text>
-            <Text style={styles.eventInfo}>📍 {item.location}</Text>
 
-            <Pressable
-              style={styles.registerBtn}
-              onPress={() => handleRegister(item.name)}
-            >
-              <Text style={styles.registerText}>Register</Text>
-            </Pressable>
+// -----------------------------------------------------------
+// TAG OPTIONS
+// -----------------------------------------------------------
+const generalTagList = [
+  { label: "Study", value: "Study" },
+  { label: "Review", value: "Review" },
+  { label: "Workshop", value: "Workshop" },
+  { label: "Project", value: "Project" },
+  { label: "Group Meeting", value: "Group Meeting" },
+  { label: "Tutoring", value: "Tutoring" },
+  { label: "Exam Prep", value: "Exam Prep" },
+  { label: "Career Event", value: "Career Event" },
+  { label: "Networking", value: "Networking" },
+  { label: "Hackathon", value: "Hackathon" },
+  { label: "Coding Challenge", value: "Coding Challenge" },
+  { label: "Office Hours", value: "Office Hours" },
+];
+
+const courseTagList = [
+  { label: "🧩 100-Level Courses", value: "100level", selectable: false },
+  { label: "CSCI 12100", value: "CSCI 12100", parent: "100level" },
+  { label: "CSCI 12700", value: "CSCI 12700", parent: "100level" },
+  { label: "CSCI 13200", value: "CSCI 13200", parent: "100level" },
+  { label: "CSCI 13300", value: "CSCI 13300", parent: "100level" },
+  { label: "CSCI 13500", value: "CSCI 13500", parent: "100level" },
+  { label: "CSCI 13600", value: "CSCI 13600", parent: "100level" },
+  { label: "CSCI 15000", value: "CSCI 15000", parent: "100level" },
+  { label: "CSCI 16000", value: "CSCI 16000", parent: "100level" },
+
+  { label: "⚙️ 200-Level Courses", value: "200level", selectable: false },
+  { label: "CSCI 22700", value: "CSCI 22700", parent: "200level" },
+  { label: "CSCI 23200", value: "CSCI 23200", parent: "200level" },
+  { label: "CSCI 23300", value: "CSCI 23300", parent: "200level" },
+  { label: "CSCI 23500", value: "CSCI 23500", parent: "200level" },
+  { label: "CSCI 26000", value: "CSCI 26000", parent: "200level" },
+  { label: "CSCI 26500", value: "CSCI 26500", parent: "200level" },
+
+  { label: "💻 300-Level Courses", value: "300level", selectable: false },
+  { label: "CSCI 32000", value: "CSCI 32000", parent: "300level" },
+  { label: "CSCI 33500", value: "CSCI 33500", parent: "300level" },
+  { label: "CSCI 34000", value: "CSCI 34000", parent: "300level" },
+
+  { label: "🧠 400-Level Courses", value: "400level", selectable: false },
+  { label: "CSCI 46000", value: "CSCI 46000", parent: "400level" },
+  { label: "CSCI 49201", value: "CSCI 49201", parent: "400level" },
+  { label: "CSCI 49900", value: "CSCI 49900", parent: "400level" },
+];
+
+
+// -----------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------
+export default function EventsScreen() {
+  const router = useRouter();
+  const user = auth.currentUser;
+
+  const [loading, setLoading] = useState(true);
+  const [upcomingEvents, setUpcomingEvents] = useState<EventData[]>([]);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+
+  const [generalTags, setGeneralTags] = useState<string[]>([]);
+  const [courseTags, setCourseTags] = useState<string[]>([]);
+
+  const [generalOpen, setGeneralOpen] = useState(false);
+  const [courseOpen, setCourseOpen] = useState(false);
+
+  const listModeConfig = Platform.OS === "web" ? "FLATLIST" : "MODAL";
+
+  const [date, setDate] = useState(new Date());
+  const [startTime, setStartTime] = useState(new Date());
+  const [endTime, setEndTime] = useState(new Date());
+
+  const [pickerMode, setPickerMode] =
+    useState<null | "date" | "start" | "end">(null);
+
+  const [tempDate, setTempDate] = useState(new Date());
+  const [tempStart, setTempStart] = useState(new Date());
+  const [tempEnd, setTempEnd] = useState(new Date());
+
+  /* ------------------------------- Open Picker ------------------------------- */
+  const openPicker = (mode: "date" | "start" | "end") => {
+    setPickerMode(mode);
+
+    if (mode === "date") setTempDate(new Date(date));
+    if (mode === "start") setTempStart(new Date(startTime));
+    if (mode === "end") setTempEnd(new Date(endTime));
+  };
+
+  // -----------------------------------------------------------
+  // HELPERS
+  // -----------------------------------------------------------
+  const safeDate = (x: any) => {
+    if (!x) return new Date();
+    if (x.toDate) return x.toDate();
+    if (x instanceof Date) return x;
+    const d = new Date(x);
+    return isNaN(d.getTime()) ? new Date() : d;
+  };
+
+  const normalizeTags = (tags: any) => ({
+    general: Array.isArray(tags?.general)
+      ? tags.general
+      : Object.values(tags?.general ?? {}),
+
+    courses: Array.isArray(tags?.courses)
+      ? tags.courses
+      : Object.values(tags?.courses ?? {}),
+  });
+
+  const isSubscribed = (e: EventData) =>
+    e.attendees?.includes(user?.uid ?? "") ?? false;
+
+
+  // -----------------------------------------------------------
+  // LOAD EVENTS
+  // -----------------------------------------------------------
+  useEffect(() => {
+    if (!user) return;
+
+    const loadEvents = async () => {
+      try {
+        const snapshot = await getDocs(query(collection(db, "events")));
+
+        const allEvents = await Promise.all(
+          snapshot.docs.map(async (docSnap) => {
+            const data = docSnap.data();
+            let creatorName = "Unknown";
+
+            if (data.createdBy) {
+              const u = await getDoc(doc(db, "users", data.createdBy));
+              if (u.exists()) {
+                const d = u.data();
+                creatorName = `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim();
+              }
+            }
+
+            return {
+              id: docSnap.id,
+              ...data,
+              creatorName,
+              createdAt: data.createdAt?.toDate?.() ?? new Date(),
+              tags: normalizeTags(data.tags),
+            } as EventData;
+          })
+        );
+
+        const upcoming = allEvents.filter((e) => safeDate(e.endTime) >= new Date());
+        setUpcomingEvents(upcoming);
+      } catch (e) {
+        console.error(e);
+      }
+
+      setLoading(false);
+    };
+
+    loadEvents();
+  }, []);
+
+
+  // -----------------------------------------------------------
+  // CREATE EVENT
+  // -----------------------------------------------------------
+  const createEvent = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch the creator’s name
+      const userSnap = await getDoc(doc(db, "users", user.uid));
+      let creatorName = "Unknown";
+
+      if (userSnap.exists()) {
+        const d = userSnap.data();
+        creatorName = `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim();
+      }
+
+      // 1) Create Firestore event
+      const docRef = await addDoc(collection(db, "events"), {
+        title,
+        description,
+        location,
+        date: Timestamp.fromDate(date),
+        startTime: Timestamp.fromDate(startTime),
+        endTime: Timestamp.fromDate(endTime),
+        createdAt: serverTimestamp(),
+        createdBy: user.uid,
+        creatorName,
+        attendees: [],
+        tags: {
+          general: generalTags,
+          courses: courseTags,
+        },
+      });
+
+      // 2) Construct local event object for instant UI update
+      const newEvent: EventData = {
+        id: docRef.id,
+        title,
+        description,
+        location,
+        date,
+        startTime,
+        endTime,
+        createdBy: user.uid,
+        creatorName,
+        attendees: [],
+        tags: {
+          general: [...generalTags],
+          courses: [...courseTags],
+        },
+        createdAt: new Date(), // fallback until Firestore timestamp arrives
+      };
+
+      // 3) Update Upcoming Events immediately
+      setUpcomingEvents((prev) => [newEvent, ...prev]);
+
+      // 4) Clear form + close dropdown
+      setShowCreateEvent(false);
+      setTitle("");
+      setDescription("");
+      setLocation("");
+      setGeneralTags([]);
+      setCourseTags([]);
+
+      alert("Event Created!");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
+  // -----------------------------------------------------------
+  // SUBSCRIBE / UNSUBSCRIBE
+  // -----------------------------------------------------------
+  const toggleSubscribe = async (event: EventData) => {
+    if (!user) return;
+
+    try {
+      await updateDoc(doc(db, "events", event.id), {
+        attendees: isSubscribed(event)
+          ? arrayRemove(user.uid)
+          : arrayUnion(user.uid),
+      });
+
+      setUpcomingEvents((prev) =>
+        prev.map((e) =>
+          e.id === event.id
+            ? {
+                ...e,
+                attendees: isSubscribed(event)
+                  ? e.attendees?.filter((a) => a !== user.uid)
+                  : [...(e.attendees ?? []), user.uid],
+              }
+            : e
+        )
+      );
+    } catch (err) {
+      console.error("Subscription error:", err);
+    }
+  };
+
+
+  // -----------------------------------------------------------
+  // EVENT CARD UI
+  // -----------------------------------------------------------
+  const renderEvent = (e: EventData) => {
+    const d = safeDate(e.date);
+    const s = safeDate(e.startTime);
+    const ed = safeDate(e.endTime);
+
+    return (
+      <View key={e.id} style={styles.eventCard}>
+        <Text style={styles.cardTitle}>{e.title}</Text>
+
+        <Text style={styles.metaText}>
+          Created by {e.creatorName} •{" "}
+          {safeDate(e.createdAt).toLocaleDateString()}
+        </Text>
+
+        <View style={styles.row}>
+          <Ionicons name="calendar-outline" size={16} color="#555" />
+          <Text style={styles.cardDetail}>
+            {d.toLocaleDateString()} •{" "}
+            {s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
+            {ed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </Text>
+        </View>
+
+        {e.location ? (
+          <View style={styles.row}>
+            <Ionicons name="location-outline" size={16} color="#e34d4d" />
+            <Text style={styles.cardDetail}>{e.location}</Text>
           </View>
+        ) : null}
+
+        <View style={styles.tagContainer}>
+          {(e.tags?.general ?? []).map((t, i) => (
+            <View key={i} style={styles.tagPurple}>
+              <Text style={styles.tagPurpleText}>{t}</Text>
+            </View>
+          ))}
+
+          {(e.tags?.courses ?? []).map((t, i) => (
+            <View key={i} style={styles.tagGreen}>
+              <Text style={styles.tagGreenText}>{t}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Subscribe Button */}
+        {e.createdBy !== user?.uid && (
+          isSubscribed(e) ? (
+            <TouchableOpacity
+              style={styles.unsubscribeBtn}
+              onPress={() => toggleSubscribe(e)}
+            >
+              <Text style={styles.unsubscribeText}>Unsubscribe</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.subscribeBtn}
+              onPress={() => toggleSubscribe(e)}
+            >
+              <Text style={styles.subscribeText}>Subscribe</Text>
+            </TouchableOpacity>
+          )
         )}
+      </View>
+    );
+  };
+
+    /* ------------------------ Web vs Mobile Picker ------------------------ */
+
+  const renderWebPicker = () => {
+    if (pickerMode === "date") {
+      return (
+        <input
+          type="date"
+          value={tempDate.toISOString().split("T")[0]}
+          onChange={(e) => {
+            const [y, m, d] = e.target.value.split("-");
+            setTempDate(new Date(Number(y), Number(m) - 1, Number(d)));
+          }}
+          style={styles.webInput}
+        />
+      );
+    }
+
+    const formatTime = (d: Date) =>
+      d.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+    if (pickerMode === "start") {
+      return (
+        <input
+          type="time"
+          value={formatTime(tempStart)}
+          onChange={(e) => {
+            const [h, m] = e.target.value.split(":");
+            const t = new Date(tempStart);
+            t.setHours(Number(h));
+            t.setMinutes(Number(m));
+            setTempStart(t);
+          }}
+          style={styles.webInput}
+        />
+      );
+    }
+
+    if (pickerMode === "end") {
+      return (
+        <input
+          type="time"
+          value={formatTime(tempEnd)}
+          onChange={(e) => {
+            const [h, m] = e.target.value.split(":");
+            const t = new Date(tempEnd);
+            t.setHours(Number(h));
+            t.setMinutes(Number(m));
+            setTempEnd(t);
+          }}
+          style={styles.webInput}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  const renderMobilePicker = () => {
+    if (!pickerMode) return null;
+
+    const mode = pickerMode === "date" ? "date" : "time";
+
+    return (
+      <DateTimePicker
+        value={
+          pickerMode === "date"
+            ? tempDate
+            : pickerMode === "start"
+            ? tempStart
+            : tempEnd
+        }
+        mode={mode}
+        display="spinner"
+        onChange={(e, selected) => {
+          if (!selected) return;
+          if (pickerMode === "date") setTempDate(selected);
+          if (pickerMode === "start") setTempStart(selected);
+          if (pickerMode === "end") setTempEnd(selected);
+        }}
       />
-    </View>
+    );
+  };
+  // -----------------------------------------------------------
+  return (
+    <Animated.View
+      entering={SlideInRight.duration(250)}
+      exiting={SlideOutRight.duration(200)}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+
+          {/* HEADER AREA */}
+          <View style={styles.pageHeader}>
+            <Text style={styles.pageTitle}>Upcoming Events</Text>
+
+            {/* Create Event Compact Button */}
+            <TouchableOpacity
+              style={styles.createEventCompact}
+              onPress={() => setShowCreateEvent(!showCreateEvent)}
+            >
+              <Ionicons name="add-circle-outline" size={18} color="#5A31F4" />
+              <Text style={styles.createEventText}>Create Event</Text>
+            </TouchableOpacity>
+          </View>
+
+
+          {/* CREATE EVENT FORM */}
+                {showCreateEvent && (
+                  <View style={styles.createBox}>
+                    {/* Title */}
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Event Title"
+                      value={title}
+                      onChangeText={setTitle}
+                    />
+
+                    {/* Description */}
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Description"
+                      value={description}
+                      onChangeText={setDescription}
+                    />
+
+                    {/* Location */}
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Location"
+                      value={location}
+                      onChangeText={setLocation}
+                    />
+
+                    {/* GENERAL TAGS */}
+                    <Text style={styles.label}>General Tags</Text>
+                    <View
+                      style={{
+                        zIndex: generalOpen ? 3000 : 1,
+                        marginBottom: generalOpen ? 200 : 10,
+                      }}
+                    >
+                      <DropDownPicker
+                        open={generalOpen}
+                        value={null}
+                        items={generalTagList}
+                        setOpen={(open) => {
+                          setGeneralOpen(open);
+                          setCourseOpen(false);
+                        }}
+                        setValue={() => {}}
+                        onSelectItem={(item) => {
+                          if (item.value && !generalTags.includes(item.value)) {
+                            setGeneralTags([...generalTags, item.value]);
+                          }
+                        }}
+                        placeholder="Select general tags..."
+                        listMode={listModeConfig}
+                        modalAnimationType="slide"
+                        style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
+                      />
+                    </View>
+
+                    {/* GENERAL TAG CHIPS */}
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      {generalTags.map((tag, idx) => (
+                        <TouchableOpacity
+                          key={idx}
+                          style={styles.tagPurple}
+                          onPress={() =>
+                            setGeneralTags(generalTags.filter((t) => t !== tag))
+                          }
+                        >
+                          <Text style={styles.tagPurpleText}>{tag}
+                            <Text style={styles.remove}>✕</Text>
+                            </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+
+                    {/* COURSE TAGS */}
+                    <Text style={styles.label}>Course Tags</Text>
+                    <View
+                      style={{
+                        zIndex: courseOpen ? 2000 : 1,
+                        marginBottom: courseOpen ? 200 : 10,
+                      }}
+                    >
+                      <DropDownPicker
+                        open={courseOpen}
+                        value={null}
+                        items={courseTagList}
+                        setOpen={(open) => {
+                          setCourseOpen(open);
+                          setGeneralOpen(false);
+                        }}
+                        setValue={() => {}}
+                        onSelectItem={(item) => {
+                          if (item.value && item.selectable !== false) {
+                            if (!courseTags.includes(item.value)) {
+                              setCourseTags([...courseTags, item.value]);
+                            }
+                          }
+                        }}
+                        placeholder="Select course tags..."
+                        listMode={listModeConfig}
+                        searchable
+                        modalAnimationType="slide"
+                        style={styles.dropdown}
+                        dropDownContainerStyle={{
+                          ...styles.dropdownContainer,
+                          maxHeight: 400,
+                        }}
+                      />
+                    </View>
+
+                    {/* COURSE TAG CHIPS */}
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      {courseTags.map((tag, idx) => (
+                        <TouchableOpacity
+                          key={idx}
+                          style={styles.tagGreen}
+                          onPress={() =>
+                            setCourseTags(courseTags.filter((t) => t !== tag))
+                          }
+                        >
+                          <Text style={styles.tagGreenText}>{tag}
+                            <Text style={styles.remove}>✕</Text>
+                            </Text>
+                          
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+
+                    {/* DATE / TIME */}
+                    <Text style={styles.label}>Event Date</Text>
+                    <TouchableOpacity
+                      style={styles.selector}
+                      onPress={() => openPicker("date")}
+                    >
+                      <Text>{date.toDateString()}</Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.label}>Start Time</Text>
+                    <TouchableOpacity
+                      style={styles.selector}
+                      onPress={() => openPicker("start")}
+                    >
+                      <Text>
+                        {startTime.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.label}>End Time</Text>
+                    <TouchableOpacity
+                      style={styles.selector}
+                      onPress={() => openPicker("end")}
+                    >
+                      <Text>
+                        {endTime.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* CREATE BUTTON */}
+                    <TouchableOpacity
+                      style={styles.createButton}
+                      onPress={createEvent}
+                    >
+                      <Text style={styles.createButtonText}>Create Event</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+          {/* UPCOMING EVENTS */}
+          {loading ? (
+            <ActivityIndicator size="large" color="#5A31F4" />
+          ) : (
+            <>
+              {upcomingEvents.map(renderEvent)}
+            </>
+          )}
+
+        </ScrollView>
+      </SafeAreaView>
+      {/* MODAL PICKER */}
+        <Modal visible={pickerMode !== null} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>
+                {pickerMode === "date"
+                  ? "Select Event Date"
+                  : pickerMode === "start"
+                  ? "Select Start Time"
+                  : "Select End Time"}
+              </Text>
+  
+              {Platform.OS === "web" ? renderWebPicker() : renderMobilePicker()}
+  
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setPickerMode(null)}
+                >
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+  
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={() => {
+                    if (pickerMode === "date") setDate(tempDate);
+                    if (pickerMode === "start") setStartTime(tempStart);
+                    if (pickerMode === "end") setEndTime(tempEnd);
+                    setPickerMode(null);
+                  }}
+                >
+                  <Text style={styles.saveText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+    </Animated.View>
   );
 }
 
+
+// -----------------------------------------------------------
+// STYLES
+// -----------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 15,
-    paddingTop: 50,
+    backgroundColor: "#F5F5F7",
   },
-  header: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  eventCard: {
-    backgroundColor: "#f0f0f0",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 15,
-  },
-  eventName: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 5,
-  },
-  eventInfo: {
-    fontSize: 14,
-    marginBottom: 5,
-    color: "#555",
-  },
-  registerBtn: {
-    marginTop: 10,
-    backgroundColor: "#007AFF",
-    paddingVertical: 8,
-    borderRadius: 8,
+
+  scrollContent: {
+    paddingBottom: 40,
     alignItems: "center",
   },
-  registerText: {
-    color: "#fff",
+
+  //-----------------------------------------
+  // Page Header
+  //-----------------------------------------
+  pageHeader: {
+    width: "100%",
+    maxWidth: 700,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1A1A1A",
+  },
+
+  createEventCompact: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#EFE9FF",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+
+  createEventText: {
+    marginLeft: 6,
+    color: "#5A31F4",
     fontWeight: "600",
+  },
+
+  //-----------------------------------------
+  // Event Card
+  //-----------------------------------------
+  eventCard: {
+    width: "100%",
+    maxWidth: 700,
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+  },
+
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+
+  metaText: {
+    color: "#777",
+    marginBottom: 8,
+    fontSize: 13,
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+
+  cardDetail: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: "#444",
+  },
+
+  //-----------------------------------------
+  // Tags
+  //-----------------------------------------
+  tagContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 10,
+  },
+
+  tagPurple: {
+    backgroundColor: "#EFE9FF",
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+
+  tagPurpleText: {
+    color: "#6B4CF6",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  tagGreen: {
+    backgroundColor: "#E8F9EF",
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+
+  tagGreenText: {
+    color: "#0F6F3C",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  remove: {
+    color: "#ccc",
+    marginLeft: 5,
+    fontSize: 14,
+  },
+
+  //-----------------------------------------
+  // Subscribe Buttons
+  //-----------------------------------------
+  subscribeBtn: {
+    borderWidth: 1.5,
+    borderColor: "#6B4CF6",
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginTop: 12,
+    alignItems: "center",
+  },
+
+  subscribeText: {
+    color: "#6B4CF6",
+    fontWeight: "600",
+  },
+
+  unsubscribeBtn: {
+    borderWidth: 1.5,
+    borderColor: "#AAA",
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginTop: 12,
+    alignItems: "center",
+  },
+
+  unsubscribeText: {
+    color: "#555",
+    fontWeight: "600",
+  },
+
+  //-----------------------------------------
+  // Create Form
+  //-----------------------------------------
+  createBox: {
+    width: "100%",
+    maxWidth: 700,
+    backgroundColor: "#FFFFFF",
+    padding: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    marginBottom: 20,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: "#D5D5D5",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+  },
+
+  label: {
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+
+  dropdown: {
+    borderColor: "#CCC",
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+
+  dropdownContainer: {
+    borderColor: "#CCC",
+    borderRadius: 10,
+  },
+
+  chip: {
+    backgroundColor: "#EFE9FF",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 6,
+  },
+
+  chipText: {
+    color: "#6B4CF6",
+    fontWeight: "600",
+  },
+
+  selector: {
+    borderWidth: 1,
+    borderColor: "#D5D5D5",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+
+  createButton: {
+    backgroundColor: "#6B4CF6",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  createButtonText: {
+    color: "#FFF",
+    fontWeight: "700",
+  },
+
+  /* Modal */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBox: {
+    width: "85%",
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 13,
+  },
+
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 15,
+  },
+
+  cancelButton: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: "#ddd",
+    borderRadius: 10,
+    marginRight: 10,
+    alignItems: "center",
+  },
+  cancelText: { fontWeight: "600", color: "#333" },
+
+  saveButton: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: "#5A31F4",
+    borderRadius: 10,
+    marginLeft: 10,
+    alignItems: "center",
+  },
+  saveText: { fontWeight: "600", color: "#fff" },
+
+  webInput: {
+    width: "100%",
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    fontSize: 16,
+    marginBottom: 10,
   },
 });
