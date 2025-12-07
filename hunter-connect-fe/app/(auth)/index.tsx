@@ -1,4 +1,5 @@
 import { UserInterface, createUser } from "@/api/Users";
+import { initUserSocial } from "@/api/friends/initUserSocial";
 import { useRouter } from "expo-router";
 import {
   createUserWithEmailAndPassword,
@@ -172,6 +173,7 @@ export default function AuthScreen() {
         };
 
         await createUser(reqBody, bearerToken);
+        await initUserSocial(uid);
 
         // Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);

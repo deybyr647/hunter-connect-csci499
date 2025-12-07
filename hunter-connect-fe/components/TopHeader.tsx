@@ -1,5 +1,6 @@
 import { auth } from "@/api/firebaseConfig";
 import Colors from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -59,6 +60,11 @@ const TopHeader = () => {
         >
           <FontAwesome name="comment-o" size={22} color="black" />
         </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/(user)/friends")}>
+          <Ionicons name="people-outline" size={24} />
+        </TouchableOpacity>
+
 
         {/* 👤 Profile Icon — hover on web, tap on mobile */}
         <View
