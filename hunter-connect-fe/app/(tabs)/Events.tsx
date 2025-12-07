@@ -1,7 +1,3 @@
-// -----------------------------------------------------------
-//  EVENTS.TSX — CLEAN MODERN UI VERSION
-// -----------------------------------------------------------
-
 import { auth, db } from "@/firebase/firebaseConfig";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,15 +28,16 @@ import {
   Platform,
 } from "react-native";
 
-import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
+import Animated, {
+  SlideInRight,
+  SlideOutRight,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DropDownPicker from "react-native-dropdown-picker";
 
+/* ----------------------------- EVENT TYPES ----------------------------- */
 
-// -----------------------------------------------------------
-// EVENT TYPES
-// -----------------------------------------------------------
 interface EventData {
   id: string;
   title: string;
@@ -61,10 +58,8 @@ interface EventData {
   creatorName?: string;
 }
 
+/* ----------------------------- TAG LISTS ----------------------------- */
 
-// -----------------------------------------------------------
-// TAG OPTIONS
-// -----------------------------------------------------------
 const generalTagList = [
   { label: "Study", value: "Study" },
   { label: "Review", value: "Review" },
@@ -110,10 +105,8 @@ const courseTagList = [
   { label: "CSCI 49900", value: "CSCI 49900", parent: "400level" },
 ];
 
+/* ----------------------------- MAIN COMPONENT ----------------------------- */
 
-// -----------------------------------------------------------
-// MAIN COMPONENT
-// -----------------------------------------------------------
 export default function EventsScreen() {
   const router = useRouter();
   const user = auth.currentUser;
@@ -145,7 +138,7 @@ export default function EventsScreen() {
   const [tempStart, setTempStart] = useState(new Date());
   const [tempEnd, setTempEnd] = useState(new Date());
 
-  /* ------------------------------- Open Picker ------------------------------- */
+  /* ------------------ Picker Helpers ------------------ */
   const openPicker = (mode: "date" | "start" | "end") => {
     setPickerMode(mode);
 
@@ -154,9 +147,7 @@ export default function EventsScreen() {
     if (mode === "end") setTempEnd(new Date(endTime));
   };
 
-  // -----------------------------------------------------------
-  // HELPERS
-  // -----------------------------------------------------------
+  /* ------------------ Helpers ------------------ */
   const safeDate = (x: any) => {
     if (!x) return new Date();
     if (x.toDate) return x.toDate();
@@ -178,10 +169,7 @@ export default function EventsScreen() {
   const isSubscribed = (e: EventData) =>
     e.attendees?.includes(user?.uid ?? "") ?? false;
 
-
-  // -----------------------------------------------------------
-  // LOAD EVENTS
-  // -----------------------------------------------------------
+  /* ------------------ Load Events ------------------ */
   useEffect(() => {
     if (!user) return;
 
@@ -212,7 +200,9 @@ export default function EventsScreen() {
           })
         );
 
-        const upcoming = allEvents.filter((e) => safeDate(e.endTime) >= new Date());
+        const upcoming = allEvents.filter(
+          (e) => safeDate(e.endTime) >= new Date()
+        );
         setUpcomingEvents(upcoming);
       } catch (e) {
         console.error(e);
@@ -224,15 +214,11 @@ export default function EventsScreen() {
     loadEvents();
   }, []);
 
-
-  // -----------------------------------------------------------
-  // CREATE EVENT
-  // -----------------------------------------------------------
+  /* ------------------ Create Event ------------------ */
   const createEvent = async () => {
     if (!user) return;
 
     try {
-      // Fetch the creator’s name
       const userSnap = await getDoc(doc(db, "users", user.uid));
       let creatorName = "Unknown";
 
@@ -241,7 +227,6 @@ export default function EventsScreen() {
         creatorName = `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim();
       }
 
-      // 1) Create Firestore event
       const docRef = await addDoc(collection(db, "events"), {
         title,
         description,
@@ -259,7 +244,6 @@ export default function EventsScreen() {
         },
       });
 
-      // 2) Construct local event object for instant UI update
       const newEvent: EventData = {
         id: docRef.id,
         title,
@@ -275,13 +259,11 @@ export default function EventsScreen() {
           general: [...generalTags],
           courses: [...courseTags],
         },
-        createdAt: new Date(), // fallback until Firestore timestamp arrives
+        createdAt: new Date(),
       };
 
-      // 3) Update Upcoming Events immediately
       setUpcomingEvents((prev) => [newEvent, ...prev]);
 
-      // 4) Clear form + close dropdown
       setShowCreateEvent(false);
       setTitle("");
       setDescription("");
@@ -295,10 +277,7 @@ export default function EventsScreen() {
     }
   };
 
-
-  // -----------------------------------------------------------
-  // SUBSCRIBE / UNSUBSCRIBE
-  // -----------------------------------------------------------
+  /* ------------------ Subscribe / Unsubscribe ------------------ */
   const toggleSubscribe = async (event: EventData) => {
     if (!user) return;
 
@@ -326,10 +305,7 @@ export default function EventsScreen() {
     }
   };
 
-
-  // -----------------------------------------------------------
-  // EVENT CARD UI
-  // -----------------------------------------------------------
+  /* ------------------ Event Card ------------------ */
   const renderEvent = (e: EventData) => {
     const d = safeDate(e.date);
     const s = safeDate(e.startTime);
@@ -348,8 +324,15 @@ export default function EventsScreen() {
           <Ionicons name="calendar-outline" size={16} color="#555" />
           <Text style={styles.cardDetail}>
             {d.toLocaleDateString()} •{" "}
-            {s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
-            {ed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {s.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}{" "}
+            -{" "}
+            {ed.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </Text>
         </View>
 
@@ -360,6 +343,7 @@ export default function EventsScreen() {
           </View>
         ) : null}
 
+        {/* TAGS */}
         <View style={styles.tagContainer}>
           {(e.tags?.general ?? []).map((t, i) => (
             <View key={i} style={styles.tagPurple}>
@@ -376,27 +360,30 @@ export default function EventsScreen() {
 
         {/* Subscribe Button */}
         {e.createdBy !== user?.uid && (
-          isSubscribed(e) ? (
-            <TouchableOpacity
-              style={styles.unsubscribeBtn}
-              onPress={() => toggleSubscribe(e)}
+          <TouchableOpacity
+            style={
+              isSubscribed(e)
+                ? styles.unsubscribeBtn
+                : styles.subscribeBtn
+            }
+            onPress={() => toggleSubscribe(e)}
+          >
+            <Text
+              style={
+                isSubscribed(e)
+                  ? styles.unsubscribeText
+                  : styles.subscribeText
+              }
             >
-              <Text style={styles.unsubscribeText}>Unsubscribe</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.subscribeBtn}
-              onPress={() => toggleSubscribe(e)}
-            >
-              <Text style={styles.subscribeText}>Subscribe</Text>
-            </TouchableOpacity>
-          )
+              {isSubscribed(e) ? "Unsubscribe" : "Subscribe"}
+            </Text>
+          </TouchableOpacity>
         )}
       </View>
     );
   };
 
-    /* ------------------------ Web vs Mobile Picker ------------------------ */
+  /* ------------------ Web/Mobile Picker ------------------ */
 
   const renderWebPicker = () => {
     if (pickerMode === "date") {
@@ -481,7 +468,9 @@ export default function EventsScreen() {
       />
     );
   };
-  // -----------------------------------------------------------
+
+  /* ------------------ RETURN UI ------------------ */
+
   return (
     <Animated.View
       entering={SlideInRight.duration(250)}
@@ -490,12 +479,10 @@ export default function EventsScreen() {
     >
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-
-          {/* HEADER AREA */}
+          {/* HEADER */}
           <View style={styles.pageHeader}>
             <Text style={styles.pageTitle}>Upcoming Events</Text>
 
-            {/* Create Event Compact Button */}
             <TouchableOpacity
               style={styles.createEventCompact}
               onPress={() => setShowCreateEvent(!showCreateEvent)}
@@ -505,236 +492,224 @@ export default function EventsScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* CREATE FORM */}
+          {showCreateEvent && (
+            <View style={styles.createBox}>
+              <TextInput
+                style={styles.input}
+                placeholder="Event Title"
+                value={title}
+                onChangeText={setTitle}
+              />
 
-          {/* CREATE EVENT FORM */}
-                {showCreateEvent && (
-                  <View style={styles.createBox}>
-                    {/* Title */}
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Event Title"
-                      value={title}
-                      onChangeText={setTitle}
-                    />
+              <TextInput
+                style={styles.input}
+                placeholder="Description"
+                value={description}
+                onChangeText={setDescription}
+              />
 
-                    {/* Description */}
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Description"
-                      value={description}
-                      onChangeText={setDescription}
-                    />
+              <TextInput
+                style={styles.input}
+                placeholder="Location"
+                value={location}
+                onChangeText={setLocation}
+              />
 
-                    {/* Location */}
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Location"
-                      value={location}
-                      onChangeText={setLocation}
-                    />
+              {/* GENERAL TAGS */}
+              <Text style={styles.label}>General Tags</Text>
+              <View
+                style={{
+                  zIndex: generalOpen ? 3000 : 1,
+                  marginBottom: generalOpen ? 200 : 10,
+                }}
+              >
+                <DropDownPicker
+                  open={generalOpen}
+                  value={null}
+                  items={generalTagList}
+                  setOpen={(open) => {
+                    setGeneralOpen(open);
+                    setCourseOpen(false);
+                  }}
+                  setValue={() => {}}
+                  onSelectItem={(item) => {
+                    if (!item.value) return; // ignore undefined values
 
-                    {/* GENERAL TAGS */}
-                    <Text style={styles.label}>General Tags</Text>
-                    <View
-                      style={{
-                        zIndex: generalOpen ? 3000 : 1,
-                        marginBottom: generalOpen ? 200 : 10,
-                      }}
-                    >
-                      <DropDownPicker
-                        open={generalOpen}
-                        value={null}
-                        items={generalTagList}
-                        setOpen={(open) => {
-                          setGeneralOpen(open);
-                          setCourseOpen(false);
-                        }}
-                        setValue={() => {}}
-                        onSelectItem={(item) => {
-                          if (item.value && !generalTags.includes(item.value)) {
-                            setGeneralTags([...generalTags, item.value]);
-                          }
-                        }}
-                        placeholder="Select general tags..."
-                        listMode={listModeConfig}
-                        modalAnimationType="slide"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
-                      />
-                    </View>
+                    if (!generalTags.includes(item.value)) {
+                      setGeneralTags([...generalTags, item.value]);
+                    }
+                  }}
+                  placeholder="Select general tags..."
+                  listMode={listModeConfig}
+                  modalAnimationType="slide"
+                  style={styles.dropdown}
+                  dropDownContainerStyle={styles.dropdownContainer}
+                />
+              </View>
 
-                    {/* GENERAL TAG CHIPS */}
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      {generalTags.map((tag, idx) => (
-                        <TouchableOpacity
-                          key={idx}
-                          style={styles.tagPurple}
-                          onPress={() =>
-                            setGeneralTags(generalTags.filter((t) => t !== tag))
-                          }
-                        >
-                          <Text style={styles.tagPurpleText}>{tag}
-                            <Text style={styles.remove}>✕</Text>
-                            </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {generalTags.map((tag, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.tagPurple}
+                    onPress={() =>
+                      setGeneralTags(generalTags.filter((t) => t !== tag))
+                    }
+                  >
+                    <Text style={styles.tagPurpleText}>
+                      {tag} <Text style={styles.remove}>✕</Text>
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
-                    {/* COURSE TAGS */}
-                    <Text style={styles.label}>Course Tags</Text>
-                    <View
-                      style={{
-                        zIndex: courseOpen ? 2000 : 1,
-                        marginBottom: courseOpen ? 200 : 10,
-                      }}
-                    >
-                      <DropDownPicker
-                        open={courseOpen}
-                        value={null}
-                        items={courseTagList}
-                        setOpen={(open) => {
-                          setCourseOpen(open);
-                          setGeneralOpen(false);
-                        }}
-                        setValue={() => {}}
-                        onSelectItem={(item) => {
-                          if (item.value && item.selectable !== false) {
-                            if (!courseTags.includes(item.value)) {
-                              setCourseTags([...courseTags, item.value]);
-                            }
-                          }
-                        }}
-                        placeholder="Select course tags..."
-                        listMode={listModeConfig}
-                        searchable
-                        modalAnimationType="slide"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={{
-                          ...styles.dropdownContainer,
-                          maxHeight: 400,
-                        }}
-                      />
-                    </View>
+              {/* COURSE TAGS */}
+              <Text style={styles.label}>Course Tags</Text>
+              <View
+                style={{
+                  zIndex: courseOpen ? 2000 : 1,
+                  marginBottom: courseOpen ? 200 : 10,
+                }}
+              >
+                <DropDownPicker
+                  open={courseOpen}
+                  value={null}
+                  items={courseTagList}
+                  setOpen={(open) => {
+                    setCourseOpen(open);
+                    setGeneralOpen(false);
+                  }}
+                  setValue={() => {}}
+                  onSelectItem={(item) => {
+                    if (!item.value || item.selectable === false) return;
 
-                    {/* COURSE TAG CHIPS */}
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      {courseTags.map((tag, idx) => (
-                        <TouchableOpacity
-                          key={idx}
-                          style={styles.tagGreen}
-                          onPress={() =>
-                            setCourseTags(courseTags.filter((t) => t !== tag))
-                          }
-                        >
-                          <Text style={styles.tagGreenText}>{tag}
-                            <Text style={styles.remove}>✕</Text>
-                            </Text>
-                          
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
+                    if (!courseTags.includes(item.value)) {
+                      setCourseTags([...courseTags, item.value]);
+                    }
+                  }}
+                  placeholder="Select course tags..."
+                  listMode={listModeConfig}
+                  searchable
+                  modalAnimationType="slide"
+                  style={styles.dropdown}
+                  dropDownContainerStyle={{
+                    ...styles.dropdownContainer,
+                    maxHeight: 400,
+                  }}
+                />
+              </View>
 
-                    {/* DATE / TIME */}
-                    <Text style={styles.label}>Event Date</Text>
-                    <TouchableOpacity
-                      style={styles.selector}
-                      onPress={() => openPicker("date")}
-                    >
-                      <Text>{date.toDateString()}</Text>
-                    </TouchableOpacity>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {courseTags.map((tag, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.tagGreen}
+                    onPress={() =>
+                      setCourseTags(courseTags.filter((t) => t !== tag))
+                    }
+                  >
+                    <Text style={styles.tagGreenText}>
+                      {tag} <Text style={styles.remove}>✕</Text>
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
-                    <Text style={styles.label}>Start Time</Text>
-                    <TouchableOpacity
-                      style={styles.selector}
-                      onPress={() => openPicker("start")}
-                    >
-                      <Text>
-                        {startTime.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Text>
-                    </TouchableOpacity>
+              {/* PICKERS */}
+              <Text style={styles.label}>Event Date</Text>
+              <TouchableOpacity
+                style={styles.selector}
+                onPress={() => openPicker("date")}
+              >
+                <Text>{date.toDateString()}</Text>
+              </TouchableOpacity>
 
-                    <Text style={styles.label}>End Time</Text>
-                    <TouchableOpacity
-                      style={styles.selector}
-                      onPress={() => openPicker("end")}
-                    >
-                      <Text>
-                        {endTime.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Text>
-                    </TouchableOpacity>
+              <Text style={styles.label}>Start Time</Text>
+              <TouchableOpacity
+                style={styles.selector}
+                onPress={() => openPicker("start")}
+              >
+                <Text>
+                  {startTime.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </TouchableOpacity>
 
-                    {/* CREATE BUTTON */}
-                    <TouchableOpacity
-                      style={styles.createButton}
-                      onPress={createEvent}
-                    >
-                      <Text style={styles.createButtonText}>Create Event</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
+              <Text style={styles.label}>End Time</Text>
+              <TouchableOpacity
+                style={styles.selector}
+                onPress={() => openPicker("end")}
+              >
+                <Text>
+                  {endTime.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </TouchableOpacity>
+
+              {/* CREATE BUTTON */}
+              <TouchableOpacity style={styles.createButton} onPress={createEvent}>
+                <Text style={styles.createButtonText}>Create Event</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* UPCOMING EVENTS */}
           {loading ? (
             <ActivityIndicator size="large" color="#5A31F4" />
           ) : (
-            <>
-              {upcomingEvents.map(renderEvent)}
-            </>
+            upcomingEvents.map(renderEvent)
           )}
-
         </ScrollView>
       </SafeAreaView>
-      {/* MODAL PICKER */}
-        <Modal visible={pickerMode !== null} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>
-                {pickerMode === "date"
-                  ? "Select Event Date"
-                  : pickerMode === "start"
-                  ? "Select Start Time"
-                  : "Select End Time"}
-              </Text>
-  
-              {Platform.OS === "web" ? renderWebPicker() : renderMobilePicker()}
-  
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => setPickerMode(null)}
-                >
-                  <Text style={styles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
-  
-                <TouchableOpacity
-                  style={styles.saveButton}
-                  onPress={() => {
-                    if (pickerMode === "date") setDate(tempDate);
-                    if (pickerMode === "start") setStartTime(tempStart);
-                    if (pickerMode === "end") setEndTime(tempEnd);
-                    setPickerMode(null);
-                  }}
-                >
-                  <Text style={styles.saveText}>Save</Text>
-                </TouchableOpacity>
-              </View>
+
+      {/* DATE/TIME MODAL */}
+      <Modal visible={pickerMode !== null} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>
+              {pickerMode === "date"
+                ? "Select Event Date"
+                : pickerMode === "start"
+                ? "Select Start Time"
+                : "Select End Time"}
+            </Text>
+
+            {Platform.OS === "web" ? renderWebPicker() : renderMobilePicker()}
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setPickerMode(null)}
+              >
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={() => {
+                  if (pickerMode === "date") setDate(tempDate);
+                  if (pickerMode === "start") setStartTime(tempStart);
+                  if (pickerMode === "end") setEndTime(tempEnd);
+                  setPickerMode(null);
+                }}
+              >
+                <Text style={styles.saveText}>Save</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
+        </View>
+      </Modal>
     </Animated.View>
   );
 }
 
+/* ----------------------------- STYLES ----------------------------- */
 
-// -----------------------------------------------------------
-// STYLES
-// -----------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -742,26 +717,24 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 50,
     alignItems: "center",
   },
 
-  //-----------------------------------------
-  // Page Header
-  //-----------------------------------------
+  /* Header */
   pageHeader: {
     width: "100%",
     maxWidth: 700,
     paddingHorizontal: 20,
     paddingTop: 20,
-    marginBottom: 10,
+    paddingBottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
 
   pageTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "700",
     color: "#1A1A1A",
   },
@@ -770,7 +743,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#EFE9FF",
-    paddingVertical: 6,
+    paddingVertical: 7,
     paddingHorizontal: 12,
     borderRadius: 10,
   },
@@ -781,14 +754,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  //-----------------------------------------
-  // Event Card
-  //-----------------------------------------
+  /* Event Card */
   eventCard: {
     width: "100%",
     maxWidth: 700,
     backgroundColor: "#FFFFFF",
-    padding: 16,
+    padding: 18,
     borderRadius: 14,
     marginBottom: 16,
     borderWidth: 1,
@@ -799,6 +770,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 6,
+    color: "#222",
   },
 
   metaText: {
@@ -819,13 +791,12 @@ const styles = StyleSheet.create({
     color: "#444",
   },
 
-  //-----------------------------------------
-  // Tags
-  //-----------------------------------------
+  /* Tags */
   tagContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     marginTop: 10,
+    marginBottom: 4,
   },
 
   tagPurple: {
@@ -859,18 +830,16 @@ const styles = StyleSheet.create({
   },
 
   remove: {
-    color: "#ccc",
-    marginLeft: 5,
+    color: "#999",
+    marginLeft: 4,
     fontSize: 14,
   },
 
-  //-----------------------------------------
-  // Subscribe Buttons
-  //-----------------------------------------
+  /* Subscribe Buttons */
   subscribeBtn: {
-    borderWidth: 1.5,
+    borderWidth: 1.4,
     borderColor: "#6B4CF6",
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 10,
     marginTop: 12,
     alignItems: "center",
@@ -879,25 +848,25 @@ const styles = StyleSheet.create({
   subscribeText: {
     color: "#6B4CF6",
     fontWeight: "600",
+    fontSize: 15,
   },
 
   unsubscribeBtn: {
-    borderWidth: 1.5,
+    borderWidth: 1.4,
     borderColor: "#AAA",
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 10,
     marginTop: 12,
     alignItems: "center",
   },
 
   unsubscribeText: {
-    color: "#555",
+    color: "#666",
     fontWeight: "600",
+    fontSize: 15,
   },
 
-  //-----------------------------------------
-  // Create Form
-  //-----------------------------------------
+  /* Create Form */
   createBox: {
     width: "100%",
     maxWidth: 700,
@@ -911,21 +880,23 @@ const styles = StyleSheet.create({
 
   input: {
     borderWidth: 1,
-    borderColor: "#D5D5D5",
+    borderColor: "#CCC",
     borderRadius: 10,
     padding: 12,
-    marginBottom: 10,
+    marginBottom: 12,
+    backgroundColor: "#FFF",
   },
 
   label: {
     fontWeight: "600",
     marginBottom: 6,
+    fontSize: 14,
   },
 
   dropdown: {
     borderColor: "#CCC",
     borderRadius: 10,
-    marginBottom: 10,
+    backgroundColor: "#FFF",
   },
 
   dropdownContainer: {
@@ -933,25 +904,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
-  chip: {
-    backgroundColor: "#EFE9FF",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 6,
-  },
-
-  chipText: {
-    color: "#6B4CF6",
-    fontWeight: "600",
-  },
-
   selector: {
     borderWidth: 1,
-    borderColor: "#D5D5D5",
+    borderColor: "#CCC",
     padding: 12,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 12,
+    backgroundColor: "#FFF",
   },
 
   createButton: {
@@ -965,6 +924,7 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: "#FFF",
     fontWeight: "700",
+    fontSize: 15,
   },
 
   /* Modal */
@@ -974,13 +934,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   modalBox: {
     width: "85%",
-    backgroundColor: "#fff",
+    backgroundColor: "#FFF",
     borderRadius: 14,
     padding: 20,
     alignItems: "center",
   },
+
   modalTitle: {
     fontSize: 18,
     fontWeight: "700",
@@ -997,12 +959,16 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     padding: 12,
-    backgroundColor: "#ddd",
+    backgroundColor: "#DDD",
     borderRadius: 10,
     marginRight: 10,
     alignItems: "center",
   },
-  cancelText: { fontWeight: "600", color: "#333" },
+
+  cancelText: {
+    fontWeight: "600",
+    color: "#333",
+  },
 
   saveButton: {
     flex: 1,
@@ -1012,15 +978,20 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     alignItems: "center",
   },
-  saveText: { fontWeight: "600", color: "#fff" },
+
+  saveText: {
+    fontWeight: "600",
+    color: "#FFF",
+  },
 
   webInput: {
     width: "100%",
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#CCC",
     fontSize: 16,
     marginBottom: 10,
+    backgroundColor: "#FFF",
   },
 });
