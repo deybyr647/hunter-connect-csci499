@@ -1,4 +1,4 @@
-import { auth } from "@/firebase/firebaseConfig";
+import { auth } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
 import { sendPasswordResetEmail } from "firebase/auth";
 import React, { useState } from "react";

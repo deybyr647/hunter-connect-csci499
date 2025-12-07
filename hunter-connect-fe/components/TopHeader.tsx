@@ -1,5 +1,5 @@
+import { auth } from "@/api/firebaseConfig";
 import Colors from "@/constants/Colors";
-import { auth } from "@/firebase/firebaseConfig";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -49,9 +49,10 @@ const TopHeader = () => {
       )}
 
       <View style={styles.header}>
-        <FontAwesome name="graduation-cap" size={24} color="black" />
-        <Text style={styles.title}>Hunter Connect</Text>
-        <FontAwesome name="bell-o" size={22} color="black" />
+        <TouchableOpacity onPress={() => router.push("/(tabs)/Landing")}>
+          <Text style={styles.title}>Hunter Connect</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => router.push("/(messages)/messages")}
@@ -106,14 +107,14 @@ const TopHeader = () => {
 
               <Pressable
                 style={styles.dropdownItem}
-                onPress={() => router.push("/(tabs)/privacy")}
+                //onPress={() => router.push("/(tabs)/privacy")}
               >
                 <Text style={styles.dropdownItemText}>Privacy Settings</Text>
               </Pressable>
 
               <Pressable
                 style={styles.dropdownItem}
-                onPress={() => router.push("/(tabs)/help")}
+                //onPress={() => router.push("/(tabs)/help")}
               >
                 <Text style={styles.dropdownItemText}>Help & Support</Text>
               </Pressable>

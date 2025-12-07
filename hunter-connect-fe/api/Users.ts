@@ -1,7 +1,6 @@
 interface UserInterface {
   uid: string;
   email: string;
-  bearerToken: string;
   name: {
     firstName: string;
     lastName: string;
@@ -14,8 +13,8 @@ interface UserInterface {
   };
 }
 
-const createUser = async (body: UserInterface) => {
-  const { uid, email, bearerToken, name } = body;
+const createUser = async (body: UserInterface, bearerToken: string) => {
+  const { uid, email, name } = body;
   const { firstName, lastName } = name;
 
   const createUserRequest: RequestInit = {
@@ -43,7 +42,8 @@ const createUser = async (body: UserInterface) => {
       "http://localhost:8080/api/users",
       createUserRequest
     );
-    const json = await req.json();
+
+    const json: UserInterface = await req.json();
 
     if (req.status === 200) {
       console.log(json);
@@ -54,8 +54,8 @@ const createUser = async (body: UserInterface) => {
   }
 };
 
-const updateUser = async (body: UserInterface) => {
-  const { uid, email, bearerToken, name, preferences } = body;
+const updateUser = async (body: UserInterface, bearerToken: string) => {
+  const { uid, email, name, preferences } = body;
   const { firstName, lastName } = name;
 
   const updateUserRequest: RequestInit = {
@@ -84,7 +84,8 @@ const updateUser = async (body: UserInterface) => {
       "http://localhost:8080/api/users",
       updateUserRequest
     );
-    const json = await req.json();
+
+    const json: UserInterface = await req.json();
 
     if (req.status === 200) {
       console.log(json);
@@ -95,9 +96,10 @@ const updateUser = async (body: UserInterface) => {
   }
 };
 
-const getUser = async (body: UserInterface) => {
-  const { uid, bearerToken } = body;
-
+const getUser = async (
+  uid: string | undefined,
+  bearerToken: string | undefined
+) => {
   const getUserRequest: RequestInit = {
     method: "GET",
     headers: {
@@ -117,7 +119,8 @@ const getUser = async (body: UserInterface) => {
       `http://localhost:8080/api/users/${uid}`,
       getUserRequest
     );
-    const json = await req.json();
+
+    const json: UserInterface = await req.json();
 
     if (req.status === 200) {
       console.log(json);
@@ -129,12 +132,13 @@ const getUser = async (body: UserInterface) => {
   }
 };
 
-const getAllUsers = async () => {
+const getAllUsers = async (bearerToken: string) => {
   const getAllUsersRequest: RequestInit = {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      Authorization: `Bearer ${bearerToken}`,
     },
     mode: "cors",
     credentials: "omit",
@@ -148,7 +152,8 @@ const getAllUsers = async () => {
       `http://localhost:8080/api/users/`,
       getAllUsersRequest
     );
-    const json = await req.json();
+
+    const json: UserInterface[] = await req.json();
 
     if (req.status === 200) {
       console.log(json);

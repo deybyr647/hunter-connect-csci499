@@ -1,5 +1,6 @@
 package com.hunter_connect.config;
 
+import com.hunter_connect.handlers.EventHandler;
 import com.hunter_connect.handlers.PostHandler;
 import com.hunter_connect.handlers.UserHandler;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +41,18 @@ public class RouterFunctionConfig {
                         .GET("/{id}", postHandler::getPostById)
                         .POST("", postHandler::createPost)
                         .PUT("", postHandler::updatePost)
+                ).build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> eventRoutes(EventHandler eventHandler) {
+        return route()
+                .path("/api/events", builder -> builder
+                        .GET("", eventHandler::getAllEvents)
+                        .GET("/{id}", eventHandler::getEventById)
+                        .POST("", eventHandler::createEvent)
+                        .POST("/{id}/subscribe", eventHandler::toggleSubscribe)
+                        .PUT("", eventHandler::updateEvent)
                 ).build();
     }
 

@@ -1,5 +1,5 @@
-import { UserInterface, createUser, updateUser } from "@/app/(auth)/api/Users";
-import { auth, db } from "@/firebase/firebaseConfig";
+import { UserInterface, createUser, updateUser } from "@/api/Users";
+import { auth, db } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import React, { useState } from "react";
@@ -822,7 +822,6 @@ export default function OnboardingScreen() {
           firstName: "",
           lastName: "",
         },
-        bearerToken: bearerToken,
         email: "",
         uid: "",
         preferences: {
@@ -833,9 +832,7 @@ export default function OnboardingScreen() {
         },
       };
 
-      console.log("Request Body: \n", reqBody);
-      console.log("Bearer Token: \n", bearerToken);
-      await updateUser(reqBody);
+      await updateUser(reqBody, bearerToken);
 
       router.replace("/(tabs)/Landing");
     } catch (error) {

@@ -11,7 +11,6 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import TopHeader from "@/components/TopHeader";
-import { useColorScheme } from "@/components/useColorScheme";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -27,16 +26,20 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ header: () => <TopHeader /> }} />
+    <ThemeProvider value={DefaultTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen
+          name="(tabs)"
+          options={{ header: () => <TopHeader />, headerShown: true }}
+        />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen
           name="messages"
-          options={{ header: () => <TopHeader /> }}
+          options={{
+            header: () => <TopHeader />,
+            headerShown: true,
+          }}
         />
       </Stack>
     </ThemeProvider>

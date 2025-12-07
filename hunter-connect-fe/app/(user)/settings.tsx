@@ -1,4 +1,5 @@
-import { auth, db } from "@/firebase/firebaseConfig";
+import { UserInterface, getUser } from "@/api/Users";
+import { auth } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
 import {
   EmailAuthProvider,
@@ -7,7 +8,6 @@ import {
   updatePassword,
   updateProfile,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -18,7 +18,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-// 🔥 ANIMATION IMPORTS
 import Animated, {
   SlideInRight,
   SlideOutLeft,
@@ -40,25 +39,24 @@ export default function SettingsScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    const load = async () => {
-      if (!user) return;
+    (async () => {
+      try {
+        const bearerToken = await user?.getIdToken();
+        const userData: UserInterface | undefined = await getUser(
+          user?.uid,
+          bearerToken
+        );
 
-      setEmail(user.email || "");
+        const { firstName, lastName, email, preferences } = userData;
 
-      const nameSplit = (user.displayName || "User").split(" ");
-      setFirstName(nameSplit[0]);
-      setLastName(nameSplit.slice(1).join(" "));
-
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        const prefs = snap.data().preferences || {};
-        setAcademicYear(prefs.academicYear || "");
+        setFirstName(firstName || "Unknown First Name");
+        setLastName(lastName || "Unknown Last Name");
+        setEmail(email || "Unknown Email Address");
+        setAcademicYear(preferences.academicYear);
+      } catch (error) {
+        console.error(error);
       }
-    };
-
-    load();
+    })();
   }, []);
 
   const handleSave = async () => {

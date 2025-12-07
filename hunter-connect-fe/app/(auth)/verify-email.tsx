@@ -1,3 +1,4 @@
+import { auth } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
 import { sendEmailVerification } from "firebase/auth";
 import React, { useEffect, useState } from "react";
@@ -10,8 +11,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { auth } from "../../firebase/firebaseConfig";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
