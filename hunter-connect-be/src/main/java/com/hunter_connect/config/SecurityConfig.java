@@ -35,13 +35,12 @@ public class SecurityConfig {
 
                         // Public Routes
                         // Allow "create user" (POST) without auth
-                        .requestMatchers(HttpMethod.GET, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
 
                         // Secure Routes
                         .requestMatchers("/api/users/**").authenticated()
-
-                        .requestMatchers("/api/files/**").authenticated()
+                        .requestMatchers("/api/posts/**").authenticated()
+                        .requestMatchers("/api/events/**").authenticated()
 
                         // Secure all other /api/ routes
                         .requestMatchers("/api/**").authenticated()
