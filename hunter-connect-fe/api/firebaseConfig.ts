@@ -3,13 +3,13 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyADhQn9EHEt3N5OmMMpm0N3ccjr-HyfjOA",
-  authDomain: "hunterconnect-80634.firebaseapp.com",
-  projectId: "hunterconnect-80634",
-  storageBucket: "hunterconnect-80634.firebasestorage.app",
-  messagingSenderId: "555459134033",
-  appId: "1:555459134033:web:24a45068ba72aa0081ae70",
-  measurementId: "G-8N2YR7GFQ3",
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // ✅ Initialize Firebase first
