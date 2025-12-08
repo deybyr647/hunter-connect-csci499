@@ -13,41 +13,25 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
-/**
- * Handles the business logic for user-related requests.
- * The @Component annotation allows Spring to detect and inject this class.
- */
 
 @Component
 public class UserHandler {
-    public UserHandler() {
-    }
 
-    /**
-     * Handles GET /api/users
-     * Fetches ALL users from the Firestore collection.
-     */
+    /* ============================================================
+     * GET /api/users — return ALL users
+     * ============================================================ */
     public ServerResponse getAllUsers(ServerRequest request) {
         try {
             Firestore db = FirestoreClient.getFirestore();
+            ApiFuture<QuerySnapshot> future = db.collection("users").get();
 
-            // 1. Get the entire collection
-            // NOTE: In production, consider adding .limit(50) here!
-            ApiFuture<QuerySnapshot> future = db.collection("users").limit(50).get();
-
-            // 2. Wait for the query to complete
-            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-
-            // 3. Convert Firestore documents to User objects
-            List<User> userList = documents.stream()
-                    .map(document -> document.toObject(User.class))
+            List<User> users = future.get().getDocuments()
+                    .stream()
+                    .map(doc -> doc.toObject(User.class))
                     .collect(Collectors.toList());
 
-            // 4. Return the list (Spring will serialize this as a JSON Array)
-            return ServerResponse.ok().body(userList);
+            return ServerResponse.ok().body(users);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -55,35 +39,26 @@ public class UserHandler {
         }
     }
 
-    /**
-     * Handles GET /api/users/{id}
-     * Fetches a single user document by UID.
-     */
+    /* ============================================================
+     * GET /api/users/{id} — get a single user document
+     * ============================================================ */
     public ServerResponse getUserById(ServerRequest request) {
         try {
-            // 1. Extract the UID from the URL path parameter
-            String targetUid = request.pathVariable("id");
+            String uid = request.pathVariable("id");
 
-            // 2. Get Firestore instance
             Firestore db = FirestoreClient.getFirestore();
+            ApiFuture<DocumentSnapshot> future = db.collection("users")
+                    .document(uid)
+                    .get();
 
-            // 3. Create a query to get the document
-            ApiFuture<DocumentSnapshot> future = db.collection("users").document(targetUid).get();
+            DocumentSnapshot doc = future.get();
 
-            // 4. Wait for the result (synchronously)
-            DocumentSnapshot document = future.get();
-
-            // 5. Check if the document exists
-            if (document.exists()) {
-                // Convert the Firestore document directly into your User POJO
-                User user = document.toObject(User.class);
-
-                // Return user object
-                assert user != null;
-                return ServerResponse.ok().body(user);
-            } else {
+            if (!doc.exists()) {
                 return ServerResponse.notFound().build();
             }
+
+            User user = doc.toObject(User.class);
+            return ServerResponse.ok().body(user);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,33 +66,38 @@ public class UserHandler {
         }
     }
 
+    /* ============================================================
+     * POST /api/users — Create new user
+     * Authenticated UID controls Firestore document ID
+     * ============================================================ */
     public ServerResponse createUser(ServerRequest request) {
         try {
-            // 1. Get the SECURE uid from the Auth Token (Principal)
+            // ----- AUTH CHECK -----
             Principal principal = request.principal()
-                    .orElseThrow(() -> new SecurityException("No auth token found"));
+                    .orElseThrow(() -> new SecurityException("Missing authentication token"));
+
             String authenticatedUid = principal.getName();
 
-            // 2. Deserialize the JSON body directly into your User POJO
-            User newUser = request.body(User.class);
+            // ----- DESERIALIZE BODY -----
+            User user = request.body(User.class);
 
-            // 3. SECURITY STEP: Overwrite the UID in the POJO with the secure one.
-            newUser.setUid(authenticatedUid);
+            // **Always enforce UID from token**
+            user.setUid(authenticatedUid);
 
-            // 4. Save directly to Firestore
+            // Initialize empty lists if null — Firestore requires non-null arrays
+            if (user.getIncomingRequests() == null) user.setIncomingRequests(List.of());
+            if (user.getOutgoingRequests() == null) user.setOutgoingRequests(List.of());
+            if (user.getFriends() == null) user.setFriends(List.of());
+
             Firestore db = FirestoreClient.getFirestore();
 
-            // We use .set() to create the document at the specific ID "authenticatedUid"
-            ApiFuture<WriteResult> future = db.collection("users")
-                    .document(authenticatedUid)
-                    .set(newUser);
+            ApiFuture<WriteResult> future =
+                    db.collection("users").document(authenticatedUid).set(user);
 
-            // Wait for write to complete
-            WriteResult result = future.get();
+            future.get(); // wait for write
 
-            // 5. Return success response
             return ServerResponse.created(URI.create("/api/users/" + authenticatedUid))
-                    .body(newUser);
+                    .body(user);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -125,58 +105,48 @@ public class UserHandler {
         }
     }
 
-    /**
-     * Handles PUT /api/users
-     * Updates the authenticated user's profile.
-     * Maps the JSON body (including nested Preferences) to the User object.
-     */
+    /* ============================================================
+     * PUT /api/users — Update profile safely using MERGE
+     * Only overwrites fields sent in the request
+     * ============================================================ */
     public ServerResponse updateUser(ServerRequest request) {
         try {
-            // 1. SECURITY: Determine WHO is making the request from the token
+            // ----- AUTH CHECK -----
             Principal principal = request.principal()
-                    .orElseThrow(() -> new SecurityException("No auth token found"));
+                    .orElseThrow(() -> new SecurityException("Missing authentication token"));
+
             String authenticatedUid = principal.getName();
 
-            // 2. Deserialize the JSON body directly into your updated User POJO
-            // This automagically maps 'preferences' and other nested objects.
+            // ----- BODY → POJO -----
             User updates = request.body(User.class);
 
-            // 3. Construct a Map of ONLY the fields we want to update.
-            // This prevents overwriting existing data with null/empty values.
-            Map<String, Object> dataToUpdate = new HashMap<>();
+            Map<String, Object> updateMap = new HashMap<>();
 
-            if (updates.getFirstName() != null && !updates.getFirstName().isEmpty()) {
-                dataToUpdate.put("firstName", updates.getFirstName());
-            }
-            if (updates.getLastName() != null && !updates.getLastName().isEmpty()) {
-                dataToUpdate.put("lastName", updates.getLastName());
-            }
-            if (updates.getEmail() != null && !updates.getEmail().isEmpty()) {
-                dataToUpdate.put("email", updates.getEmail());
-            }
-            // Always include preferences if they are present in the request
-            if (updates.getPreferences() != null) {
-                dataToUpdate.put("preferences", updates.getPreferences());
-            }
+            // Only include fields that are not null
+            if (updates.getFirstName() != null) updateMap.put("firstName", updates.getFirstName());
+            if (updates.getLastName() != null) updateMap.put("lastName", updates.getLastName());
+            if (updates.getEmail() != null) updateMap.put("email", updates.getEmail());
+            if (updates.getUsername() != null) updateMap.put("username", updates.getUsername());
+            if (updates.getPreferences() != null) updateMap.put("preferences", updates.getPreferences());
 
-            // Logging for debugging
-            System.out.println("Processing update for UID: " + authenticatedUid);
-            System.out.println("Fields being updated: " + dataToUpdate.keySet());
+            // Friend arrays — only included when explicitly sent
+            if (updates.getIncomingRequests() != null)
+                updateMap.put("incomingRequests", updates.getIncomingRequests());
+            if (updates.getOutgoingRequests() != null)
+                updateMap.put("outgoingRequests", updates.getOutgoingRequests());
+            if (updates.getFriends() != null)
+                updateMap.put("friends", updates.getFriends());
 
-            // 4. Save to Firestore using MERGE
+            // ----- UPDATE -----
             Firestore db = FirestoreClient.getFirestore();
+            ApiFuture<WriteResult> future =
+                    db.collection("users")
+                            .document(authenticatedUid)
+                            .set(updateMap, SetOptions.merge());
 
-            // SetOptions.merge() combined with our filtered Map ensures that
-            // omitted (empty) fields in 'dataToUpdate' are NOT touched in the database.
-            ApiFuture<WriteResult> future = db.collection("users")
-                    .document(authenticatedUid)
-                    .set(dataToUpdate, SetOptions.merge());
+            future.get();
 
-            WriteResult result = future.get();
-            System.out.println("Update successful at: " + result.getUpdateTime());
-
-            // Return the updates object (or you could return the dataToUpdate map)
-            return ServerResponse.ok().body(updates);
+            return ServerResponse.ok().body(updateMap);
 
         } catch (Exception e) {
             e.printStackTrace();
