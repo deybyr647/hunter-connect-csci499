@@ -267,32 +267,37 @@ export default function AuthScreen() {
               : styles.signupFormContainer
           }
         >
-          {/* Signup-only name fields */}
+          {/* Signup-only name + username fields */}
           {mode === "signup" && (
-            <View style={styles.row}>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="First Name"
-                placeholderTextColor="#999"
-                value={firstName}
-                onChangeText={setFirstName}
-              />
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Last Name"
-                placeholderTextColor="#999"
-                value={lastName}
-                onChangeText={setLastName}
-              />
+            <>
+              <View style={styles.row}>
+                <TextInput
+                  style={[styles.input, styles.halfInput]}
+                  placeholder="First Name"
+                  placeholderTextColor="#999"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                />
+                <TextInput
+                  style={[styles.input, styles.halfInput]}
+                  placeholder="Last Name"
+                  placeholderTextColor="#999"
+                  value={lastName}
+                  onChangeText={setLastName}
+                />
+              </View>
+
               <TextInput
                 style={styles.input}
                 placeholder="Username"
+                placeholderTextColor="#999"
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
               />
-            </View>
+            </>
           )}
+
 
           {/* Shared email + password */}
           <TextInput
