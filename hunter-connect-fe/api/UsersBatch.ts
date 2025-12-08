@@ -1,0 +1,39 @@
+import { getUser } from "./Users";
+import { auth } from "@/api/firebaseConfig";
+
+export async function getUsersByUIDs(uids: string[]) {
+  if (!uids || uids.length === 0) return [];
+
+  const token = await auth.currentUser?.getIdToken();
+
+  const users = await Promise.all(
+    uids.map(async (id) => {
+        try {
+        const profile = await getUser(id, token);
+
+        if (!profile) {
+            return {
+            uid: id,
+            fullName: "Unknown User",
+            email: "",
+            };
+        }
+
+        return {
+            uid: id,
+            fullName: `${profile.name.firstName} ${profile.name.lastName}`,
+            email: profile.email,
+        };
+        } catch (error) {
+        return {
+            uid: id,
+            fullName: "Unknown User",
+            email: "",
+        };
+        }
+    })
+    );
+
+
+  return users;
+}
