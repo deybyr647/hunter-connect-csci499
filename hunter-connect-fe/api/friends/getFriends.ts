@@ -1,5 +1,6 @@
-import { db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
+
+import { db } from "../firebaseConfig";
 
 export async function getFriends(uid: string) {
   const ref = doc(db, "users", uid);

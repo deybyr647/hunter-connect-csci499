@@ -19,9 +19,8 @@ interface UserInterface {
 }
 
 /* ---------------- CREATE USER ---------------- */
-const createUser = async (body: UserInterface, bearerToken: string) => {
-  const { uid, email, name, username } = body;
-  const { firstName, lastName } = name;
+const createUser = async (body: UserInterface, bearerToken: string = "") => {
+  const { uid, email, firstName, lastName, username } = body;
 
   const createUserRequest: RequestInit = {
     method: "POST",
@@ -35,17 +34,20 @@ const createUser = async (body: UserInterface, bearerToken: string) => {
       firstName,
       lastName,
       email,
-      username
+      username,
     }),
-      mode: "cors",
-      credentials: "omit",
-      cache: "no-cache",
-      redirect: "follow",
-      referrerPolicy: "no-referrer-when-downgrade",
+    mode: "cors",
+    credentials: "omit",
+    cache: "no-cache",
+    redirect: "follow",
+    referrerPolicy: "no-referrer-when-downgrade",
   };
 
   try {
-    const req = await fetch("http://localhost:8080/api/users", createUserRequest);
+    const req = await fetch(
+      "http://localhost:8080/api/users",
+      createUserRequest
+    );
     const json = await req.json();
     console.log("User created.");
     return json;
@@ -56,8 +58,7 @@ const createUser = async (body: UserInterface, bearerToken: string) => {
 
 /* ---------------- UPDATE USER ---------------- */
 const updateUser = async (body: UserInterface, bearerToken: string) => {
-  const { uid, email, name, preferences } = body;
-  const { firstName, lastName } = name;
+  const { uid, email, firstName, lastName, preferences } = body;
 
   const updateUserRequest: RequestInit = {
     method: "PUT",
@@ -73,15 +74,18 @@ const updateUser = async (body: UserInterface, bearerToken: string) => {
       email,
       preferences,
     }),
-      mode: "cors",
-      credentials: "omit",
-      cache: "no-cache",
-      redirect: "follow",
-      referrerPolicy: "no-referrer-when-downgrade",
+    mode: "cors",
+    credentials: "omit",
+    cache: "no-cache",
+    redirect: "follow",
+    referrerPolicy: "no-referrer-when-downgrade",
   };
 
   try {
-    const req = await fetch("http://localhost:8080/api/users", updateUserRequest);
+    const req = await fetch(
+      "http://localhost:8080/api/users",
+      updateUserRequest
+    );
     const json = await req.json();
 
     console.log("User updated.");
@@ -92,7 +96,7 @@ const updateUser = async (body: UserInterface, bearerToken: string) => {
 };
 
 /* ---------------- GET USER ---------------- */
-const getUser = async (uid: string, bearerToken: string) => {
+const getUser = async (uid: string = "", bearerToken: string = "") => {
   const getUserRequest: RequestInit = {
     method: "GET",
     headers: {
@@ -100,15 +104,18 @@ const getUser = async (uid: string, bearerToken: string) => {
       Authorization: `Bearer ${bearerToken}`,
       Accept: "application/json",
     },
-      mode: "cors",
-      credentials: "omit",
-      cache: "no-cache",
-      redirect: "follow",
-      referrerPolicy: "no-referrer-when-downgrade",
+    mode: "cors",
+    credentials: "omit",
+    cache: "no-cache",
+    redirect: "follow",
+    referrerPolicy: "no-referrer-when-downgrade",
   };
 
   try {
-    const req = await fetch(`http://localhost:8080/api/users/${uid}`, getUserRequest);
+    const req = await fetch(
+      `http://localhost:8080/api/users/${uid}`,
+      getUserRequest
+    );
     const data: UserInterface = await req.json();
     return data;
   } catch (error) {
@@ -125,18 +132,21 @@ const getAllUsers = async (bearerToken: string) => {
       Authorization: `Bearer ${bearerToken}`,
       Accept: "application/json",
     },
-      mode: "cors",
-      credentials: "omit",
-      cache: "no-cache",
-      redirect: "follow",
-      referrerPolicy: "no-referrer-when-downgrade",
+    mode: "cors",
+    credentials: "omit",
+    cache: "no-cache",
+    redirect: "follow",
+    referrerPolicy: "no-referrer-when-downgrade",
   };
 
   try {
-    const req = await fetch("http://localhost:8080/api/users", getAllUsersRequest);
+    const req = await fetch(
+      "http://localhost:8080/api/users",
+      getAllUsersRequest
+    );
     const json: UserInterface[] = await req.json();
-      console.log("Successful GET data from backend");
-      return json;
+    console.log("Successful GET data from backend");
+    return json;
   } catch (error) {
     return Promise.reject(error);
   }

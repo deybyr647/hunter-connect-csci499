@@ -8,6 +8,13 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
+import {
+  collection,
+  getDocs,
+  query,
+  setLogLevel,
+  where,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -21,7 +28,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { auth, db } from "../../api/firebaseConfig";
-import { collection, query, where, getDocs, setLogLevel } from "firebase/firestore";
 import { AuthStyles as styles } from "./AuthStyles";
 
 type AuthMode = "login" | "signup";
@@ -65,7 +71,6 @@ export default function AuthScreen() {
   const [passwordStrength, setPasswordStrength] = useState("");
   const [matchMessage, setMatchMessage] = useState("");
   const [username, setUsername] = useState("");
-
 
   const evaluatePasswordStrength = (pwd: string) => {
     if (!pwd) return "";
@@ -143,7 +148,9 @@ export default function AuthScreen() {
       }
 
       if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-        setErrorMessage("Usernames can only contain letters, numbers, and underscores.");
+        setErrorMessage(
+          "Usernames can only contain letters, numbers, and underscores."
+        );
         return;
       }
     }
@@ -196,10 +203,8 @@ export default function AuthScreen() {
           uid,
           email,
           username: username.toLowerCase(),
-          name: {
-            firstName,
-            lastName,
-          },
+          firstName,
+          lastName,
 
           // REQUIRED since backend model includes these fields
           incomingRequests: [],
@@ -215,7 +220,6 @@ export default function AuthScreen() {
         await reload(userCredential.user);
         router.replace("/verify-email");
       }
-
     } catch (error: any) {
       setLogLevel("debug");
       console.log("Firebase error:", error.code);
@@ -297,7 +301,6 @@ export default function AuthScreen() {
               />
             </>
           )}
-
 
           {/* Shared email + password */}
           <TextInput

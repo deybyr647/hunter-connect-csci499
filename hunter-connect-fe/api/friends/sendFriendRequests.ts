@@ -1,5 +1,6 @@
+import { arrayUnion, doc, updateDoc } from "firebase/firestore";
+
 import { db } from "../firebaseConfig";
-import { doc, updateDoc, arrayUnion } from "firebase/firestore";
 
 export async function sendFriendRequest(fromUid: string, toUid: string) {
   if (fromUid === toUid) throw new Error("Cannot friend yourself.");

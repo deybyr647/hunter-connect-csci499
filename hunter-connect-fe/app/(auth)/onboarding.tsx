@@ -818,12 +818,14 @@ export default function OnboardingScreen() {
       const bearerToken = await user.getIdToken();
 
       const reqBody: UserInterface = {
-        name: {
-          firstName: "",
-          lastName: "",
-        },
+        firstName: "",
+        lastName: "",
         email: "",
         uid: "",
+        username: "",
+        incomingRequests: [],
+        outgoingRequests: [],
+        friends: [],
         preferences: {
           academicYear: academicYear,
           courses: courses,

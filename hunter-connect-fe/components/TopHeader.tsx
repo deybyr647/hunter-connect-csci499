@@ -65,7 +65,6 @@ const TopHeader = () => {
           <Ionicons name="people-outline" size={24} />
         </TouchableOpacity>
 
-
         {/* 👤 Profile Icon — hover on web, tap on mobile */}
         <View
           {...(Platform.OS === "web"

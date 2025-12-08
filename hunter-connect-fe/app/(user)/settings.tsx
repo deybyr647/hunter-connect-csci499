@@ -43,7 +43,7 @@ export default function SettingsScreen() {
       try {
         const bearerToken = await user?.getIdToken();
         const userData = await getUser(user?.uid, bearerToken);
-        const {firstName, lastName, email, preferences} = userData;
+        const { firstName, lastName, email, preferences } = userData;
 
         if (!userData) return;
 
@@ -56,7 +56,6 @@ export default function SettingsScreen() {
       }
     })();
   }, []);
-
 
   const handleSave = async () => {
     try {

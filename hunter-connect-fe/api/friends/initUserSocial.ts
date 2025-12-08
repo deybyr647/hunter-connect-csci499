@@ -1,5 +1,6 @@
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
 import { db } from "../firebaseConfig";
-import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export async function initUserSocial(uid: string) {
   const ref = doc(db, "users", uid);

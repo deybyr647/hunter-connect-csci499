@@ -306,7 +306,7 @@ export default function EventsScreen() {
       });
 
       setUpcomingEvents((prev) =>
-        prev.map((e) =>
+        prev?.map((e) =>
           e.id === event.id
             ? {
                 ...e,
@@ -329,7 +329,7 @@ export default function EventsScreen() {
     }));
   };
 
-  const filteredEvents = upcomingEvents.filter((e) => {
+  const filteredEvents = upcomingEvents?.filter((e) => {
     const q = searchQuery.toLowerCase();
 
     const matchesSearch =
@@ -745,7 +745,7 @@ export default function EventsScreen() {
           {loading ? (
             <ActivityIndicator size="large" color="#5A31F4" />
           ) : (
-            filteredEvents.map(renderEvent)
+            filteredEvents?.map(renderEvent)
           )}
         </ScrollView>
       </SafeAreaView>

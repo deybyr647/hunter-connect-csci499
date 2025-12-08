@@ -1,22 +1,21 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { getUsersByUIDs } from "@/api/UsersBatch";
 import { auth } from "@/api/firebaseConfig";
-
-import { getFriends } from "@/api/friends/getFriends";
-import { getFriendRequests } from "@/api/friends/getFriendRequests";
-import { searchUsers } from "@/api/friends/searchUsers";
-import { sendFriendRequest } from "@/api/friends/sendFriendRequests";
 import { acceptFriendRequest } from "@/api/friends/acceptFriendRequest";
 import { declineFriendRequest } from "@/api/friends/declineFriendRequest";
+import { getFriendRequests } from "@/api/friends/getFriendRequests";
+import { getFriends } from "@/api/friends/getFriends";
 import { removeFriend } from "@/api/friends/removeFriend";
-import { getUsersByUIDs } from "@/api/UsersBatch";
+import { searchUsers } from "@/api/friends/searchUsers";
+import { sendFriendRequest } from "@/api/friends/sendFriendRequests";
+import React, { useEffect, useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function FriendsScreen() {
   const [tab, setTab] = useState<"friends" | "requests" | "search">("friends");
@@ -70,8 +69,8 @@ export default function FriendsScreen() {
               {key === "friends"
                 ? "Friends"
                 : key === "requests"
-                ? "Requests"
-                : "Search"}
+                  ? "Requests"
+                  : "Search"}
             </Text>
           </TouchableOpacity>
         ))}
@@ -83,7 +82,9 @@ export default function FriendsScreen() {
           <Text style={styles.sectionHeader}>Your Friends</Text>
 
           {friends.length === 0 ? (
-            <Text style={styles.emptyText}>You don't have any friends yet 😔</Text>
+            <Text style={styles.emptyText}>
+              You don't have any friends yet 😔
+            </Text>
           ) : (
             friends.map((friend) => (
               <View key={friend.uid} style={styles.card}>
