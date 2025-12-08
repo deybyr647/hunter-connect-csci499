@@ -52,7 +52,7 @@ cd hunter-connect-be
     - Rename the downloaded file to `service-account-key.json`.
     - Move this file into the resources folder: `hunter-connect-be/src/main/resources/service-account-key.json`
     
-    <br></br>
+    <br>
 
 3. **Run the Server:**
 	```
@@ -75,7 +75,7 @@ The frontend is an Expo app that runs on iOS, Android, and Web.
     ```
     cd hunter-connect-fe
     ```
-    <br></br>
+    <br>
 2. **Install Dependencies:**
     
     ```
@@ -85,12 +85,12 @@ The frontend is an Expo app that runs on iOS, Android, and Web.
     # or
     yarn install
     ```
-    <br></br><br></br>
+    <br>
 3. **🔑 Environment Variables (Crucial Step)**
     
     To keep API keys secure and configurable, this project uses a .env file. Expo automatically loads variables starting with `EXPO_PUBLIC_`.
     
-    <br></br>
+    <br>
     
     1. Create a file named `.env` in the `hunter-connect-fe` root directory.
     2. Add the following variables (replace with your actual Firebase keys found in Project Settings > General):
@@ -116,7 +116,7 @@ The frontend is an Expo app that runs on iOS, Android, and Web.
     npx expo start
     ```
 
-<br></br>
+<br>
 - **Note:** If you change the `.env` file while the server is running, you must restart with `npx expo start --clear` to apply changes.
 
 ## 📡 API Endpoints
@@ -132,7 +132,7 @@ The backend exposes the following REST endpoints. All write operations require a
 | `GET`      | `/api/users/{id}` | Secure     | Get a specific user profile.                 |
 | `PUT`      | `/api/users`      | Secure     | Update the authenticated user's profile.     |
 
-<br></br>
+<br>
 
 ### **Events**
 
@@ -143,7 +143,7 @@ The backend exposes the following REST endpoints. All write operations require a
 | `PUT`      | `/api/events/{id}`           | Creator Only | Update event details.           |
 | `POST`     | `/api/events/{id}/subscribe` | Secure       | Toggle attendance (Join/Leave). |
 
-<br></br>
+<br>
 
 ### **Posts**
 
@@ -152,7 +152,7 @@ The backend exposes the following REST endpoints. All write operations require a
 | `GET`      | `/api/posts` | Secure     | Get community posts. |
 | `POST`     | `/api/posts` | Secure     | Create a new post.   |
 
-<br></br><br></br>
+<br>
 
 ## 📂 Project Structure
 
@@ -169,7 +169,7 @@ hunter-connect/
     └── assets/              # Images and Fonts
 ```
 
-<br></br>
+<br>
 
 ## 🤝 Contributing
 
