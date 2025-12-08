@@ -1,10 +1,8 @@
 interface UserInterface {
   uid: string;
   email: string;
-  name: {
-    firstName: string;
-    lastName: string;
-  };
+  firstName: string;
+  lastName: string;
   username: string;
 
   // Friend system fields
@@ -14,9 +12,9 @@ interface UserInterface {
 
   preferences?: {
     academicYear: string;
-    courses: string[] | null;
-    interests: string[] | null;
-    skills: string[] | null;
+    courses: string[];
+    interests: string[];
+    skills: string[];
   };
 }
 
@@ -39,12 +37,18 @@ const createUser = async (body: UserInterface, bearerToken: string) => {
       email,
       username
     }),
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-cache",
+      redirect: "follow",
+      referrerPolicy: "no-referrer-when-downgrade",
   };
 
   try {
     const req = await fetch("http://localhost:8080/api/users", createUserRequest);
-    if (!req.ok) throw new Error("Failed to create user");
+    const json = await req.json();
     console.log("User created.");
+    return json;
   } catch (error) {
     return Promise.reject(error);
   }
@@ -53,6 +57,7 @@ const createUser = async (body: UserInterface, bearerToken: string) => {
 /* ---------------- UPDATE USER ---------------- */
 const updateUser = async (body: UserInterface, bearerToken: string) => {
   const { uid, email, name, preferences } = body;
+  const { firstName, lastName } = name;
 
   const updateUserRequest: RequestInit = {
     method: "PUT",
@@ -63,61 +68,49 @@ const updateUser = async (body: UserInterface, bearerToken: string) => {
     },
     body: JSON.stringify({
       uid,
-      firstName: name.firstName,
-      lastName: name.lastName,
+      firstName,
+      lastName,
       email,
       preferences,
     }),
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-cache",
+      redirect: "follow",
+      referrerPolicy: "no-referrer-when-downgrade",
   };
 
   try {
     const req = await fetch("http://localhost:8080/api/users", updateUserRequest);
-    if (!req.ok) throw new Error("Failed to update user");
+    const json = await req.json();
+
     console.log("User updated.");
+    return json;
   } catch (error) {
     return Promise.reject(error);
   }
 };
 
 /* ---------------- GET USER ---------------- */
-const getUser = async (uid: string | undefined, bearerToken: string | undefined) => {
+const getUser = async (uid: string, bearerToken: string) => {
   const getUserRequest: RequestInit = {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${bearerToken}`,
       Accept: "application/json",
-    }
+    },
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-cache",
+      redirect: "follow",
+      referrerPolicy: "no-referrer-when-downgrade",
   };
 
   try {
     const req = await fetch(`http://localhost:8080/api/users/${uid}`, getUserRequest);
-    const data = await req.json();
-
-    if (req.status === 200) {
-      console.log("GET USER:", data);
-
-      const normalized: UserInterface = {
-        uid: data.uid,
-        email: data.email,
-        name: {
-          firstName: data.firstName,
-          lastName: data.lastName
-        },
-        username: data.username,
-
-        // Normalize lists – prevent null from blowing up UI
-        incomingRequests: data.incomingRequests ?? [],
-        outgoingRequests: data.outgoingRequests ?? [],
-        friends: data.friends ?? [],
-
-        preferences: data.preferences ?? undefined
-      };
-
-      return normalized;
-    }
-
-    return undefined;
+    const data: UserInterface = await req.json();
+    return data;
   } catch (error) {
     return Promise.reject(error);
   }
@@ -132,28 +125,18 @@ const getAllUsers = async (bearerToken: string) => {
       Authorization: `Bearer ${bearerToken}`,
       Accept: "application/json",
     },
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-cache",
+      redirect: "follow",
+      referrerPolicy: "no-referrer-when-downgrade",
   };
 
   try {
-    const req = await fetch("http://localhost:8080/api/users/", getAllUsersRequest);
-    const json = await req.json();
-
-    if (req.status === 200) {
-      console.log("ALL USERS:", json);
-      return json.map((u: any) => ({
-        uid: u.uid,
-        email: u.email,
-        name: {
-          firstName: u.firstName,
-          lastName: u.lastName
-        },
-        username: u.username,
-        incomingRequests: u.incomingRequests ?? [],
-        outgoingRequests: u.outgoingRequests ?? [],
-        friends: u.friends ?? [],
-        preferences: u.preferences ?? undefined
-      })) as UserInterface[];
-    }
+    const req = await fetch("http://localhost:8080/api/users", getAllUsersRequest);
+    const json: UserInterface[] = await req.json();
+      console.log("Successful GET data from backend");
+      return json;
   } catch (error) {
     return Promise.reject(error);
   }

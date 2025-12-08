@@ -17,7 +17,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class UserHandler {
+    public UserHandler() {
 
+    }
     /* ============================================================
      * GET /api/users — return ALL users
      * ============================================================ */
@@ -26,10 +28,12 @@ public class UserHandler {
             Firestore db = FirestoreClient.getFirestore();
             ApiFuture<QuerySnapshot> future = db.collection("users").get();
 
-            List<User> users = future.get().getDocuments()
+            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+            List<User> users = documents
                     .stream()
                     .map(doc -> doc.toObject(User.class))
-                    .collect(Collectors.toList());
+                    .toList();
 
             return ServerResponse.ok().body(users);
 
@@ -53,13 +57,13 @@ public class UserHandler {
 
             DocumentSnapshot doc = future.get();
 
-            if (!doc.exists()) {
+            if(doc.exists()) {
+                User user = doc.toObject(User.class);
+                assert user != null;
+                return ServerResponse.ok().body(user);
+            } else {
                 return ServerResponse.notFound().build();
             }
-
-            User user = doc.toObject(User.class);
-            return ServerResponse.ok().body(user);
-
         } catch (Exception e) {
             e.printStackTrace();
             return ServerResponse.badRequest().body("Error fetching user: " + e.getMessage());
@@ -122,14 +126,22 @@ public class UserHandler {
 
             Map<String, Object> updateMap = new HashMap<>();
 
-            // Only include fields that are not null
-            if (updates.getFirstName() != null) updateMap.put("firstName", updates.getFirstName());
-            if (updates.getLastName() != null) updateMap.put("lastName", updates.getLastName());
-            if (updates.getEmail() != null) updateMap.put("email", updates.getEmail());
-            if (updates.getUsername() != null) updateMap.put("username", updates.getUsername());
-            if (updates.getPreferences() != null) updateMap.put("preferences", updates.getPreferences());
+            // Prevent overwriting existing data with empty/null values
+            if (updates.getFirstName() != null && !updates.getFirstName().isEmpty()) {
+                updateMap.put("firstName", updates.getFirstName());
+            }
+            if (updates.getLastName() != null && !updates.getLastName().isEmpty()) {
+                updateMap.put("lastName", updates.getLastName());
+            }
+            if (updates.getEmail() != null && !updates.getEmail().isEmpty()) {
+                updateMap.put("email", updates.getEmail());
+            }
+            // Always include preferences if they are present in the request
+            if (updates.getPreferences() != null) {
+                updateMap.put("preferences", updates.getPreferences());
+            }
 
-            // Friend arrays — only included when explicitly sent
+            // Always include Friend Lists if they are present in the request
             if (updates.getIncomingRequests() != null)
                 updateMap.put("incomingRequests", updates.getIncomingRequests());
             if (updates.getOutgoingRequests() != null)
@@ -144,7 +156,8 @@ public class UserHandler {
                             .document(authenticatedUid)
                             .set(updateMap, SetOptions.merge());
 
-            future.get();
+            WriteResult result = future.get();
+            System.out.println("Update successful at: " + result.getUpdateTime());
 
             return ServerResponse.ok().body(updateMap);
 
