@@ -16,6 +16,7 @@ import { sendFriendRequest } from "@/api/friends/sendFriendRequests";
 import { acceptFriendRequest } from "@/api/friends/acceptFriendRequest";
 import { declineFriendRequest } from "@/api/friends/declineFriendRequest";
 import { removeFriend } from "@/api/friends/removeFriend";
+import { getUsersByUIDs } from "@/api/UsersBatch";
 
 export default function FriendsScreen() {
   const [tab, setTab] = useState<"friends" | "requests" | "search">("friends");
@@ -35,12 +36,16 @@ export default function FriendsScreen() {
   }, [uid]);
 
   const loadData = async () => {
-    const friendsList = await getFriends(uid!);
+    const friendsUIDs = await getFriends(uid!);
     const requests = await getFriendRequests(uid!);
 
-    setFriends(friendsList);
-    setIncoming(requests.incoming);
-    setOutgoing(requests.outgoing);
+    const friendProfiles = await getUsersByUIDs(friendsUIDs);
+    const incomingProfiles = await getUsersByUIDs(requests.incoming);
+    const outgoingProfiles = await getUsersByUIDs(requests.outgoing);
+
+    setFriends(friendProfiles);
+    setIncoming(incomingProfiles);
+    setOutgoing(outgoingProfiles);
   };
 
   const handleSearch = async () => {
@@ -59,17 +64,9 @@ export default function FriendsScreen() {
           <TouchableOpacity
             key={key}
             onPress={() => setTab(key as any)}
-            style={[
-              styles.tab,
-              tab === key && styles.activeTab,
-            ]}
+            style={[styles.tab, tab === key && styles.activeTab]}
           >
-            <Text
-              style={[
-                styles.tabText,
-                tab === key && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabText, tab === key && styles.activeTabText]}>
               {key === "friends"
                 ? "Friends"
                 : key === "requests"
@@ -89,13 +86,16 @@ export default function FriendsScreen() {
             <Text style={styles.emptyText}>You don't have any friends yet 😔</Text>
           ) : (
             friends.map((friend) => (
-              <View key={friend} style={styles.card}>
-                <Text style={styles.cardTitle}>{friend}</Text>
+              <View key={friend.uid} style={styles.card}>
+                <View>
+                  <Text style={styles.cardTitle}>{friend.fullName}</Text>
+                  <Text style={styles.cardEmail}>{friend.email}</Text>
+                </View>
 
                 <TouchableOpacity
                   style={styles.removeBtn}
                   onPress={async () => {
-                    await removeFriend(uid!, friend);
+                    await removeFriend(uid!, friend.uid);
                     loadData();
                   }}
                 >
@@ -116,14 +116,17 @@ export default function FriendsScreen() {
             <Text style={styles.emptyText}>No incoming requests.</Text>
           ) : (
             incoming.map((req) => (
-              <View key={req} style={styles.card}>
-                <Text style={styles.cardTitle}>{req}</Text>
+              <View key={req.uid} style={styles.card}>
+                <View>
+                  <Text style={styles.cardTitle}>{req.fullName}</Text>
+                  <Text style={styles.cardEmail}>{req.email}</Text>
+                </View>
 
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <TouchableOpacity
                     style={styles.acceptBtn}
                     onPress={async () => {
-                      await acceptFriendRequest(uid!, req);
+                      await acceptFriendRequest(uid!, req.uid);
                       loadData();
                     }}
                   >
@@ -133,7 +136,7 @@ export default function FriendsScreen() {
                   <TouchableOpacity
                     style={styles.declineBtn}
                     onPress={async () => {
-                      await declineFriendRequest(uid!, req);
+                      await declineFriendRequest(uid!, req.uid);
                       loadData();
                     }}
                   >
@@ -152,8 +155,11 @@ export default function FriendsScreen() {
             <Text style={styles.emptyText}>No pending outgoing requests.</Text>
           ) : (
             outgoing.map((req) => (
-              <View key={req} style={styles.card}>
-                <Text style={styles.cardTitle}>{req}</Text>
+              <View key={req.uid} style={styles.card}>
+                <View>
+                  <Text style={styles.cardTitle}>{req.fullName}</Text>
+                  <Text style={styles.cardEmail}>{req.email}</Text>
+                </View>
                 <Text style={styles.pendingText}>Pending…</Text>
               </View>
             ))
@@ -180,7 +186,10 @@ export default function FriendsScreen() {
 
           {results.map((user) => (
             <View key={user.uid} style={styles.card}>
-              <Text style={styles.cardTitle}>{user.email}</Text>
+              <View>
+                <Text style={styles.cardTitle}>{user.fullName}</Text>
+                <Text style={styles.cardEmail}>{user.email}</Text>
+              </View>
 
               <TouchableOpacity
                 style={styles.addBtn}
@@ -255,6 +264,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  cardEmail: {
+    fontSize: 14,
+    color: "#777",
+    marginTop: 2,
   },
   removeBtn: {
     backgroundColor: "#eb3b5a",

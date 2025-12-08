@@ -42,22 +42,20 @@ export default function SettingsScreen() {
     (async () => {
       try {
         const bearerToken = await user?.getIdToken();
-        const userData: UserInterface | undefined = await getUser(
-          user?.uid,
-          bearerToken
-        );
+        const userData = await getUser(user?.uid, bearerToken);
 
-        const { firstName, lastName, email, preferences } = userData;
+        if (!userData) return;
 
-        setFirstName(firstName || "Unknown First Name");
-        setLastName(lastName || "Unknown Last Name");
-        setEmail(email || "Unknown Email Address");
-        setAcademicYear(preferences.academicYear);
+        setFirstName(userData.name.firstName ?? "Unknown First Name");
+        setLastName(userData.name.lastName ?? "Unknown Last Name");
+        setEmail(userData.email ?? "Unknown Email Address");
+        setAcademicYear(userData.preferences?.academicYear ?? "Unknown");
       } catch (error) {
         console.error(error);
       }
     })();
   }, []);
+
 
   const handleSave = async () => {
     try {

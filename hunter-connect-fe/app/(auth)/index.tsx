@@ -20,10 +20,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth } from "../../api/firebaseConfig";
+import { auth, db } from "../../api/firebaseConfig";
+import { collection, query, where, getDocs, setLogLevel } from "firebase/firestore";
 import { AuthStyles as styles } from "./AuthStyles";
 
 type AuthMode = "login" | "signup";
+
+const checkUsernameUnique = async (username: string) => {
+  const q = query(
+    collection(db, "users"),
+    where("username", "==", username.toLowerCase())
+  );
+
+  const snap = await getDocs(q);
+  return snap.empty; // true = unique
+};
 
 export default function AuthScreen() {
   const router = useRouter();
@@ -53,6 +64,8 @@ export default function AuthScreen() {
   const [errorMessage, setErrorMessage] = useState("");
   const [passwordStrength, setPasswordStrength] = useState("");
   const [matchMessage, setMatchMessage] = useState("");
+  const [username, setUsername] = useState("");
+
 
   const evaluatePasswordStrength = (pwd: string) => {
     if (!pwd) return "";
@@ -123,6 +136,24 @@ export default function AuthScreen() {
       setErrorMessage("Please use your @myhunter.cuny.edu email to sign up.");
       return;
     }
+    if (mode === "signup") {
+      if (!username.trim()) {
+        setErrorMessage("Please enter a username.");
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        setErrorMessage("Usernames can only contain letters, numbers, and underscores.");
+        return;
+      }
+    }
+    if (mode === "signup") {
+      const isUnique = await checkUsernameUnique(username.toLowerCase());
+      if (!isUnique) {
+        setErrorMessage("Username is already taken. Try another.");
+        return;
+      }
+    }
 
     try {
       if (mode === "login") {
@@ -152,34 +183,41 @@ export default function AuthScreen() {
         );
         const user = userCredential.user;
 
-        // Save full name to Firebase Auth
         await updateProfile(userCredential.user, {
           displayName: `${firstName} ${lastName}`,
         });
 
         await sendEmailVerification(userCredential.user);
 
-        // Access UID of user here, along with token to send to backend for authentication
         const uid = user.uid;
         const bearerToken = await user.getIdToken();
 
         const reqBody: UserInterface = {
+          uid,
+          email,
+          username: username.toLowerCase(),
           name: {
-            firstName: firstName,
-            lastName: lastName,
+            firstName,
+            lastName,
           },
-          email: email,
-          uid: uid,
+
+          // REQUIRED since backend model includes these fields
+          incomingRequests: [],
+          outgoingRequests: [],
+          friends: [],
+
+          // Preferences are optional so leave as undefined
         };
 
         await createUser(reqBody, bearerToken);
         await initUserSocial(uid);
 
-        // Refresh the user object so `onAuthStateChanged` gets updated info
         await reload(userCredential.user);
         router.replace("/verify-email");
       }
+
     } catch (error: any) {
+      setLogLevel("debug");
       console.log("Firebase error:", error.code);
       const friendlyMessage = getFriendlyErrorMessage(error.code);
       setErrorMessage(friendlyMessage);
@@ -245,6 +283,13 @@ export default function AuthScreen() {
                 placeholderTextColor="#999"
                 value={lastName}
                 onChangeText={setLastName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Username"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
               />
             </View>
           )}
