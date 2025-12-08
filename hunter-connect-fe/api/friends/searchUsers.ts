@@ -2,12 +2,17 @@ import { db } from "../firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
 export async function searchUsers(searchTerm: string) {
-  if (!searchTerm.trim()) return [];
+  const term = searchTerm.trim().toLowerCase();
+  if (!term) return [];
 
   const usersRef = collection(db, "users");
 
-  // Basic search (Firestore doesn't allow contains text search)
-  const q = query(usersRef, where("email", ">=", searchTerm), where("email", "<=", searchTerm + "\uf8ff"));
+  // Username prefix search (e.g., "lu" matches "lucy", "luna", etc.)
+  const q = query(
+    usersRef,
+    where("username", ">=", term),
+    where("username", "<=", term + "\uf8ff")
+  );
 
   const snap = await getDocs(q);
 

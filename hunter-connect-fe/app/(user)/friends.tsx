@@ -30,10 +30,30 @@ export default function FriendsScreen() {
 
   const uid = auth.currentUser?.uid;
 
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    const res = await searchUsers(searchTerm.trim());
+    setResults(res.filter((u) => u.uid !== uid));
+  };
+
   useEffect(() => {
     if (!uid) return;
     loadData();
   }, [uid]);
+
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      if (tab === "search" && searchTerm.trim().length > 0) {
+        handleSearch();     
+      } else {
+        setResults([]);     
+      }
+    }, 300); // wait 300ms after user stops typing
+
+    return () => clearTimeout(delay);
+  }, [searchTerm, tab]);
+
 
   const loadData = async () => {
     const friendsUIDs = await getFriends(uid!);
@@ -48,11 +68,6 @@ export default function FriendsScreen() {
     setOutgoing(outgoingProfiles);
   };
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
-    const res = await searchUsers(searchTerm.trim());
-    setResults(res.filter((u) => u.uid !== uid));
-  };
 
   const tabs = ["friends", "requests", "search"];
 
@@ -166,29 +181,29 @@ export default function FriendsScreen() {
           )}
         </View>
       )}
-
       {/* SEARCH TAB */}
       {tab === "search" && (
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Search Users</Text>
 
           <TextInput
-            placeholder="Search by email"
+            placeholder="Search by username"
             placeholderTextColor="#888"
             value={searchTerm}
             onChangeText={setSearchTerm}
             style={styles.input}
+            autoCapitalize="none"
           />
 
-          <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
-            <Text style={styles.searchText}>Search</Text>
-          </TouchableOpacity>
+          {results.length === 0 && searchTerm.trim().length > 0 && (
+            <Text style={{ color: "gray", marginTop: 10 }}>No users found…</Text>
+          )}
 
           {results.map((user) => (
             <View key={user.uid} style={styles.card}>
               <View>
                 <Text style={styles.cardTitle}>{user.fullName}</Text>
-                <Text style={styles.cardEmail}>{user.email}</Text>
+                <Text style={styles.cardEmail}>@{user.username}</Text>
               </View>
 
               <TouchableOpacity
@@ -204,6 +219,7 @@ export default function FriendsScreen() {
           ))}
         </View>
       )}
+
     </ScrollView>
   );
 }
