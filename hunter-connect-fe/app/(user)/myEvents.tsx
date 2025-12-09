@@ -266,9 +266,9 @@ export default function MyEventsScreen() {
       style={{ flex: 1 }}
     >
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.pageHeader}>
           {/* HEADER */}
-          <View style={styles.pageHeader}>
+          
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={24} color="#5A31F4" />
             </TouchableOpacity>
@@ -277,7 +277,7 @@ export default function MyEventsScreen() {
 
             <View style={{ width: 24 }} />
           </View>
-
+          <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* CREATED BY ME */}
           <Text style={styles.sectionTitle}>Created by Me</Text>
           {loading ? (
@@ -325,18 +325,19 @@ const styles = StyleSheet.create({
   },
 
   pageHeader: {
-    width: "100%",
-    maxWidth: 700,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderColor: "#E8E8E8",
   },
 
   pageTitle: {
-    fontSize: 22,
+    flex: 1,
+    textAlign: "center",
+    fontSize: 20,
     fontWeight: "700",
     color: "#1A1A1A",
   },
