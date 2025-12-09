@@ -1,397 +1,162 @@
-import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FontAwesome } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
+import { auth } from "@/api/firebaseConfig";
+import { listenToConversations } from "@/api/messages/getConversations";
+import { listenToMessages } from "@/api/messages/getMessages";
+import { sendMessage } from "@/api/messages/sendMessage";
+import { Conversation, Message } from "@/api/messages/types";
 import { Text } from "@/components/Themed";
 
-interface Conversation {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  isOnline: boolean;
-}
-
-interface Message {
-  id: string;
-  text: string;
-  timestamp: string;
-  isCurrentUser: boolean;
-  senderName?: string;
-}
-
-interface ConversationCardProps {
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount?: number;
-  avatarUrl?: string;
-  isOnline?: boolean;
-  onPress: () => void;
-}
-
-interface MessageBubbleProps {
-  message: string;
-  timestamp: string;
-  isCurrentUser: boolean;
-  senderName?: string;
-}
-
-function ConversationCard({
-  name,
-  lastMessage,
-  timestamp,
-  unreadCount = 0,
-  avatarUrl,
-  isOnline = false,
-  onPress,
-}: ConversationCardProps) {
-  return (
-    <TouchableOpacity
-      style={conversationStyles.container}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={conversationStyles.avatarContainer}>
-        {avatarUrl ? (
-          <Image
-            source={{ uri: avatarUrl }}
-            style={conversationStyles.avatar}
-          />
-        ) : (
-          <View style={conversationStyles.avatarPlaceholder}>
-            <FontAwesome name="user" size={24} color="#8E8E93" />
-          </View>
-        )}
-        {isOnline && <View style={conversationStyles.onlineIndicator} />}
-      </View>
-
-      <View style={conversationStyles.contentContainer}>
-        <View style={conversationStyles.headerRow}>
-          <Text style={conversationStyles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          <Text style={conversationStyles.timestamp}>{timestamp}</Text>
-        </View>
-
-        <View style={conversationStyles.messageRow}>
-          <Text
-            style={[
-              conversationStyles.lastMessage,
-              unreadCount > 0 && conversationStyles.unreadMessage,
-            ]}
-            numberOfLines={2}
-          >
-            {lastMessage}
-          </Text>
-          {unreadCount > 0 && (
-            <View style={conversationStyles.unreadBadge}>
-              <Text style={conversationStyles.unreadCount}>
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-function MessageBubble({
-  message,
-  timestamp,
-  isCurrentUser,
-  senderName,
-}: MessageBubbleProps) {
-  return (
-    <View
-      style={[
-        bubbleStyles.container,
-        isCurrentUser
-          ? bubbleStyles.currentUserContainer
-          : bubbleStyles.otherUserContainer,
-      ]}
-    >
-      {!isCurrentUser && senderName && (
-        <Text style={bubbleStyles.senderName}>{senderName}</Text>
-      )}
-      <View
-        style={[
-          bubbleStyles.bubble,
-          isCurrentUser
-            ? bubbleStyles.currentUserBubble
-            : bubbleStyles.otherUserBubble,
-        ]}
-      >
-        <Text
-          style={[
-            bubbleStyles.messageText,
-            isCurrentUser
-              ? bubbleStyles.currentUserText
-              : bubbleStyles.otherUserText,
-          ]}
-        >
-          {message}
-        </Text>
-      </View>
-      <Text style={bubbleStyles.timestamp}>{timestamp}</Text>
-    </View>
-  );
-}
-
-const MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    lastMessage: "See you at the study group tomorrow!",
-    timestamp: "2m ago",
-    unreadCount: 2,
-    isOnline: true,
-  },
-  {
-    id: "2",
-    name: "CS Study Group",
-    lastMessage: "John Doe: I'll be there!",
-    timestamp: "15m ago",
-    unreadCount: 0,
-    isOnline: false,
-  },
-];
-
-const MOCK_MESSAGES: { [key: string]: Message[] } = {
-  "1": [
-    {
-      id: "1",
-      text: "Hey! How's the Computer Science assignment going?",
-      timestamp: "10:30 AM",
-      isCurrentUser: false,
-      senderName: "Sarah Johnson",
-    },
-    {
-      id: "2",
-      text: "Going well! Just finished the algorithm part.",
-      timestamp: "10:32 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: "3",
-      text: "That's great! I'm stuck on problem 3. Any tips?",
-      timestamp: "10:33 AM",
-      isCurrentUser: false,
-      senderName: "Sarah Johnson",
-    },
-    {
-      id: "4",
-      text: "Sure! Try using a hashmap for that one.",
-      timestamp: "10:35 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: "5",
-      text: "It makes the lookup much faster.",
-      timestamp: "10:35 AM",
-      isCurrentUser: true,
-    },
-    {
-      id: "6",
-      text: "Oh that makes sense! Thanks so much!",
-      timestamp: "10:37 AM",
-      isCurrentUser: false,
-      senderName: "Sarah Johnson",
-    },
-    {
-      id: "7",
-      text: "See you at the study group tomorrow!",
-      timestamp: "10:38 AM",
-      isCurrentUser: false,
-      senderName: "Sarah Johnson",
-    },
-  ],
-  "2": [
-    {
-      id: "1",
-      text: "Hey everyone! Anyone have notes from last lecture?",
-      timestamp: "Yesterday 3:45 PM",
-      isCurrentUser: false,
-      senderName: "Mike",
-    },
-    {
-      id: "2",
-      text: "I do! I'll share them in a bit",
-      timestamp: "Yesterday 3:50 PM",
-      isCurrentUser: false,
-      senderName: "Alex",
-    },
-    {
-      id: "3",
-      text: "Thanks Alex! Really appreciate it",
-      timestamp: "Yesterday 3:52 PM",
-      isCurrentUser: true,
-    },
-    {
-      id: "4",
-      text: "Don't forget we're meeting tomorrow at 2pm!",
-      timestamp: "Today 9:15 AM",
-      isCurrentUser: false,
-      senderName: "Sarah",
-    },
-    {
-      id: "5",
-      text: "I'll be there!",
-      timestamp: "Today 9:20 AM",
-      isCurrentUser: true,
-    },
-  ],
-};
-
 export default function MessagesScreen() {
+  const user = auth.currentUser;
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [conversations, setConversations] =
-    useState<Conversation[]>(MOCK_CONVERSATIONS);
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(null);
+
+  /* ---------------- STATE ---------------- */
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [search, setSearch] = useState("");
   const [inputText, setInputText] = useState("");
+
   const flatListRef = useRef<FlatList>(null);
 
-  const filteredConversations = conversations.filter((conv) =>
-    conv.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  /* ------------ LISTEN TO CONVERSATIONS ------------ */
+  useEffect(() => {
+    if (!user) return;
+    const unsub = listenToConversations(user.uid, setConversations);
+    return unsub;
+  }, [user]);
 
-  const handleConversationPress = (conversationId: string) => {
-    setSelectedConversationId(conversationId);
-    setMessages(MOCK_MESSAGES[conversationId] || []);
-  };
+  /* ------------ LISTEN TO MESSAGES ------------ */
+  useEffect(() => {
+    if (!selectedConversationId) return;
 
-  const handleBackToList = () => {
-    setSelectedConversationId(null);
-    setMessages([]);
+    const unsub = listenToMessages(selectedConversationId, (msgs) => {
+      setMessages(msgs);
+
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 50);
+    });
+
+    return unsub;
+  }, [selectedConversationId]);
+
+  /* ------------ SEND MESSAGE ------------ */
+  const handleSend = async () => {
+    if (!inputText.trim() || !user || !selectedConversationId) return;
+
+    await sendMessage(selectedConversationId, user.uid, inputText);
     setInputText("");
   };
 
-  const handleSend = () => {
-    if (inputText.trim().length === 0) return;
+  const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText.trim(),
-      timestamp: new Date().toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      }),
-      isCurrentUser: true,
-    };
+  /* ==================================================================== */
+  /* ============================ CHAT VIEW ============================== */
+  /* ==================================================================== */
 
-    setMessages([...messages, newMessage]);
-    setInputText("");
+  if (selectedConversation) {
+    const otherId = selectedConversation.participants.find((p) => p !== user?.uid);
+    const otherUser = otherId ? selectedConversation.participantData?.[otherId] : null;
 
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  };
-
-  const selectedConversation = conversations.find(
-    (c) => c.id === selectedConversationId
-  );
-
-  // Chat View
-  if (selectedConversationId && selectedConversation) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
         <View style={styles.chatHeader}>
-          <TouchableOpacity
-            onPress={handleBackToList}
-            style={styles.chatBackButton}
-          >
+          <TouchableOpacity onPress={() => setSelectedConversationId(null)} style={styles.chatBackButton}>
             <FontAwesome name="chevron-left" size={20} color="#2E1759" />
           </TouchableOpacity>
 
           <View style={styles.chatHeaderCenter}>
-            <Text style={styles.chatHeaderTitle}>
-              {selectedConversation.name}
-            </Text>
+            <Text style={styles.chatHeaderTitle}>{otherUser?.username ?? "Unknown User"}</Text>
             <Text style={styles.chatHeaderSubtitle}>Active now</Text>
           </View>
 
           <TouchableOpacity style={styles.chatInfoButton}>
-            <FontAwesome name="info-circle" size={24} color="#2E1759" />
+            <FontAwesome name="info-circle" size={22} color="#2E1759" />
           </TouchableOpacity>
         </View>
 
+        {/* Chat Body */}
         <KeyboardAvoidingView
-          style={styles.keyboardView}
+          style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
-          {messages.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <FontAwesome name="comments-o" size={64} color="#C7C7CC" />
-              <Text style={styles.emptyText}>No messages yet</Text>
-              <Text style={styles.emptySubtext}>Start the conversation!</Text>
-            </View>
-          ) : (
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <MessageBubble
-                  message={item.text}
-                  timestamp={item.timestamp}
-                  isCurrentUser={item.isCurrentUser}
-                  senderName={item.senderName}
-                />
-              )}
-              contentContainerStyle={styles.messageList}
-              showsVerticalScrollIndicator={false}
-              onContentSizeChange={() =>
-                flatListRef.current?.scrollToEnd({ animated: true })
-              }
-            />
-          )}
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+              const isMe = item.senderId === user?.uid;
+              return (
+                <View
+                  style={[
+                    bubbleStyles.container,
+                    isMe ? bubbleStyles.currentUserContainer : bubbleStyles.otherUserContainer,
+                  ]}
+                >
+                  <View
+                    style={[
+                      bubbleStyles.bubble,
+                      isMe ? bubbleStyles.currentUserBubble : bubbleStyles.otherUserBubble,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        bubbleStyles.messageText,
+                        isMe ? bubbleStyles.currentUserText : bubbleStyles.otherUserText,
+                      ]}
+                    >
+                      {item.text}
+                    </Text>
+                  </View>
 
+                  <Text style={bubbleStyles.timestamp}>
+                    {item.timestamp?.toDate
+                      ? item.timestamp.toDate().toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
+                  </Text>
+                </View>
+              );
+            }}
+            contentContainerStyle={styles.messageList}
+            showsVerticalScrollIndicator={false}
+          />
+
+          {/* Message Input */}
           <View style={styles.inputContainer}>
-            <TouchableOpacity style={styles.attachButton}>
-              <FontAwesome name="plus-circle" size={28} color="#8E8E93" />
-            </TouchableOpacity>
-
             <TextInput
               style={styles.input}
               placeholder="Type a message..."
               value={inputText}
               onChangeText={setInputText}
-              placeholderTextColor="#8E8E93"
               multiline
-              maxLength={1000}
             />
 
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                inputText.trim().length === 0 && styles.sendButtonDisabled,
+                !inputText.trim() && styles.sendButtonDisabled,
               ]}
               onPress={handleSend}
-              disabled={inputText.trim().length === 0}
+              disabled={!inputText.trim()}
             >
-              <FontAwesome
-                name="send"
-                size={20}
-                color={inputText.trim().length > 0 ? "#fff" : "#C7C7CC"}
-              />
+              <FontAwesome name="send" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -399,64 +164,139 @@ export default function MessagesScreen() {
     );
   }
 
-  // Conversation List View
+  /* ==================================================================== */
+  /* ===================== CONVERSATION LIST VIEW ======================= */
+  /* ==================================================================== */
+
+  const filtered = conversations.filter((c) => {
+    const otherId = c.participants.find((p) => p !== user?.uid);
+    const username = c.participantData?.[otherId]?.username || "";
+    return username.toLowerCase().includes(search.toLowerCase());
+  });
+
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container}>
+      {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <FontAwesome
-          name="search"
-          size={16}
-          color="#8E8E93"
-          style={styles.searchIcon}
-        />
+        <FontAwesome name="search" size={16} color="#8E8E93" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search messages..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholderTextColor="#8E8E93"
+          value={search}
+          onChangeText={setSearch}
         />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <FontAwesome name="times-circle" size={16} color="#8E8E93" />
-          </TouchableOpacity>
-        )}
       </View>
 
+      {/* Conversation List */}
       <FlatList
-        data={filteredConversations}
+        data={filtered}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ConversationCard
-            name={item.name}
-            lastMessage={item.lastMessage}
-            timestamp={item.timestamp}
-            unreadCount={item.unreadCount}
-            isOnline={item.isOnline}
-            onPress={() => handleConversationPress(item.id)}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <FontAwesome name="comments-o" size={64} color="#C7C7CC" />
-            <Text style={styles.emptyText}>No conversations found</Text>
-            <Text style={styles.emptySubtext}>
-              Start a new conversation to connect with others
-            </Text>
-          </View>
-        }
+        renderItem={({ item }) => {
+          const otherId = item.participants.find((p) => p !== user?.uid);
+          const u = item.participantData?.[otherId];
+
+          return (
+            <TouchableOpacity
+              style={styles.conversationCard}
+              onPress={() => setSelectedConversationId(item.id)}
+            >
+              <Text style={styles.conversationName}>{u?.username ?? "Unknown User"}</Text>
+              <Text style={styles.conversationLast}>{item.lastMessage}</Text>
+            </TouchableOpacity>
+          );
+        }}
+        contentContainerStyle={{ paddingBottom: 40 }}
       />
     </SafeAreaView>
   );
 }
 
-const bubbleStyles = StyleSheet.create({
+/* --------------------------- STYLES --------------------------- */
+
+const styles = {
   container: {
-    marginVertical: 4,
-    paddingHorizontal: 12,
+    flex: 1,
+    backgroundColor: "#F2F2F7",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    backgroundColor: "#E9E9EB",
+    margin: 16,
+    padding: 10,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  conversationCard: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5EA",
+  },
+  conversationName: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  conversationLast: {
+    marginTop: 4,
+    color: "#8E8E93",
+  },
+  chatHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5EA",
+    backgroundColor: "#fff",
+  },
+  chatBackButton: { padding: 4 },
+  chatHeaderCenter: { flex: 1, alignItems: "center" },
+  chatHeaderTitle: { fontSize: 17, fontWeight: "600" },
+  chatHeaderSubtitle: { fontSize: 13, color: "#34C759" },
+  chatInfoButton: { padding: 4 },
+  inputContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E5EA",
+  },
+  input: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 16,
+    maxHeight: 120,
+  },
+  sendButton: {
+    backgroundColor: "#2E1759",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  sendButtonDisabled: {
+    backgroundColor: "#C7C7CC",
+  },
+  messageList: {
+    paddingVertical: 12,
+  },
+};
+
+const bubbleStyles = {
+  container: {
     maxWidth: "80%",
+    paddingHorizontal: 12,
+    marginVertical: 6,
   },
   currentUserContainer: {
     alignSelf: "flex-end",
@@ -467,246 +307,18 @@ const bubbleStyles = StyleSheet.create({
     alignItems: "flex-start",
   },
   bubble: {
-    borderRadius: 18,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    marginVertical: 2,
+    borderRadius: 18,
   },
-  currentUserBubble: {
-    backgroundColor: "#2E1759",
-  },
-  otherUserBubble: {
-    backgroundColor: "#E9E9EB",
-  },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  currentUserText: {
-    color: "#fff",
-  },
-  otherUserText: {
-    color: "#000",
-  },
+  currentUserBubble: { backgroundColor: "#2E1759" },
+  otherUserBubble: { backgroundColor: "#E9E9EB" },
+  messageText: { fontSize: 16 },
+  currentUserText: { color: "#fff" },
+  otherUserText: { color: "#000" },
   timestamp: {
-    fontSize: 11,
-    color: "#8E8E93",
     marginTop: 2,
-  },
-  senderName: {
     fontSize: 12,
     color: "#8E8E93",
-    marginBottom: 2,
-    marginLeft: 4,
-    fontWeight: "600",
   },
-});
-
-const conversationStyles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    padding: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  avatarContainer: {
-    position: "relative",
-    marginRight: 12,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  avatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#E9E9EB",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  onlineIndicator: {
-    position: "absolute",
-    bottom: 2,
-    right: 2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: "#34C759",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  contentContainer: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  name: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#000",
-    flex: 1,
-    marginRight: 8,
-  },
-  timestamp: {
-    fontSize: 14,
-    color: "#8E8E93",
-  },
-  messageRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  lastMessage: {
-    fontSize: 15,
-    color: "#8E8E93",
-    flex: 1,
-    marginRight: 8,
-  },
-  unreadMessage: {
-    color: "#000",
-    fontWeight: "500",
-  },
-  unreadBadge: {
-    backgroundColor: "#2E1759",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 6,
-  },
-  unreadCount: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F2F2F7",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E9E9EB",
-    marginHorizontal: 16,
-    marginVertical: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#000",
-  },
-  listContent: {
-    flexGrow: 1,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 60,
-    paddingHorizontal: 40,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#8E8E93",
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 15,
-    color: "#C7C7CC",
-    marginTop: 8,
-    textAlign: "center",
-  },
-  chatHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#F8F8F8",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  chatBackButton: {
-    padding: 4,
-  },
-  chatHeaderCenter: {
-    flex: 1,
-    alignItems: "center",
-    marginHorizontal: 16,
-  },
-  chatHeaderTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#000",
-  },
-  chatHeaderSubtitle: {
-    fontSize: 13,
-    color: "#34C759",
-    marginTop: 2,
-  },
-  chatInfoButton: {
-    padding: 4,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  messageList: {
-    paddingVertical: 12,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#F8F8F8",
-    borderTopWidth: 1,
-    borderTopColor: "#E5E5EA",
-  },
-  attachButton: {
-    padding: 6,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    maxHeight: 100,
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-  },
-  sendButton: {
-    backgroundColor: "#2E1759",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-    marginBottom: 4,
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#E9E9EB",
-  },
-});
+};
