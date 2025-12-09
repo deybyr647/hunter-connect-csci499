@@ -44,16 +44,21 @@ cd hunter-connect-be
 ```
 
 2. **Firebase Credentials:**
-    
+   This project uses environment variables to securely load credentials instead of a physical file
     - Go to the [Firebase Console](https://console.firebase.google.com/).
     - Navigate to **Project Settings > Service Accounts**.
     - Click **Generate new private key**.
-    - Rename the downloaded file to `service-account-key.json`.
-    - Move this file into the resources folder: `hunter-connect-be/src/main/resources/service-account-key.json`
+    - Open the downloaded JSON file and copy its entire content.
+    - Create a `.env` file in the `hunter-connect-be` root directory (or set this in your IDE/Cloud environment):
+      
+      ```
+      FIREBASE_CREDENTIALS_JSON={"type": "service_account", "project_id": "...", ...}
+      ```
+	(Paste the full JSON content as a single line string)
     
     <br>
 
-3. **Run the Server:**
+4. **Run the Server:**
 	```
 	# Linux/Mac
     ./mvnw spring-boot:run
