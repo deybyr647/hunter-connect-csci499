@@ -18,7 +18,7 @@ COPY --from=build /app/target/*.jar app.jar
 COPY src/main/resources/service-account-key.json /app/service-account-key.json
 
 # Expose port 8080
-EXPO 8080
+EXPOSE 8080
 
 # Run the app
 ENTRYPOINT ["java", "-jar", "app.jar"]
