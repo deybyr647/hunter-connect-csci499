@@ -66,4 +66,21 @@ export const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 10,
   },
+  dot: {
+    position: "absolute",
+    top: -2,
+    right: -4,
+    width: 10,
+    height: 10,
+    backgroundColor: "#5A31F4", // Hunter Purple
+    borderRadius: 50,
+
+    // optional glow for polish
+    shadowColor: "#5A31F4",
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+
+
 });

@@ -1,5 +1,5 @@
 import { getUsersByUIDs } from "@/api/UsersBatch";
-import { auth } from "@/api/firebaseConfig";
+import { auth, db } from "@/api/firebaseConfig";
 import { acceptFriendRequest } from "@/api/friends/acceptFriendRequest";
 import { declineFriendRequest } from "@/api/friends/declineFriendRequest";
 import { getFriendRequests } from "@/api/friends/getFriendRequests";
@@ -16,12 +16,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { onSnapshot, doc } from "firebase/firestore";
+
 
 export default function FriendsScreen() {
   const [tab, setTab] = useState<"friends" | "requests" | "search">("friends");
 
   const [friends, setFriends] = useState<any[]>([]);
   const [incoming, setIncoming] = useState<any[]>([]);
+  const [incomingCount, setIncomingCount] = useState(0);
   const [outgoing, setOutgoing] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
 
@@ -40,6 +43,20 @@ export default function FriendsScreen() {
     loadData();
   }, [uid]);
 
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const ref = doc(db, "users", user.uid);
+
+    const unsubscribe = onSnapshot(ref, (snap) => {
+      const data = snap.data();
+      const incoming = data?.incomingRequests ?? [];
+      setIncomingCount(incoming.length);
+    });
+
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     const delay = setTimeout(() => {
@@ -80,13 +97,19 @@ export default function FriendsScreen() {
             onPress={() => setTab(key as any)}
             style={[styles.tab, tab === key && styles.activeTab]}
           >
-            <Text style={[styles.tabText, tab === key && styles.activeTabText]}>
-              {key === "friends"
-                ? "Friends"
-                : key === "requests"
+            <View style={{ position: "relative", alignItems: "center" }}>
+              <Text style={[styles.tabText, tab === key && styles.activeTabText]}>
+                {key === "friends"
+                  ? "Friends"
+                  : key === "requests"
                   ? "Requests"
                   : "Search"}
-            </Text>
+              </Text>
+
+              {/* 🔴 Badge Only for Requests Tab */}
+              {key === "requests" && incomingCount > 0 && <View style={styles.requestDot} />}
+            </View>
+
           </TouchableOpacity>
         ))}
       </View>
@@ -474,4 +497,22 @@ const styles = StyleSheet.create({
     gap: 8,
     flexShrink: 1,            
   },
+
+  requestDot: {
+    position: "absolute",
+    top: -4,
+    right: -12,
+    width: 8,
+    height: 8,
+    backgroundColor: "#5A31F4", // Hunter Purple
+    borderRadius: 50,
+
+    shadowColor: "#5A31F4",
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+
+
+
 });

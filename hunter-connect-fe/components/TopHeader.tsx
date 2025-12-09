@@ -1,4 +1,4 @@
-import { auth } from "@/api/firebaseConfig";
+import { auth, db } from "@/api/firebaseConfig";
 import Colors from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -8,13 +8,12 @@ import React, { useEffect, useState } from "react";
 import {
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { onSnapshot, doc } from "firebase/firestore";
 import { styles } from "./TopHeaderStyles";
 
 const TopHeader = () => {
@@ -22,11 +21,27 @@ const TopHeader = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [user, setUser] = useState<any>(null);
 
+  // 🔥 NEW: Incoming Request Count
+  const [incomingCount, setIncomingCount] = useState(0);
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+
+      if (currentUser) {
+        const ref = doc(db, "users", currentUser.uid);
+
+        const unsubscribeSnapshot = onSnapshot(ref, (snap) => {
+          const data = snap.data();
+          const incoming = data?.incomingRequests ?? [];
+          setIncomingCount(incoming.length);
+        });
+
+        return () => unsubscribeSnapshot();
+      }
     });
-    return () => unsubscribe();
+
+    return () => unsubscribeAuth();
   }, []);
 
   const handleSignOut = async () => {
@@ -40,8 +55,8 @@ const TopHeader = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      {/* Mobile overlay (click outside closes dropdown) */}
+    <SafeAreaView>
+      {/* Mobile overlay */}
       {menuVisible && Platform.OS !== "web" && (
         <Pressable
           style={styles.overlay}
@@ -50,10 +65,12 @@ const TopHeader = () => {
       )}
 
       <View style={styles.header}>
+        {/* Logo */}
         <TouchableOpacity onPress={() => router.push("/(tabs)/Landing")}>
           <Text style={styles.title}>Hunter Connect</Text>
         </TouchableOpacity>
 
+        {/* Messages Icon */}
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => router.push("/(messages)/messages")}
@@ -61,11 +78,20 @@ const TopHeader = () => {
           <FontAwesome name="comment-o" size={22} color="black" />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/(user)/friends")}>
-          <Ionicons name="people-outline" size={24} />
-        </TouchableOpacity>
+        {/* Friends Icon + Badge */}
+        <View style={{ position: "relative" }}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/(user)/friends")}
+          >
+            <Ionicons name="people-outline" size={24} color="black" />
+          </TouchableOpacity>
 
-        {/* 👤 Profile Icon — hover on web, tap on mobile */}
+          {/* 🔮 Purple Notification Badge */}
+          {incomingCount > 0 && <View style={styles.dot} />}
+        </View>
+
+        {/* Profile Icon */}
         <View
           {...(Platform.OS === "web"
             ? {
@@ -73,7 +99,6 @@ const TopHeader = () => {
                 onMouseLeave: () => setMenuVisible(false),
               }
             : {})}
-          // 👆 this safely adds web-only props
         >
           <TouchableOpacity
             activeOpacity={0.7}
@@ -84,12 +109,13 @@ const TopHeader = () => {
             <FontAwesome name="user-circle-o" size={26} color="black" />
           </TouchableOpacity>
 
+          {/* Dropdown */}
           {menuVisible && (
             <View
               {...(Platform.OS === "web"
                 ? {
-                    onMouseEnter: () => setMenuVisible(true), // keep open
-                    onMouseLeave: () => setMenuVisible(false), // close only after leaving dropdown
+                    onMouseEnter: () => setMenuVisible(true),
+                    onMouseLeave: () => setMenuVisible(false),
                   }
                 : {})}
               style={styles.dropdown}
@@ -110,17 +136,11 @@ const TopHeader = () => {
                 <Text style={styles.dropdownItemText}>Profile Settings</Text>
               </Pressable>
 
-              <Pressable
-                style={styles.dropdownItem}
-                //onPress={() => router.push("/(tabs)/privacy")}
-              >
+              <Pressable style={styles.dropdownItem}>
                 <Text style={styles.dropdownItemText}>Privacy Settings</Text>
               </Pressable>
 
-              <Pressable
-                style={styles.dropdownItem}
-                //onPress={() => router.push("/(tabs)/help")}
-              >
+              <Pressable style={styles.dropdownItem}>
                 <Text style={styles.dropdownItemText}>Help & Support</Text>
               </Pressable>
 
