@@ -7,6 +7,8 @@ interface PostInterface {
   timestamp: Date;
 }
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
+
 const createPost = async (body: PostInterface) => {
   const { uid, userID, bearerToken, content, title, timestamp } = body;
 
@@ -34,7 +36,7 @@ const createPost = async (body: PostInterface) => {
 
   try {
     const req = await fetch(
-      "http://localhost:8080/api/posts",
+        `${API_URL}/api/posts`,
       createPostRequest
     );
     const json = await req.json();
@@ -75,7 +77,7 @@ const updatePost = async (body: PostInterface) => {
 
   try {
     const req = await fetch(
-      "http://localhost:8080/api/posts",
+        `${API_URL}/api/posts`,
       updatePostRequest
     );
     const json = await req.json();
@@ -108,7 +110,7 @@ const getPost = async (body: PostInterface) => {
 
   try {
     const req = await fetch(
-      `http://localhost:8080/api/users/${uid}`,
+        `${API_URL}/api/posts/${uid}`,
       getPostRequest
     );
     const json = await req.json();
@@ -139,7 +141,7 @@ const getAllPosts = async () => {
 
   try {
     const req = await fetch(
-      `http://localhost:8080/api/users/`,
+        `${API_URL}/api/posts`,
       getAllPostsRequest
     );
     const json = await req.json();

@@ -1,4 +1,4 @@
-import { EventInterface, getAllEvents, timestampToDate } from "@/api/Events";
+import { EventInterface, getAllEvents } from "@/api/Events";
 import { UserInterface, getUser } from "@/api/Users";
 import { auth, db } from "@/api/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,28 +33,7 @@ import {
 import DropDownPicker from "react-native-dropdown-picker";
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-/* ----------------------------- EVENT TYPES ----------------------------- */
-
-interface EventData {
-  id: string;
-  title: string;
-  date: any;
-  startTime?: any;
-  endTime?: any;
-  location?: string;
-  description?: string;
-  createdBy?: string;
-  attendees?: string[];
-
-  tags?: {
-    general: string[];
-    courses: string[];
-  };
-
-  createdAt?: any;
-  creatorName?: string;
-}
+import {formatDateString, formatTimeString, isFuture, timestampToDate} from "@/api/Timestamp";
 
 /* ----------------------------- TAG LISTS ----------------------------- */
 
@@ -204,20 +183,14 @@ export default function EventsScreen() {
     (async () => {
       try {
         const bearerToken = await user?.getIdToken();
-        const events: EventInterface[] | undefined =
-          await getAllEvents(bearerToken);
+        const events: EventInterface[] = await getAllEvents(bearerToken);
 
-        const upcomingEvents: EventInterface[] | undefined = events
-          ?.map((arr) => arr)
-          .filter((event) => {
-            //@ts-ignore
-            event.createdAt = timestampToDate(event.createdAt); //@ts-ignore
-            event.startTime = timestampToDate(event.startTime); //@ts-ignore
-            event.endTime = timestampToDate(event.endTime);
-            event.tags = normalizeTags(event.tags);
-
-            return event.endTime >= new Date();
-          });
+        const upcomingEvents: EventInterface[] = events
+          ?.map((event) => {
+              event.tags = normalizeTags(event.tags);
+              return event;
+          })
+          .filter((event) => isFuture(event.endTime));
 
         setUpcomingEvents(upcomingEvents);
         setLoading(false);
@@ -355,47 +328,47 @@ export default function EventsScreen() {
   });
 
   /* ------------------ Event Card ------------------ */
-  const renderEvent = (e: EventInterface) => {
-    const d = safeDate(e.date);
-    const s = safeDate(e.startTime);
-    const ed = safeDate(e.endTime);
+  const renderEvent = (event: EventInterface) => {
+      const date = formatDateString(event.date);
+      const startTime = formatTimeString(event.startTime);
+      const endTime = formatTimeString(event.endTime);
 
-    const isExpanded = expandedCards[e.id] ?? false;
+    const isExpanded = expandedCards[event.id] ?? false;
 
     return (
-      <View key={e.id} style={styles.eventCard}>
-        <Text style={styles.cardTitle}>{e.title}</Text>
+      <View key={event.id} style={styles.eventCard}>
+        <Text style={styles.cardTitle}>{event.title}</Text>
 
         <Text style={styles.metaText}>
-          Created by {e.creatorName} •{" "}
-          {safeDate(e.createdAt).toLocaleDateString()}
+          Created by {event.creatorName} •{" "}
+          {formatTimeString(event.createdAt)}
         </Text>
 
         <View style={styles.row}>
           <Ionicons name="calendar-outline" size={16} color="#555" />
           <Text style={styles.cardDetail}>
-            {d.toLocaleDateString()} •{" "}
-            {s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
-            {ed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {date} •{" "}
+            {startTime} -{" "}
+            {endTime}
           </Text>
         </View>
 
-        {e.location ? (
+        {event.location ? (
           <View style={styles.row}>
             <Ionicons name="location-outline" size={16} color="#e34d4d" />
-            <Text style={styles.cardDetail}>{e.location}</Text>
+            <Text style={styles.cardDetail}>{event.location}</Text>
           </View>
         ) : null}
 
         {/* TAGS */}
         <View style={styles.tagContainer}>
-          {(e.tags?.general ?? []).map((t, i) => (
+          {(event.tags?.general ?? []).map((t, i) => (
             <View key={i} style={styles.tagPurple}>
               <Text style={styles.tagPurpleText}>{t}</Text>
             </View>
           ))}
 
-          {(e.tags?.courses ?? []).map((t, i) => (
+          {(event.tags?.courses ?? []).map((t, i) => (
             <View key={i} style={styles.tagGreen}>
               <Text style={styles.tagGreenText}>{t}</Text>
             </View>
@@ -403,11 +376,11 @@ export default function EventsScreen() {
         </View>
 
         {/* DESCRIPTION SECTION */}
-        {e.description ? (
+        {event.description ? (
           <>
             {/* HEADER BUTTON */}
             <TouchableOpacity
-              onPress={() => toggleDescription(e.id)}
+              onPress={() => toggleDescription(event.id)}
               style={styles.descriptionHeader}
             >
               <Text style={styles.descriptionHeaderText}>
@@ -418,25 +391,25 @@ export default function EventsScreen() {
             {/* COLLAPSIBLE AREA */}
             {isExpanded && (
               <View style={styles.descriptionBox}>
-                <Text style={styles.descriptionFull}>{e.description}</Text>
+                <Text style={styles.descriptionFull}>{event.description}</Text>
               </View>
             )}
           </>
         ) : null}
 
         {/* SUBSCRIBE BUTTON */}
-        {e.createdBy !== user?.uid &&
-          (isSubscribed(e) ? (
+        {event.createdBy !== user?.uid &&
+          (isSubscribed(event) ? (
             <TouchableOpacity
               style={styles.unsubscribeBtn}
-              onPress={() => toggleSubscribe(e)}
+              onPress={() => toggleSubscribe(event)}
             >
               <Text style={styles.unsubscribeText}>Unsubscribe</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
               style={styles.subscribeBtn}
-              onPress={() => toggleSubscribe(e)}
+              onPress={() => toggleSubscribe(event)}
             >
               <Text style={styles.subscribeText}>Subscribe</Text>
             </TouchableOpacity>
