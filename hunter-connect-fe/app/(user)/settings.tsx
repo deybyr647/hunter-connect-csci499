@@ -1,12 +1,12 @@
 import { UserInterface, getUser } from "@/api/Users";
 import { auth } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   signOut,
   updatePassword,
-  updateProfile,
 } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import {
@@ -31,6 +31,7 @@ export default function SettingsScreen() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [academicYear, setAcademicYear] = useState("");
 
@@ -43,7 +44,9 @@ export default function SettingsScreen() {
       try {
         const bearerToken = await user?.getIdToken();
         const userData = await getUser(user?.uid, bearerToken);
-        const { firstName, lastName, email, preferences } = userData;
+        const { firstName, lastName, email, username, preferences } = userData;
+
+        setUsername(username ?? "Unknown Username");
 
         if (!userData) return;
 
@@ -57,19 +60,6 @@ export default function SettingsScreen() {
     })();
   }, []);
 
-  const handleSave = async () => {
-    try {
-      if (user) {
-        await updateProfile(user, {
-          displayName: `${firstName} ${lastName}`,
-        });
-
-        Alert.alert("Success", "Profile updated!");
-      }
-    } catch (err: any) {
-      Alert.alert("Error", err.message);
-    }
-  };
 
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword)
@@ -106,8 +96,11 @@ export default function SettingsScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.back}>← Back</Text>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="chevron-back" size={24} color="#5A31F4" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Settings</Text>
             <View style={{ width: 60 }} />
@@ -118,16 +111,23 @@ export default function SettingsScreen() {
 
             <Text style={styles.label}>First Name</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.disabled]}
               value={firstName}
-              onChangeText={setFirstName}
+              editable={false}
             />
 
             <Text style={styles.label}>Last Name</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.disabled]}
               value={lastName}
-              onChangeText={setLastName}
+              editable={false}
+            />
+            
+            <Text style={styles.label}>Username</Text>
+            <TextInput
+              style={[styles.input, styles.disabled, { fontStyle: "italic", color: "#555" }]}
+              value={`@${username}`}
+              editable={false}
             />
 
             <Text style={styles.label}>Email</Text>
@@ -150,10 +150,6 @@ export default function SettingsScreen() {
               value={academicYear}
               editable={false}
             />
-
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-              <Text style={styles.saveText}>Save Changes</Text>
-            </TouchableOpacity>
 
             <Text style={styles.section}>Change Password</Text>
 
@@ -199,61 +195,109 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f6f6f6" },
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F7", // Same background as Friends page
+  },
+
+  /* HEADER */
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 20,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  back: { fontSize: 16, color: "#007AFF" },
-  headerTitle: { fontSize: 18, fontWeight: "bold" },
-  box: { backgroundColor: "#fff", margin: 20, padding: 20, borderRadius: 12 },
-  section: { fontSize: 18, fontWeight: "bold", marginTop: 20 },
-  label: { fontSize: 14, marginTop: 10 },
-  input: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 5,
-  },
-  disabled: { backgroundColor: "#eee" },
-  saveBtn: {
-    borderWidth: 2,
-    borderColor: "#2E1759",
-    paddingVertical: 12,
-    borderRadius: 10,
     alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderColor: "#E8E8E8",
+  },
+  backButton: {
+    width: 40,
+    justifyContent: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1A1A1A",
+  },
+
+  /* CARD WRAPPER */
+  box: {
+    backgroundColor: "#FFFFFF",
+    padding: 20,
+    margin: 20,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+
+  section: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 10,
     marginTop: 10,
   },
-  saveText: {
-    color: "#2E1759",
-    fontSize: 16,
+
+  /* LABELS */
+  label: {
+    fontSize: 14,
+    color: "#555",
+    marginTop: 14,
+    marginBottom: 4,
     fontWeight: "600",
   },
+
+  /* INPUTS (match Friends search input style) */
+  input: {
+    borderWidth: 1,
+    borderColor: "#CCC",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    backgroundColor: "#FFF",
+    marginBottom: 8,
+  },
+
+  disabled: {
+    backgroundColor: "#F0F0F0",
+    color: "#777",
+  },
+
+
+
   updatePassBtn: {
-    borderWidth: 2,
-    borderColor: "#2E1759",
+    backgroundColor: "#EFE9FF",
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 16,
   },
   updatePassText: {
-    color: "#2E1759",
-    fontSize: 16,
+    color: "#6B4CF6",
     fontWeight: "600",
+    fontSize: 16,
+    fontStyle: "italic",
   },
+
+  /* LOGOUT BUTTON (match declineBtn styling) */
   logoutBtn: {
-    borderWidth: 1,
-    borderColor: "#FF3B30",
-    padding: 12,
+    backgroundColor: "#FFE8EE",
+    paddingVertical: 12,
     borderRadius: 10,
-    marginTop: 25,
+    marginTop: 30,
   },
-  logoutText: { color: "#FF3B30", textAlign: "center", fontWeight: "600" },
+  logoutText: {
+    color: "#E44860",
+    fontWeight: "600",
+    textAlign: "center",
+    fontSize: 16,
+    fontStyle: "italic",
+  },
 });
