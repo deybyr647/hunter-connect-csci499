@@ -12,10 +12,9 @@ WORKDIR /app
 # Copy the built jar from the previous stage
 COPY --from=build /app/target/*.jar app.jar
 
-# We need to get the firebase key in here.
-# In production, we usually pass the key content as an Environment Variable
-# and write it to a file at runtime.
-COPY src/main/resources/service-account-key.json /app/service-account-key.json
+# IMPORTANT: We no longer COPY the service-account-key.json here.
+# Instead, we rely on the environment variable FIREBASE_CREDENTIALS_JSON being passed at runtime.
+# This variable is handled directly by FirebaseConfig.java code.
 
 # Expose port 8080
 EXPOSE 8080
