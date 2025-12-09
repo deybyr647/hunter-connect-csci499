@@ -1,6 +1,7 @@
 import { UserInterface, getUser } from "@/api/Users";
 import { auth } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -45,10 +46,10 @@ export default function ProfileScreen() {
             style={styles.backButton}
             onPress={() => router.push("/(tabs)/Landing")}
           >
-            <Text style={styles.backButtonText}>← Back</Text>
+            <Ionicons name="chevron-back" size={24} color="#5A31F4" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
-          <View style={styles.backButton} />
+          <View style={styles.backButton}/>
         </View>
 
         {/* PROFILE */}
@@ -116,62 +117,108 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  scrollContent: { paddingBottom: 40 },
+  container: {
+    flex: 1,
+    backgroundColor: "#F2F2F7", // Matches Friends page bg
+  },
 
+  scrollContent: {
+    paddingBottom: 40,
+  },
+
+  /* ---------- HEADER ---------- */
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e2e2",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   backButton: { width: 60 },
-  backButtonText: { fontSize: 16, color: "#007AFF" },
-  headerTitle: { fontSize: 18, fontWeight: "bold" },
+  backButtonText: { fontSize: 16, color: "#6C47FF", fontWeight: "600" },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: "#222" },
 
+  /* ---------- PROFILE CARD ---------- */
   profileSection: {
     backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginTop: 20,
+    paddingVertical: 28,
+    borderRadius: 14,
     alignItems: "center",
-    paddingVertical: 30,
-    marginBottom: 20,
+
+    shadowColor: "#000",
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 3,
   },
+
   avatarContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#e0e0e0",
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#EEE",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 12,
   },
+
   avatar: { width: 80, height: 80 },
-  userName: { fontSize: 24, fontWeight: "700" },
+
+  userName: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginTop: 8,
+    color: "#1C1C1E",
+  },
 
   academicYearText: {
-    marginTop: 5,
+    marginTop: 6,
     fontSize: 16,
     color: "#666",
   },
 
+  /* ---------- OPTIONS CARD ---------- */
   optionsContainer: {
     backgroundColor: "#fff",
-    marginHorizontal: 20,
-    borderRadius: 10,
-    overflow: "hidden",
+    marginHorizontal: 16,
+    marginTop: 20,
+    borderRadius: 14,
+    paddingVertical: 4,
+
+    shadowColor: "#000",
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 3,
   },
+
   optionItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingHorizontal: 16,
   },
-  optionIcon: { fontSize: 24, marginRight: 15 },
-  optionText: { flex: 1, fontSize: 16 },
-  optionArrow: { fontSize: 24, color: "#aaa" },
+
+  optionIcon: { 
+    fontSize: 22, 
+    marginRight: 16 
+  },
+
+  optionText: { 
+    flex: 1, 
+    fontSize: 16, 
+    color: "#2C2C2E",
+    fontWeight: "500",
+  },
+
+  optionArrow: { 
+    fontSize: 24, 
+    color: "#C7C7CC" 
+  },
 });
+
