@@ -18,6 +18,8 @@ interface UserInterface {
   };
 }
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
+
 /* ---------------- CREATE USER ---------------- */
 const createUser = async (body: UserInterface, bearerToken: string = "") => {
   const { uid, email, firstName, lastName, username } = body;
@@ -45,7 +47,7 @@ const createUser = async (body: UserInterface, bearerToken: string = "") => {
 
   try {
     const req = await fetch(
-      "http://localhost:8080/api/users",
+      `${API_URL}/api/users}`,
       createUserRequest
     );
     const json = await req.json();
@@ -83,7 +85,7 @@ const updateUser = async (body: UserInterface, bearerToken: string) => {
 
   try {
     const req = await fetch(
-      "http://localhost:8080/api/users",
+        `${API_URL}/api/users`,
       updateUserRequest
     );
     const json = await req.json();
@@ -113,7 +115,7 @@ const getUser = async (uid: string = "", bearerToken: string = "") => {
 
   try {
     const req = await fetch(
-      `http://localhost:8080/api/users/${uid}`,
+      `${API_URL}/api/users/${uid}`,
       getUserRequest
     );
     const data: UserInterface = await req.json();
@@ -141,7 +143,7 @@ const getAllUsers = async (bearerToken: string) => {
 
   try {
     const req = await fetch(
-      "http://localhost:8080/api/users",
+      `${API_URL}/api/users`,
       getAllUsersRequest
     );
     const json: UserInterface[] = await req.json();

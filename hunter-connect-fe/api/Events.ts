@@ -1,22 +1,16 @@
-/**
- * Interface representing the raw Firestore timestamp object received from the backend.
- */
-interface FirestoreTimestamp {
-  seconds: number;
-  nanos: number;
-}
+import {Timestamp} from "firebase/firestore";
 
 interface EventInterface {
-  id?: string; // Added optional ID for frontend convenience
+  id: string; // Added optional ID for frontend convenience
   attendees: string[];
-  createdAt: FirestoreTimestamp;
+  createdAt: Timestamp | Date;
   createdBy: string;
   creatorName: string;
-  date?: FirestoreTimestamp;
+  date: Timestamp | Date;
   description: string;
-  endTime: FirestoreTimestamp;
+  endTime: Timestamp | Date;
   location: string;
-  startTime: FirestoreTimestamp;
+  startTime: Timestamp | Date;
   tags: {
     courses: string[];
     general: string[];
@@ -29,6 +23,8 @@ interface EventApiRequest extends Partial<EventInterface> {
   bearerToken: string;
   id?: string; // Explicit ID for updates/gets
 }
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
 
 /**
  * POST /api/events
@@ -54,7 +50,7 @@ const createEvent = async (body: EventApiRequest, bearerToken: string) => {
   };
 
   try {
-    const req = await fetch("http://localhost:8080/api/events", requestConfig);
+    const req = await fetch(`${API_URL}/api/events`, requestConfig);
     const json: EventInterface = await req.json();
 
     if (req.status === 201) {
@@ -94,7 +90,7 @@ const updateEvent = async (body: EventApiRequest, bearerToken: string) => {
 
   try {
     const req = await fetch(
-      `http://localhost:8080/api/events/${id}`,
+      `${API_URL}/api/events/${id}`,
       requestConfig
     );
     const json: EventInterface = await req.json();
@@ -129,7 +125,7 @@ const getEvent = async (body: EventApiRequest, bearerToken: string) => {
 
   try {
     const req = await fetch(
-      `http://localhost:8080/api/events/${id}`,
+      `${API_URL}/api/events/${id}`,
       requestConfig
     );
     const json: EventInterface = await req.json();
@@ -160,7 +156,7 @@ const getAllEvents = async (bearerToken: string) => {
   };
 
   try {
-    const req = await fetch(`http://localhost:8080/api/events`, requestConfig);
+    const req = await fetch(`${API_URL}/api/events`, requestConfig);
     const json: EventInterface[] = await req.json();
 
     if (req.status === 200) {
@@ -192,7 +188,7 @@ const toggleSubscribe = async (body: EventApiRequest, bearerToken: string) => {
 
   try {
     const req = await fetch(
-      `http://localhost:8080/api/events/${id}/subscribe`,
+      `${API_URL}/api/events/${id}/subscribe`,
       requestConfig
     );
     const json = await req.json();
@@ -206,74 +202,4 @@ const toggleSubscribe = async (body: EventApiRequest, bearerToken: string) => {
   }
 };
 
-/* Timestamp Helpers */
-
-/**
- * Converts a Firestore Timestamp object to a native JavaScript Date object.
- * @param ts The timestamp object { seconds, nanos }
- * @returns Date object or null if input is invalid
- */
-export const timestampToDate = (
-  ts: FirestoreTimestamp | null | undefined
-): Date | null => {
-  if (!ts || typeof ts.seconds !== "number") return null;
-
-  // Convert seconds to milliseconds
-  const milliseconds = ts.seconds * 1000 + ts.nanos / 1000000;
-  return new Date(milliseconds);
-};
-
-/**
- * Formats a timestamp into a readable Date string (e.g., "Fri, Dec 25, 2026")
- */
-export const formatDateString = (
-  ts: FirestoreTimestamp | null | undefined
-): string => {
-  const date = timestampToDate(ts);
-  if (!date) return "N/A";
-
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-/**
- * Formats a timestamp into a readable Time string (e.g., "10:30 AM")
- */
-export const formatTimeString = (
-  ts: FirestoreTimestamp | null | undefined
-): string => {
-  const date = timestampToDate(ts);
-  if (!date) return "";
-
-  return date.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-/**
- * Helper to get a "Range" string (e.g., "10:00 AM - 11:30 AM")
- */
-export const formatTimeRange = (
-  start: FirestoreTimestamp,
-  end: FirestoreTimestamp
-): string => {
-  const s = formatTimeString(start);
-  const e = formatTimeString(end);
-  if (!s || !e) return "";
-  return `${s} - ${e}`;
-};
-
-export {
-  EventInterface,
-  EventApiRequest,
-  createEvent,
-  updateEvent,
-  getEvent,
-  getAllEvents,
-  toggleSubscribe,
-};
+export {getEvent, getAllEvents, createEvent, updateEvent, toggleSubscribe, EventInterface};
