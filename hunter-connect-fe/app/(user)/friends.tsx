@@ -105,7 +105,7 @@ export default function FriendsScreen() {
               <View key={friend.uid} style={styles.card}>
                 <View>
                   <Text style={styles.cardTitle}>{friend.fullName}</Text>
-                  <Text style={styles.cardEmail}>{friend.email}</Text>
+                  <Text style={styles.cardEmail}>@{friend.username}</Text>
                 </View>
 
                 <TouchableOpacity
@@ -135,10 +135,10 @@ export default function FriendsScreen() {
               <View key={req.uid} style={styles.card}>
                 <View>
                   <Text style={styles.cardTitle}>{req.fullName}</Text>
-                  <Text style={styles.cardEmail}>{req.email}</Text>
+                  <Text style={styles.cardEmail}>@{req.username}</Text>
                 </View>
 
-                <View style={{ flexDirection: "row", gap: 10 }}>
+                <View style={styles.actionRow}>
                   <TouchableOpacity
                     style={styles.acceptBtn}
                     onPress={async () => {
@@ -174,7 +174,7 @@ export default function FriendsScreen() {
               <View key={req.uid} style={styles.card}>
                 <View>
                   <Text style={styles.cardTitle}>{req.fullName}</Text>
-                  <Text style={styles.cardEmail}>{req.email}</Text>
+                  <Text style={styles.cardEmail}>@{req.username}</Text>
                 </View>
                 <Text style={styles.pendingText}>Pending…</Text>
               </View>
@@ -200,24 +200,70 @@ export default function FriendsScreen() {
             <Text style={{ color: "gray", marginTop: 10 }}>No users found…</Text>
           )}
 
-          {results.map((user) => (
-            <View key={user.uid} style={styles.card}>
-              <View>
-                <Text style={styles.cardTitle}>{user.fullName}</Text>
-                <Text style={styles.cardEmail}>@{user.username}</Text>
-              </View>
+          {results.map((user) => {
+            const isFriend = friends.some((f) => f.uid === user.uid);
+            const isOutgoing = outgoing.some((o) => o.uid === user.uid);
+            const isIncoming = incoming.some((i) => i.uid === user.uid);
 
-              <TouchableOpacity
-                style={styles.addBtn}
-                onPress={async () => {
-                  await sendFriendRequest(uid!, user.uid);
-                  loadData();
-                }}
-              >
-                <Text style={styles.addBtnText}>Add Friend</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+            let buttonLabel = "Send Request";
+            let buttonStyle = styles.addBtn;
+            let textStyle = styles.addBtnText;
+
+            if (isFriend) {
+              buttonLabel = "Friends ✓";
+              buttonStyle = styles.tagGreen;
+              textStyle = styles.tagGreenText;
+            } 
+              
+            else if (isOutgoing) {
+              buttonLabel = "Pending…";
+              buttonStyle = styles.pendingBtn;
+              textStyle = styles.pendingBtnText;
+            }
+
+              
+            else if (isIncoming) {
+              buttonLabel = "Respond";
+              buttonStyle = styles.pendingBtn;
+              textStyle = styles.pendingBtnText;
+            }
+
+            return (
+              <View key={user.uid} style={styles.card}>
+                <View>
+                  <Text style={styles.cardTitle}>{user.fullName}</Text>
+                  <Text style={styles.cardEmail}>@{user.username}</Text>
+                </View>
+
+                <TouchableOpacity
+                  disabled={isFriend || isOutgoing}
+                  style={buttonStyle}
+                  onPress={async () => {
+                    if (isIncoming) {
+                      // Redirect to requests tab
+                      setTab("requests");
+                      return;
+                    }
+
+                    if (isFriend || isOutgoing) {
+                      // Do nothing
+                      return;
+                    }
+
+                    // Default behavior → Send friend request
+                    await sendFriendRequest(uid!, user.uid);
+                    setOutgoing((prev) => [...prev, user]);
+                    loadData();
+                  }}
+                >
+                  <Text style={textStyle}>{buttonLabel}</Text>
+                </TouchableOpacity>
+
+              </View>
+            );
+          })}
+
+
         </View>
       )}
 
@@ -226,116 +272,206 @@ export default function FriendsScreen() {
 }
 
 const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: "#F5F5F7",
+  },
+
   tabRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#fff",
     paddingVertical: 12,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderColor: "#E6E6E6",
+    borderColor: "#E8E8E8",
   },
+
   tab: {
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
   },
+
   activeTab: {
-    backgroundColor: "#4B7BEC",
+    backgroundColor: "#EFE9FF",
   },
+
   tabText: {
-    color: "#555",
+    color: "#444",
     fontSize: 15,
     fontWeight: "600",
   },
+
   activeTabText: {
-    color: "white",
+    color: "#5A31F4",
+    fontWeight: "500",
   },
+
   section: {
-    padding: 18,
+    padding: 20,
   },
+
   sectionHeader: {
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 12,
+    color: "#1A1A1A",
   },
+
   emptyText: {
-    color: "gray",
+    color: "#777",
     fontStyle: "italic",
-    marginTop: 10,
+    marginTop: 6,
   },
+
+  /* Cards */
   card: {
-    backgroundColor: "white",
-    padding: 15,
-    borderRadius: 12,
-    marginVertical: 6,
+    backgroundColor: "#FFFFFF",
+    padding: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    marginBottom: 12,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
     elevation: 1,
-    borderWidth: 1,
-    borderColor: "#f3f3f3",
   },
+
   cardTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: "#222",
   },
+
   cardEmail: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#777",
     marginTop: 2,
   },
-  removeBtn: {
-    backgroundColor: "#eb3b5a",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+
+  pendingBtn: {
+    backgroundColor: "#EFE9FF", // soft lavender
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 10,
   },
-  removeBtnText: {
-    color: "white",
+
+  pendingBtnText: {
+    color: "#6B4CF6",
     fontWeight: "600",
-  },
-  acceptBtn: {
-    backgroundColor: "#20bf6b",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  acceptText: { color: "white", fontWeight: "600" },
-  declineBtn: {
-    backgroundColor: "#eb3b5a",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  declineText: { color: "white", fontWeight: "600" },
-  pendingText: {
-    color: "gray",
+    fontSize: 14,
     fontStyle: "italic",
   },
-  input: {
-    backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#ccc",
+
+  tagGreen: {
+    backgroundColor: "#E8F9EF",
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 10,
   },
-  searchBtn: {
-    backgroundColor: "#4B7BEC",
-    paddingVertical: 12,
+
+  tagGreenText: {
+    color: "#0F6F3C",
+    fontSize: 14,
+    fontWeight: "600",
+    fontStyle: "italic",
+  },
+
+  actionBtn: {
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     borderRadius: 10,
-    marginBottom: 15,
+    backgroundColor: "#5A31F4",
   },
-  searchText: { color: "white", textAlign: "center", fontWeight: "600" },
-  addBtn: {
-    backgroundColor: "#3867d6",
+
+  actionText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+
+  removeBtn: {
+    backgroundColor: "#E8E0FF",
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+
+  removeBtnText: {
+    color: "#5A31F4",
+    fontWeight: "600",
+  },
+
+  acceptBtn: {
+    backgroundColor: "#EFE9FF",
     paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,      // pill shape
   },
-  addBtnText: { color: "white", fontWeight: "600" },
+
+  acceptText: {
+    color: "#5A31F4",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+
+  declineBtn: {
+    backgroundColor: "#FFE8EE",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+
+  declineText: {
+    color: "#E44860",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+
+
+  pendingText: {
+    color: "#5A31F4",
+    fontWeight: "600",
+    fontStyle: "italic",
+  },
+
+  /* Search Input */
+  input: {
+    borderWidth: 1,
+    borderColor: "#CCC",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    backgroundColor: "#FFF",
+    marginBottom: 14,
+  },
+
+  addBtn: {
+    backgroundColor: "#5A31F4",
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+
+  addBtnText: {
+    color: "#FFF",
+    fontWeight: "600",
+  },
+
+  disabledBtn: {
+    backgroundColor: "#C7B7FF",
+  },
+
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",        
+    gap: 8,
+    flexShrink: 1,            
+  },
 });

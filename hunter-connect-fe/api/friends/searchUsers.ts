@@ -17,8 +17,13 @@ export async function searchUsers(searchTerm: string) {
 
   const snap = await getDocs(q);
 
-  return snap.docs.map((doc) => ({
-    uid: doc.id,
-    ...doc.data(),
-  }));
+  return snap.docs.map((doc) => {
+    const data = doc.data();
+
+    return {
+      uid: doc.id,
+      ...data,
+      fullName: `${data.firstName} ${data.lastName}`.trim(),
+    };
+  });
 }

@@ -24,6 +24,7 @@ export async function getUsersByUIDs(uids: string[]) {
           uid: id,
           fullName: `${profile.firstName} ${profile.lastName}`,
           email: profile.email,
+          username: profile.username,
         };
       } catch (error) {
         return {
