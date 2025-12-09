@@ -1,6 +1,7 @@
 import { UserInterface, getUser } from "@/api/Users";
 import { auth, db } from "@/api/firebaseConfig";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   ScrollView,
@@ -50,21 +51,25 @@ export default function TagsScreen() {
       style={{ flex: 1 }}
     >
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.back}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Tags</Text>
-          <View style={{ width: 60 }} />
-        </View>
-
-        <ScrollView contentContainerStyle={{ padding: 20 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+          <View style={styles.header}>
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => router.back()}
+              >
+                <Ionicons name="chevron-back" size={24} color="#5A31F4" />
+              </TouchableOpacity>
+            <Text style={styles.headerTitle}>My Tags</Text>
+            <View style={{ width: 60 }} />
+          </View>
           <View style={styles.box}>
+            {/* Academic Year */}
             <Text style={styles.section}>Academic Year</Text>
-            <Text style={styles.infoText}>
-              {academicYear || "Not selected"}
-            </Text>
+            <Text style={styles.infoText}>{academicYear || "Not selected"}</Text>
 
+            <View style={styles.divider} />
+
+            {/* Courses */}
             <Text style={styles.section}>Courses</Text>
             {courses.length ? (
               <View style={styles.tagWrap}>
@@ -78,6 +83,9 @@ export default function TagsScreen() {
               <Text style={styles.empty}>No courses selected.</Text>
             )}
 
+            <View style={styles.divider} />
+
+            {/* Skills */}
             <Text style={styles.section}>Skills</Text>
             {skills.length ? (
               <View style={styles.tagWrap}>
@@ -91,6 +99,9 @@ export default function TagsScreen() {
               <Text style={styles.empty}>No skills selected.</Text>
             )}
 
+            <View style={styles.divider} />
+
+            {/* Interests */}
             <Text style={styles.section}>Interests</Text>
             {interests.length ? (
               <View style={styles.tagWrap}>
@@ -104,13 +115,12 @@ export default function TagsScreen() {
               <Text style={styles.empty}>No interests selected.</Text>
             )}
 
-            <TouchableOpacity
-              style={styles.editBtn}
-              onPress={() => router.push("/onboarding")}
-            >
+            <TouchableOpacity style={styles.editBtn} onPress={() => router.push("/onboarding")}>
               <Text style={styles.editText}>Edit Tags</Text>
             </TouchableOpacity>
+
           </View>
+
         </ScrollView>
       </SafeAreaView>
     </Animated.View>
@@ -118,43 +128,124 @@ export default function TagsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f6f6f6" },
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F7",
+  },
+
+  /* Header */
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 20,
-    backgroundColor: "#fff",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    borderColor: "#E8E8E8",
   },
-  back: { fontSize: 16, color: "#007AFF" },
-  headerTitle: { fontSize: 18, fontWeight: "bold" },
+
+  back: {
+    fontSize: 16,
+    color: "#5A31F4",
+    fontWeight: "600",
+  },
+
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1A1A1A",
+  },
+
+  /* Scroll container */
+  scrollContent: {
+    paddingBottom: 50,
+    alignItems: "center",
+  },
+
+  /* Card box — matches eventCard/createBox */
   box: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     padding: 20,
-    borderRadius: 12,
+    margin: 20,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  section: { fontSize: 18, fontWeight: "bold", marginTop: 20 },
-  infoText: { marginTop: 5, fontSize: 15 },
+  /* Section Header */
+  section: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginTop: 5,
+    marginBottom: 3,
+  },
+
+  infoText: {
+    fontSize: 15,
+    color: "#444",
+    marginTop: 2,
+  },
+
+  empty: {
+    marginTop: 6,
+    color: "#777",
+    fontStyle: "italic",
+  },
+
+  /* Tags — matching event tags (purple chips) */
   tagWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 10,
+    marginTop: 8,
+    marginBottom: 6,
   },
+
   tag: {
-    backgroundColor: "#2E1759",
+    backgroundColor: "#EFE9FF",
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 15,
-    margin: 5,
+    borderRadius: 14,
+    marginRight: 8,
+    marginBottom: 8,
   },
-  tagText: { color: "white", fontSize: 14 },
-  empty: { marginTop: 5, color: "#999" },
+
+  tagText: {
+    color: "#6B4CF6",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  /* Edit button — matches Event createButton */
   editBtn: {
-    backgroundColor: "#2E1759",
-    padding: 12,
+    backgroundColor: "#EFE9FF",
+    paddingVertical: 12,
     borderRadius: 10,
-    marginTop: 30,
+    alignItems: "center",
+    marginTop: 16,
   },
-  editText: { textAlign: "center", color: "white", fontWeight: "600" },
+
+  editText: {
+    color: "#6B4CF6",
+    fontWeight: "600",
+    fontSize: 16,
+    fontStyle: "italic",
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#E8E8E8",
+    marginVertical: 16,
+  },
+
+  backButton: {
+    width: 40,
+    justifyContent: "center",
+  },
 });
