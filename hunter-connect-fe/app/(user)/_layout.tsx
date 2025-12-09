@@ -1,12 +1,12 @@
 import { Stack } from "expo-router";
 
-import TopHeader from "@/components/TopHeader";
+import TopHeader from "@/components/TopHeader/TopHeader";
 
 export default function UserLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="profile"
+        name="Profile"
         options={{
           headerShown: false,
         }}
@@ -18,19 +18,19 @@ export default function UserLayout() {
         }}
       />
       <Stack.Screen
-        name="myEvents"
+        name="Events"
         options={{
           headerShown: false,
         }}
       />
       <Stack.Screen
-        name="myPosts"
+        name="Posts"
         options={{
           headerShown: false,
         }}
       />
       <Stack.Screen
-        name="tags"
+        name="Tags"
         options={{
           headerShown: false,
         }}
@@ -38,7 +38,7 @@ export default function UserLayout() {
 
       {/* NEW SCREENS FOR FRIENDS SYSTEM */}
       <Stack.Screen
-        name="friends"
+        name="Friends"
         options={{
           header: () => <TopHeader />,
         }}

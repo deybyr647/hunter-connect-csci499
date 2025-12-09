@@ -1,5 +1,3 @@
-import { UserInterface, createUser } from "@/api/Users";
-import { initUserSocial } from "@/api/friends/initUserSocial";
 import { useRouter } from "expo-router";
 import {
   createUserWithEmailAndPassword,
@@ -27,8 +25,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth, db } from "../../api/firebaseConfig";
-import { AuthStyles as styles } from "./AuthStyles";
+import { UserInterface, createUser } from "@/components/api/Users/Users";
+import { initUserSocial } from "@/components/api/friends/initUserSocial";
+import { auth, db } from "@/components/api/util/firebaseConfig";
+
+import { AuthStyles as styles } from "../../components/AuthPage/AuthStyles";
 
 type AuthMode = "login" | "signup";
 

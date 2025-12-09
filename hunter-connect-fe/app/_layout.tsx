@@ -10,7 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
-import TopHeader from "@/components/TopHeader";
+import TopHeader from "@/components/TopHeader/TopHeader";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -33,9 +33,9 @@ function RootLayoutNav() {
           name="(tabs)"
           options={{ header: () => <TopHeader />, headerShown: true }}
         />
-        <Stack.Screen name="profile" options={{ headerShown: false }} />
+        <Stack.Screen name="(user)" options={{ headerShown: false }} />
         <Stack.Screen
-          name="messages"
+          name="(messages)"
           options={{
             header: () => <TopHeader />,
             headerShown: true,

@@ -1,6 +1,3 @@
-import { EventInterface, getAllEvents } from "@/api/Events";
-import { UserInterface, getUser } from "@/api/Users";
-import { auth, db } from "@/api/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
@@ -33,7 +30,16 @@ import {
 import DropDownPicker from "react-native-dropdown-picker";
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {formatDateString, formatTimeString, isFuture, timestampToDate} from "@/api/Timestamp";
+
+import { EventInterface, getAllEvents } from "@/components/api/Events/Events";
+import { UserInterface, getUser } from "@/components/api/Users/Users";
+import {
+  formatDateString,
+  formatTimeString,
+  isFuture,
+  timestampToDate,
+} from "@/components/api/util/Timestamp";
+import { auth, db } from "@/components/api/util/firebaseConfig";
 
 /* ----------------------------- TAG LISTS ----------------------------- */
 
@@ -187,8 +193,8 @@ export default function EventsScreen() {
 
         const upcomingEvents: EventInterface[] = events
           ?.map((event) => {
-              event.tags = normalizeTags(event.tags);
-              return event;
+            event.tags = normalizeTags(event.tags);
+            return event;
           })
           .filter((event) => isFuture(event.endTime));
 
@@ -329,9 +335,9 @@ export default function EventsScreen() {
 
   /* ------------------ Event Card ------------------ */
   const renderEvent = (event: EventInterface) => {
-      const date = formatDateString(event.date);
-      const startTime = formatTimeString(event.startTime);
-      const endTime = formatTimeString(event.endTime);
+    const date = formatDateString(event.date);
+    const startTime = formatTimeString(event.startTime);
+    const endTime = formatTimeString(event.endTime);
 
     const isExpanded = expandedCards[event.id] ?? false;
 
@@ -340,16 +346,13 @@ export default function EventsScreen() {
         <Text style={styles.cardTitle}>{event.title}</Text>
 
         <Text style={styles.metaText}>
-          Created by {event.creatorName} •{" "}
-          {formatTimeString(event.createdAt)}
+          Created by {event.creatorName} • {formatTimeString(event.createdAt)}
         </Text>
 
         <View style={styles.row}>
           <Ionicons name="calendar-outline" size={16} color="#555" />
           <Text style={styles.cardDetail}>
-            {date} •{" "}
-            {startTime} -{" "}
-            {endTime}
+            {date} • {startTime} - {endTime}
           </Text>
         </View>
 

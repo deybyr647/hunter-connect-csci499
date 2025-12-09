@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-import TopHeader from "@/components/TopHeader";
+import TopHeader from "@/components/TopHeader/TopHeader";
 
 export default function MessagesLayout() {
   return (
