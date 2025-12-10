@@ -163,9 +163,7 @@ const getAllEvents = async (bearerToken: string) => {
  * POST /api/events/{id}/subscribe
  * Toggles subscription status (join/leave event).
  */
-const toggleSubscribe = async (body: EventApiRequest, bearerToken: string) => {
-  const { id } = body;
-
+const subscribeToEvent = async (id: string, bearerToken: string) => {
   const requestConfig: RequestInit = {
     method: "POST",
     headers: {
@@ -199,6 +197,6 @@ export {
   getAllEvents,
   createEvent,
   updateEvent,
-  toggleSubscribe,
+  subscribeToEvent,
   EventInterface,
 };
