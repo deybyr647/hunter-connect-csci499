@@ -1,5 +1,5 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
@@ -8,6 +8,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  StyleSheet,
+  Text as RNText,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -32,7 +34,10 @@ export default function MessagesScreen() {
   const [inputText, setInputText] = useState("");
 
   const flatListRef = useRef<FlatList>(null);
-
+  const { id } = useLocalSearchParams();
+  useEffect(() => {
+    if (id) setSelectedConversationId(String(id));
+  }, [id]);
   /* ------------ LISTEN TO CONVERSATIONS ------------ */
   useEffect(() => {
     if (!user) return;
@@ -67,6 +72,17 @@ export default function MessagesScreen() {
     (c) => c.id === selectedConversationId
   );
 
+  // If URL has an id and we haven't loaded the conversation yet, show loading
+  if (id && !selectedConversation) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <RNText style={{ marginTop: 20, textAlign: "center", color: "#000" }}>
+          Loading chat...
+        </RNText>
+      </SafeAreaView>
+    );
+  }
+
   /* ==================================================================== */
   /* ============================ CHAT VIEW ============================== */
   /* ==================================================================== */
@@ -78,8 +94,12 @@ export default function MessagesScreen() {
     const otherUser = otherId
       ? selectedConversation.participantData?.[otherId]
       : null;
-
+    console.log("selectedConversation:", selectedConversation);
+    console.log("otherId:", otherId);
+    console.log("participantData keys:", Object.keys(selectedConversation.participantData || {}));
+    console.log("otherUser:", otherUser);
     return (
+      
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.chatHeader}>
@@ -92,7 +112,7 @@ export default function MessagesScreen() {
 
           <View style={styles.chatHeaderCenter}>
             <Text style={styles.chatHeaderTitle}>
-              {otherUser?.username ?? "Unknown User"}
+              @{otherUser?.username ?? "Unknown User"}
             </Text>
             <Text style={styles.chatHeaderSubtitle}>Active now</Text>
           </View>
@@ -195,6 +215,16 @@ export default function MessagesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.newChatButtonContainer}>
+        <TouchableOpacity
+          style={styles.newChatButton}
+          onPress={() => router.push("/new-chat")}
+        >
+          <FontAwesome name="plus" size={18} color="#fff" />
+          <Text style={styles.newChatButtonText}>New Message</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <FontAwesome
@@ -225,7 +255,7 @@ export default function MessagesScreen() {
               onPress={() => setSelectedConversationId(item.id)}
             >
               <Text style={styles.conversationName}>
-                {u?.username ?? "Unknown User"}
+                @{u?.username ?? "Unknown User"}
               </Text>
               <Text style={styles.conversationLast}>{item.lastMessage}</Text>
             </TouchableOpacity>
@@ -239,7 +269,7 @@ export default function MessagesScreen() {
 
 /* --------------------------- STYLES --------------------------- */
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F2F2F7",
@@ -265,6 +295,7 @@ const styles = {
   conversationName: {
     fontSize: 17,
     fontWeight: "600",
+    color: "#000"
   },
   conversationLast: {
     marginTop: 4,
@@ -280,7 +311,7 @@ const styles = {
   },
   chatBackButton: { padding: 4 },
   chatHeaderCenter: { flex: 1, alignItems: "center" },
-  chatHeaderTitle: { fontSize: 17, fontWeight: "600" },
+  chatHeaderTitle: { fontSize: 17, fontWeight: "600", color: "#000"},
   chatHeaderSubtitle: { fontSize: 13, color: "#34C759" },
   chatInfoButton: { padding: 4 },
   inputContainer: {
@@ -316,9 +347,28 @@ const styles = {
   messageList: {
     paddingVertical: 12,
   },
-};
+  newChatButtonContainer: {
+  paddingHorizontal: 16,
+  paddingTop: 12,
+},
+  newChatButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2E1759",
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  newChatButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
 
-const bubbleStyles = {
+});
+
+const bubbleStyles = StyleSheet.create({
   container: {
     maxWidth: "80%",
     paddingHorizontal: 12,
@@ -347,4 +397,4 @@ const bubbleStyles = {
     fontSize: 12,
     color: "#8E8E93",
   },
-};
+});
