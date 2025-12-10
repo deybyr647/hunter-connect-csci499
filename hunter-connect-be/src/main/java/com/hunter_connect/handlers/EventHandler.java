@@ -66,6 +66,12 @@ public class EventHandler {
             DocumentReference docRef = future.get();
             String newEventId = docRef.getId();
 
+            // This ensures the 'id' field exists inside the document data
+            docRef.update("id", newEventId);
+
+            // Also update our local object so the response is correct (optional but good practice)
+            newEvent.setId(newEventId);
+
             System.out.println("Created event " + newEventId + " by " + creatorName);
 
             // 5. Return success with the new ID location
