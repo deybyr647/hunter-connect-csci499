@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -12,12 +13,12 @@ const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// ✅ Initialize Firebase first
+// Initialize Firebase first
 const app = initializeApp(firebaseConfig);
 
-// ✅ Initialize services after app
+// Initialize services after app
 const auth = getAuth(app);
 const db = getFirestore(app);
-
+const rtdb = getDatabase(app);
 // export app in case we need it elsewhere
-export { app, auth, db };
+export { app, auth, db, rtdb };

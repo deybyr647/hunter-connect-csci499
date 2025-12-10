@@ -144,7 +144,16 @@ export default function MessagesScreen() {
 
             {/* OPTIONAL — subtle active status line */}
             <Text style={styles.chatHeaderSubtitle}>
-              Active now
+              {otherUser?.status?.state === "online" ? (
+                "Active now"
+              ) : otherUser?.status?.last_changed ? (
+                `Last seen ${new Date(otherUser.status.last_changed).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}`
+              ) : (
+                "Last seen recently"
+              )}
             </Text>
           </View>
 
@@ -324,28 +333,27 @@ export default function MessagesScreen() {
                 resetUnread(item.id);
                 setSelectedConversationId(item.id);
               }}
-
             >
-              <View style={styles.cardLeft}>
+              <View style={styles.cardRow}>
+
                 {/* Avatar */}
-                <View style={styles.avatarWrapper}>
-                  <View style={styles.avatarCircle}>
-                    <Text style={styles.avatarInitial}>
+                <View style={styles.avatarContainer}>
+                  <View style={styles.avatarBubble}>
+                    <RNText style={styles.avatarInitial}>
                       {u?.username?.[0]?.toUpperCase() ?? "?"}
-                    </Text>
+                    </RNText>
                   </View>
+
+                  {u?.status?.state === "online" && <View style={styles.onlineDot} />}
                 </View>
 
-                {/* Text Column */}
-                <View style={{ flex: 1 }}>
-                  {/* Username + Timestamp in ONE ROW */}
-                  <View style={styles.topRow}>
-                    {/* Username */}
-                    <Text style={styles.conversationName}>@{u?.username}</Text>
+                {/* Middle Section */}
+                <View style={styles.cardMiddle}>
+                  <View style={styles.cardTopRow}>
+                    <Text style={styles.cardUsername}>@{u?.username}</Text>
 
-                    {/* Timestamp + unread badge */}
-                    <View style={styles.rightGroup}>
-                      <Text style={styles.timeText}>
+                    <View style={styles.timestampContainer}>
+                      <Text style={styles.timestampText}>
                         {item.lastMessageAt?.toDate
                           ? item.lastMessageAt.toDate().toLocaleTimeString([], {
                               hour: "2-digit",
@@ -354,27 +362,18 @@ export default function MessagesScreen() {
                           : ""}
                       </Text>
 
-                      {unread > 0 && (
-                        <View style={styles.unreadBadgeSmall}>
-                          <Text style={styles.unreadBadgeText}>{unread}</Text>
-                        </View>
-                      )}
-
+                      {/* NEW CLEAN DOT BADGE */}
+                      {unread > 0 && <View style={styles.unreadDot} />}
                     </View>
                   </View>
 
-
                   {/* Last Message */}
-                  <View style={styles.bottomRow}>
-                    <Text style={styles.conversationLast} numberOfLines={1}>
-                      {item.lastMessage}
-                    </Text>
-                  </View>
+                  <Text style={styles.lastMessageText} numberOfLines={1}>
+                    {item.lastMessage}
+                  </Text>
                 </View>
               </View>
             </TouchableOpacity>
-
-
           );
         }}
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -390,43 +389,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F2F2F7",
   },
-  searchContainer: {
-    flexDirection: "row",
-    backgroundColor: "#E9E9EB",
-    margin: 16,
-    padding: 10,
-    borderRadius: 12,
-    alignItems: "center",
-  },
   searchInput: {
     flex: 1,
     fontSize: 16,
   },
   conversationCard: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 16,
+    marginBottom: 10,
+    padding: 14,
+    borderRadius: 16,
+
+    // Shadow for depth
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  conversationName: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#3C2E7E"
-  },
-  conversationLast: {
-    marginTop: 4,
-    color: "#8E8E93",
-  },
-  chatHeader: {
+
+  cardRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-    backgroundColor: "#fff",
   },
-  chatBackButton: { padding: 4 },
-  chatHeaderCenter: { flex: 1, alignItems: "center" },
+  /* -------------------- AVATAR -------------------- */
+
+  avatarContainer: {
+    position: "relative",
+    marginRight: 14,
+  },
+
+  avatarBubble: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#EFE9FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
   chatHeaderTitle: {
     fontSize: 18,
@@ -442,7 +441,6 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
 
-  chatInfoButton: { padding: 4 },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -456,7 +454,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minHeight: 40,
-    maxHeight: 120,     // stops it from getting massive
+    maxHeight: 120,     
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
@@ -464,9 +462,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DAD7F2",
     fontSize: 16,
-    textAlignVertical: "top",   // IMPORTANT for multiline
+    textAlignVertical: "top",  
   },
-
 
   sendButton: {
     backgroundColor: "#6B4CF6",
@@ -485,26 +482,9 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: "#CFCDEB",
   },
+  
   messageList: {
     paddingVertical: 12,
-  },
-  newChatButtonContainer: {
-  paddingHorizontal: 16,
-  paddingTop: 12,
-},
-  newChatButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#2E1759",
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  newChatButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
   },
 
   searchWrapper: {
@@ -529,110 +509,72 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 
-  cardLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-
-  avatarWrapper: {
-    position: "relative",
-    marginRight: 12,
-  },
-
-  avatarCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#EFE9FF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
   avatarInitial: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 20,
+    fontWeight: "700",
     color: "#6B4CF6",
   },
 
   onlineDot: {
     position: "absolute",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: "#34C759",
-    bottom: 0,
-    right: 0,
+    bottom: -2,
+    right: -2,
     borderWidth: 2,
     borderColor: "#fff",
   },
+  
+  
+/* -------------------- TEXT AREA -------------------- */
 
-  cardTextWrapper: {
+  cardMiddle: {
     flex: 1,
   },
 
-  cardRight: {
-    alignItems: "flex-end",
+  cardTopRow: {
+    flexDirection: "row",
     justifyContent: "space-between",
-    paddingLeft: 8,
-  },
-
-  timeText: {
-    fontSize: 12,
-    color: "#8E8E93",
-    marginBottom: 8,
-  },
-
-  unreadBadge: {
-    backgroundColor: "#6B4CF6",
-    minWidth: 22,
-    height: 22,
-    paddingHorizontal: 6,
-    borderRadius: 11,
-    justifyContent: "center",
     alignItems: "center",
   },
 
-  unreadText: {
-    color: "#fff",
-    fontSize: 12,
+  cardUsername: {
+    fontSize: 16,
     fontWeight: "700",
+    color: "#3C2E7E",
+  },
+
+  timestampContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+
+  timestampText: {
+    fontSize: 12,
+    color: "#8E8E93",
+  },
+
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#6B4CF6",
+  },
+
+  lastMessageText: {
+    marginTop: 4,
+    fontSize: 14,
+    color: "#8E8E93",
   },
 
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 2,
   },
-
-  bottomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  rightGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6, // space between timestamp and badge
-  },
-
-  unreadBadgeSmall: {
-    backgroundColor: "#6B4CF6",
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 6,
-  },
-
-  unreadBadgeText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
 });
 
 const bubbleStyles = StyleSheet.create({
