@@ -105,9 +105,7 @@ const updateEvent = async (body: EventApiRequest, bearerToken: string) => {
  * GET /api/events/{id}
  * Fetches a single event.
  */
-const getEvent = async (body: EventApiRequest, bearerToken: string) => {
-  const { id } = body;
-
+const getEvent = async (uid: string = "", bearerToken: string = "") => {
   const requestConfig: RequestInit = {
     method: "GET",
     headers: {
@@ -121,7 +119,7 @@ const getEvent = async (body: EventApiRequest, bearerToken: string) => {
   };
 
   try {
-    const req = await fetch(`${API_URL}/api/events/${id}`, requestConfig);
+    const req = await fetch(`${API_URL}/api/events/${uid}`, requestConfig);
     const json: EventInterface = await req.json();
 
     if (req.status === 200) {

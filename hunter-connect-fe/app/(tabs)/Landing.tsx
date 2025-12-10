@@ -25,23 +25,6 @@ import PostCard from "@/components/PostCard/PostCard";
 import {courseList} from "@/components/util/OnboardingOptions";
 import {generalTagList} from "@/components/util/TagOptions";
 
-interface Post {
-  id: string;
-  uid: string;
-  userID: string;
-  content: string;
-  title: string;
-  timestamp: any;
-  creatorName?: string;
-  likes?: number;
-  location?: string;
-  tags?: {
-    general: string[];
-    courses: string[];
-  };
-}
-
-
 export default function Landing() {
   const user = auth.currentUser;
 
@@ -65,8 +48,9 @@ export default function Landing() {
     if (!user) return;
     (async () => {
       try {
-        const fetchedPosts = await getAllPosts();
-        setPosts(fetchedPosts || []);
+          const bearerToken = await user.getIdToken();
+        const fetchedPosts = await getAllPosts(bearerToken);
+        setPosts(fetchedPosts);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -106,9 +90,8 @@ export default function Landing() {
         },
       });
 
-      const newPost: Post = {
-        id: docRef.id,
-        uid: docRef.id,
+      const newPost: PostInterface = {
+        postID: docRef.id,
         userID: user.uid,
         content,
         title,
@@ -297,9 +280,7 @@ export default function Landing() {
           {loading ? (
             <ActivityIndicator size="large" color="#5A31F4" />
           ) : (
-              posts.map((post) =>
-                  <PostCard post={post}/>
-              )
+              posts?.map(PostCard)
           )}
         </ScrollView>
       </SafeAreaView>

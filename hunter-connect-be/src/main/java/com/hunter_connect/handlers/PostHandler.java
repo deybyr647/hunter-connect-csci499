@@ -1,6 +1,7 @@
 package com.hunter_connect.handlers;
 
 import com.google.api.core.ApiFuture;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import com.hunter_connect.models.Post;
@@ -17,9 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * Handles the business logic for post-related requests.
- * The @Component annotation allows Spring to detect and inject this class.
  */
-
 @Component
 public class PostHandler {
 
@@ -35,18 +34,25 @@ public class PostHandler {
             Firestore db = FirestoreClient.getFirestore();
 
             // 1. Get the entire collection
-            // NOTE: In production, consider adding .limit(50) here!
+            // In production, consider adding .limit(50) here!
             ApiFuture<QuerySnapshot> future = db.collection("posts").limit(50).get();
 
             // 2. Wait for the query to complete
             List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
-            // 3. Convert Firestore documents to User objects
+            // 3. Convert Firestore documents to Post objects
             List<Post> postList = documents.stream()
-                    .map(document -> document.toObject(Post.class))
+                    .map(document -> {
+                        Post p = document.toObject(Post.class);
+                        // Ensure the ID is set on the object from the doc ID if missing
+                        if (p.getPostID() == null) {
+                            p.setPostID(document.getId());
+                        }
+                        return p;
+                    })
                     .collect(Collectors.toList());
 
-            // 4. Return the list (Spring will serialize this as a JSON Array)
+            // 4. Return the list
             return ServerResponse.ok().body(postList);
 
         } catch (Exception e) {
@@ -57,29 +63,18 @@ public class PostHandler {
 
     /**
      * Handles GET /api/posts/{id}
-     * Fetches a single post document by UID.
+     * Fetches a single post document by ID.
      */
     public ServerResponse getPostById(ServerRequest request) {
         try {
-            // 1. Extract the UID from the URL path parameter
             String targetUid = request.pathVariable("id");
-
-            // 2. Get Firestore instance
             Firestore db = FirestoreClient.getFirestore();
 
-            // 3. Create a query to get the document
             ApiFuture<DocumentSnapshot> future = db.collection("posts").document(targetUid).get();
-
-            // 4. Wait for the result (synchronously)
             DocumentSnapshot document = future.get();
 
-            // 5. Check if the document exists
             if (document.exists()) {
-                // Convert the Firestore document directly into your User POJO
                 Post post = document.toObject(Post.class);
-
-                // Return user object
-                assert post != null;
                 return ServerResponse.ok().body(post);
             } else {
                 return ServerResponse.notFound().build();
@@ -92,35 +87,43 @@ public class PostHandler {
     }
 
     /**
-     * Handles POST /api/posts/{id}
-     * Creates single post document by UID
+     * Handles POST /api/posts
+     * Creates a single post.
+     * Note: The route in RouterFunctionConfig likely maps POST "" -> createPost
      */
     public ServerResponse createPost(ServerRequest request) {
         try {
-            // 1. Get the SECURE uid from the Auth Token (Principal)
+            // 1. Get the SECURE uid from the Auth Token
             Principal principal = request.principal()
                     .orElseThrow(() -> new SecurityException("No auth token found"));
             String authenticatedUid = principal.getName();
 
-            // 2. Deserialize the JSON body directly into your User POJO
+            // 2. Deserialize the JSON body
             Post newPost = request.body(Post.class);
 
-            // 3. SECURITY STEP: Overwrite the UID in the POJO with the secure one.
-            newPost.setUid(authenticatedUid);
+            // 3. Set server-side managed fields
+            newPost.setUserID(authenticatedUid);
+            // If timestamp wasn't sent, set it to now
+            if (newPost.getTimestamp() == null) {
+                newPost.setTimestamp(Timestamp.now());
+            }
 
-            // 4. Save directly to Firestore
             Firestore db = FirestoreClient.getFirestore();
 
-            // We use .set() to create the document at the specific ID "authenticatedUid"
-            ApiFuture<WriteResult> future = db.collection("posts")
-                    .document(authenticatedUid)
-                    .set(newPost);
+            // 4. Save to Firestore
+            // Use .add() to generate a random ID for the post, OR .document().set() if ID is provided
+            // Assuming we want a new random ID for each post:
+            ApiFuture<DocumentReference> future = db.collection("posts").add(newPost);
 
-            // Wait for write to complete
-            WriteResult result = future.get();
+            DocumentReference docRef = future.get();
+            String newPostId = docRef.getId();
 
-            // 5. Return success response
-            return ServerResponse.created(URI.create("/api/posts/" + authenticatedUid))
+            // Update the object with its new ID so we can return it correctly
+            newPost.setPostID(newPostId);
+            // Optionally write the ID back to the doc if your data model requires 'postID' field inside the doc
+            docRef.update("postID", newPostId);
+
+            return ServerResponse.created(URI.create("/api/posts/" + newPostId))
                     .body(newPost);
 
         } catch (Exception e) {
@@ -130,52 +133,65 @@ public class PostHandler {
     }
 
     /**
-     * Handles PUT /api/posts
+     * Handles PUT /api/posts/{id}
      * Updates the post.
-     * Maps the JSON body (including nested Preferences) to the Post object.
      */
     public ServerResponse updatePost(ServerRequest request) {
         try {
-            // 1. SECURITY: Determine WHO is making the request from the token
+            // 1. Security Check
             Principal principal = request.principal()
                     .orElseThrow(() -> new SecurityException("No auth token found"));
             String authenticatedUid = principal.getName();
 
-            // 2. Deserialize the JSON body directly into your updated Post POJO
-            // This automagically maps 'preferences' and other nested objects.
+            // The ID of the POST to update comes from the URL
+            String postId = request.pathVariable("id");
+
+            // 2. Deserialize
             Post updates = request.body(Post.class);
 
-            // 3. Construct a Map of ONLY the fields we want to update.
-            // This prevents overwriting existing data with null/empty values.
+            Firestore db = FirestoreClient.getFirestore();
+            DocumentReference postRef = db.collection("posts").document(postId);
+
+            // 3. Ownership Check (Critical for posts!)
+            // We must verify the user owns the post before letting them edit it.
+            DocumentSnapshot existingDoc = postRef.get().get();
+            if (!existingDoc.exists()) {
+                return ServerResponse.notFound().build();
+            }
+
+            String ownerId = existingDoc.getString("userID");
+            if (!authenticatedUid.equals(ownerId)) {
+                return ServerResponse.status(403).body("You are not the owner of this post.");
+            }
+
+            // 4. Construct Update Map
             Map<String, Object> dataToUpdate = new HashMap<>();
 
-            if (updates.getTimestamp() != null && !updates.getTimestamp().toString().isEmpty()) {
-                dataToUpdate.put("timestamp", updates.getTimestamp());
-            }
+            // We update specific fields to avoid overwriting everything with nulls
             if (updates.getContent() != null && !updates.getContent().isEmpty()) {
                 dataToUpdate.put("content", updates.getContent());
             }
             if (updates.getTitle() != null && !updates.getTitle().isEmpty()) {
                 dataToUpdate.put("title", updates.getTitle());
             }
+            if (updates.getLocation() != null) {
+                dataToUpdate.put("location", updates.getLocation());
+            }
+            if (updates.getTags() != null) {
+                dataToUpdate.put("tags", updates.getTags());
+            }
 
-            // Logging for debugging
-            System.out.println("Fields being updated: " + dataToUpdate.keySet());
+            // Note: Timestamp is usually not updated on edit, but if you have an 'editedAt' field, set it here.
 
-            // 4. Save to Firestore using MERGE
-            Firestore db = FirestoreClient.getFirestore();
+            System.out.println("Updating post " + postId + " fields: " + dataToUpdate.keySet());
 
-            // SetOptions.merge() combined with our filtered Map ensures that
-            // omitted (empty) fields in 'dataToUpdate' are NOT touched in the database.
-            ApiFuture<WriteResult> future = db.collection("posts")
-                    .document(authenticatedUid)
-                    .set(dataToUpdate, SetOptions.merge());
+            // 5. Save with Merge
+            ApiFuture<WriteResult> future = postRef.set(dataToUpdate, SetOptions.merge());
 
             WriteResult result = future.get();
             System.out.println("Update successful at: " + result.getUpdateTime());
 
-            // Return the updates object (or you could return the dataToUpdate map)
-            return ServerResponse.ok().body(updates);
+            return ServerResponse.ok().body(dataToUpdate);
 
         } catch (Exception e) {
             e.printStackTrace();

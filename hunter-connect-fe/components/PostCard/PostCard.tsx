@@ -1,142 +1,14 @@
-import {Image, Pressable, StyleSheet, Text, View} from "react-native";
+import {Pressable, Text, View} from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import React from "react";
-import {Timestamp} from "firebase/firestore";
-import {FirestoreTimestampLike} from "@/components/api/util/Timestamp";
+import {formatDateString, formatTimeString} from "@/components/util/Timestamp";
 import {Ionicons} from "@expo/vector-icons";
 import {PostInterface} from "@/components/api/Posts/Posts";
-
-
-interface PostCardProps {
-    content: string;
-    title: string;
-    author: string;
-    timestamp: FirestoreTimestampLike
-    imageURL?: string;
-    likes?: number;
-}
-
-
-const styles = StyleSheet.create({
-    /* Post Card */
-    post: {
-        width: "100%",
-        maxWidth: 700,
-        backgroundColor: "#FFFFFF",
-        padding: 18,
-        borderRadius: 14,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: "#E8E8E8",
-    },
-
-    userInfo: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 12,
-    },
-
-    avatar: {
-        marginRight: 10,
-    },
-
-    username: {
-        fontWeight: "600",
-        fontSize: 16,
-        color: "#222",
-    },
-
-    timestamp: {
-        fontSize: 12,
-        color: "#777",
-        marginTop: 2,
-    },
-
-    postTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-        marginBottom: 8,
-        color: "#222",
-    },
-
-    content: {
-        fontSize: 15,
-        marginBottom: 12,
-        color: "#444",
-        lineHeight: 20,
-    },
-
-    actions: {
-        flexDirection: "row",
-        gap: 15,
-        paddingTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: "#F0F0F0",
-    },
-
-    actionBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-    },
-
-    likeText: {
-        color: "#555",
-        fontSize: 14,
-    },
-
-    /* Tags */
-    tagContainer: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        marginTop: 10,
-        marginBottom: 8,
-    },
-
-    tagPurple: {
-        backgroundColor: "#EFE9FF",
-        paddingVertical: 4,
-        paddingHorizontal: 10,
-        borderRadius: 14,
-        marginRight: 6,
-        marginBottom: 6,
-    },
-
-    tagPurpleText: {
-        color: "#6B4CF6",
-        fontSize: 12,
-        fontWeight: "600",
-    },
-
-    tagGreen: {
-        backgroundColor: "#E8F9EF",
-        paddingVertical: 4,
-        paddingHorizontal: 10,
-        borderRadius: 14,
-        marginRight: 6,
-        marginBottom: 6,
-    },
-
-    tagGreenText: {
-        color: "#0F6F3C",
-        fontSize: 12,
-        fontWeight: "600",
-    },
-
-    remove: {
-        color: "#999",
-        marginLeft: 4,
-        fontSize: 14,
-    },
-
-    cardDetail: {
-        marginLeft: 6,
-        fontSize: 14,
-        color: "#444",
-    },
-});
+import styles from "./PostCardStyles";
 
 const PostCard = (post: PostInterface) => {
+    const {content, likes, title, timestamp, creatorName, tags, location} = post;
+
     return (
         <View style={styles.post}>
             <View style={styles.userInfo}>
@@ -144,46 +16,41 @@ const PostCard = (post: PostInterface) => {
                     <Ionicons name="person-circle-outline" size={40} color="#5A31F4"/>
                 </View>
                 <View>
-                    <Text style={styles.username}>{post.creatorName || "Unknown User"}</Text>
+                    <Text style={styles.username}>{creatorName ?? "Unknown User"}</Text>
                     <Text style={styles.timestamp}>
-                        {post.timestamp?.toDate
-                            ? new Date(post.timestamp.toDate()).toLocaleString()
-                            : new Date(post.timestamp).toLocaleString()}
+                        {`${formatDateString(timestamp)} ${formatTimeString(timestamp)}`}
                     </Text>
                 </View>
             </View>
 
-            {post.title ? <Text style={styles.postTitle}>{post.title}</Text> : null}
-            <Text style={styles.content}>{post.content}</Text>
+            <Text style={styles.postTitle}>{title ?? "Unknown Title"}</Text>
+            <Text style={styles.content}>{content ?? "Unknown Content"}</Text>
 
-            {post.location ? (
                 <View style={styles.row}>
                     <Ionicons name="location-outline" size={16} color="#e34d4d"/>
-                    <Text style={styles.cardDetail}>{post.location}</Text>
+                    <Text style={styles.cardDetail}>{location ?? "Unknown Location"}</Text>
                 </View>
-            ) : null}
 
             {/* TAGS */}
-            {(post.tags?.general?.length || post.tags?.courses?.length) ? (
+
                 <View style={styles.tagContainer}>
-                    {(post.tags?.general ?? []).map((t, i) => (
+                    {tags?.general?.map((t, i) => (
                         <View key={i} style={styles.tagPurple}>
                             <Text style={styles.tagPurpleText}>{t}</Text>
                         </View>
                     ))}
 
-                    {(post.tags?.courses ?? []).map((t, i) => (
+                    {tags?.courses?.map((t, i) => (
                         <View key={i} style={styles.tagGreen}>
                             <Text style={styles.tagGreenText}>{t}</Text>
                         </View>
                     ))}
                 </View>
-            ) : null}
 
             <View style={styles.actions}>
                 <Pressable style={styles.actionBtn}>
                     <FontAwesome name="heart-o" size={18} color="#555"/>
-                    <Text style={styles.likeText}>{post.likes || 0}</Text>
+                    <Text style={styles.likeText}>{likes ?? 0}</Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn}>
                     <FontAwesome name="comment-o" size={18} color="#555"/>
@@ -193,5 +60,4 @@ const PostCard = (post: PostInterface) => {
     )
 };
 
-export { PostCardProps };
 export default PostCard;
