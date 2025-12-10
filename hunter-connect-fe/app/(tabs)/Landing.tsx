@@ -1,5 +1,5 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {
   FlatList,
   Image,
@@ -8,6 +8,9 @@ import {
   Text,
   View,
 } from "react-native";
+import PostCard, {PostCardProps} from "@/components/api/Posts/PostCard";
+import {getAllPosts, PostInterface} from "@/components/api/Posts/Posts";
+import {Timestamp} from "firebase/firestore";
 
 const dummyPosts = [
   {
@@ -83,6 +86,43 @@ const dummyPosts = [
 ];
 
 export default function Landing() {
+    const [posts, setPosts] = useState<PostInterface[]>([]);
+
+    /*interface PostCardProps {
+        content: string;
+        title: string;
+        author: string;
+        timestamp: Timestamp;
+        imageURL?: string;
+        likes?: number;
+    }*/
+
+    useEffect(() => {
+        (async () => {
+            const posts: PostInterface[] = await getAllPosts();
+
+            const parsedPosts: PostCardProps[] = posts.map((p) => {
+                const parsed: PostCardProps = {
+                    content: p.content,
+                    title: p.title,
+                    author: p.userID,
+                    timestamp: p.timestamp
+                }
+
+                return parsed;
+            })
+        })()
+    })
+
+    interface PostCardProps {
+        content: string;
+        title: string;
+        author: string;
+        timestamp: Timestamp;
+        imageURL?: string;
+        likes?: number;
+    }
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Your Feed</Text>
@@ -91,24 +131,7 @@ export default function Landing() {
         data={dummyPosts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.post}>
-            <View style={styles.userInfo}>
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-              <Text style={styles.username}>{item.user}</Text>
-            </View>
-
-            <Text style={styles.content}>{item.content}</Text>
-
-            <View style={styles.actions}>
-              <Pressable style={styles.actionBtn}>
-                <FontAwesome name="heart" size={18} color="#ff4d4d" />
-                <Text style={styles.likeText}>{item.likes}</Text>
-              </Pressable>
-              <Pressable style={styles.actionBtn}>
-                <FontAwesome name="comment-o" size={18} color="#555" />
-              </Pressable>
-            </View>
-          </View>
+          <PostCard content={ } title={} author={} timestamp={}
         )}
       />
     </View>

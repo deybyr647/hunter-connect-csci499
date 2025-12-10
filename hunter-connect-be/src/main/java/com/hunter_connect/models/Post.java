@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  */
 public class Post {
     private String uid;
-    private long userId; // Foreign key to the Post author's user ID
+    private String userId; // Foreign key to the Post author's user ID
     private String content;
     private String title;
     private Timestamp timestamp;
@@ -18,7 +18,7 @@ public class Post {
     public Post() {}
 
     // Parameterized constructor
-    public Post(String uid, long userId, String content, Timestamp timestamp, String title) {
+    public Post(String uid, String userId, String content, Timestamp timestamp, String title) {
         this.uid = uid;
         this.userId = userId;
         this.content = content;
@@ -30,8 +30,8 @@ public class Post {
     public String getUid() { return uid; }
     public void setUid(String uid) { this.uid = uid; }
 
-    public long getUserId() { return userId; }
-    public void setUserId(long userId) { this.userId = userId; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
