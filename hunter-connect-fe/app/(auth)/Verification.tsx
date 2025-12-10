@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth } from "@/components/api/util/firebaseConfig";
+import { auth } from "@/components/api/Firebase/firebaseConfig";
 
 export default function VerifyEmailScreen() {
   const router = useRouter();

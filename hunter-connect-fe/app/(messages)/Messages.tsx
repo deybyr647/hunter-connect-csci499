@@ -11,12 +11,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Text } from "@/components/Themed";
+import { Text } from "@/components/util/Themed";
 import { listenToConversations } from "@/components/api/messages/getConversations";
 import { listenToMessages } from "@/components/api/messages/getMessages";
 import { sendMessage } from "@/components/api/messages/sendMessage";
 import { Conversation, Message } from "@/components/api/messages/types";
-import { auth } from "@/components/api/util/firebaseConfig";
+import { auth } from "@/components/api/Firebase/firebaseConfig";
 
 export default function MessagesScreen() {
   const user = auth.currentUser;

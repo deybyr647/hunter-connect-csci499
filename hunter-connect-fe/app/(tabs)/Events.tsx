@@ -38,8 +38,8 @@ import {
   formatTimeString,
   isFuture,
   timestampToDate,
-} from "@/components/api/util/Timestamp";
-import { auth, db } from "@/components/api/util/firebaseConfig";
+} from "@/components/util/Timestamp";
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 
 /* ----------------------------- TAG LISTS ----------------------------- */
 

@@ -19,8 +19,11 @@ import DropDownPicker from "react-native-dropdown-picker";
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { createPost, getAllPosts } from "@/components/api/Posts/Posts";
-import { auth, db } from "@/components/api/util/firebaseConfig";
+import {createPost, getAllPosts, PostInterface} from "@/components/api/Posts/Posts";
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
+import PostCard from "@/components/PostCard/PostCard";
+import {courseList} from "@/components/util/OnboardingOptions";
+import {generalTagList} from "@/components/util/TagOptions";
 
 interface Post {
   id: string;
@@ -38,58 +41,12 @@ interface Post {
   };
 }
 
-/* ----------------------------- TAG LISTS ----------------------------- */
-
-const generalTagList = [
-  { label: "Study", value: "Study" },
-  { label: "Review", value: "Review" },
-  { label: "Workshop", value: "Workshop" },
-  { label: "Project", value: "Project" },
-  { label: "Group Meeting", value: "Group Meeting" },
-  { label: "Tutoring", value: "Tutoring" },
-  { label: "Exam Prep", value: "Exam Prep" },
-  { label: "Career Event", value: "Career Event" },
-  { label: "Networking", value: "Networking" },
-  { label: "Hackathon", value: "Hackathon" },
-  { label: "Coding Challenge", value: "Coding Challenge" },
-  { label: "Office Hours", value: "Office Hours" },
-];
-
-const courseTagList = [
-  { label: "🧩 100-Level Courses", value: "100level", selectable: false },
-  { label: "CSCI 12100", value: "CSCI 12100", parent: "100level" },
-  { label: "CSCI 12700", value: "CSCI 12700", parent: "100level" },
-  { label: "CSCI 13200", value: "CSCI 13200", parent: "100level" },
-  { label: "CSCI 13300", value: "CSCI 13300", parent: "100level" },
-  { label: "CSCI 13500", value: "CSCI 13500", parent: "100level" },
-  { label: "CSCI 13600", value: "CSCI 13600", parent: "100level" },
-  { label: "CSCI 15000", value: "CSCI 15000", parent: "100level" },
-  { label: "CSCI 16000", value: "CSCI 16000", parent: "100level" },
-
-  { label: "⚙️ 200-Level Courses", value: "200level", selectable: false },
-  { label: "CSCI 22700", value: "CSCI 22700", parent: "200level" },
-  { label: "CSCI 23200", value: "CSCI 23200", parent: "200level" },
-  { label: "CSCI 23300", value: "CSCI 23300", parent: "200level" },
-  { label: "CSCI 23500", value: "CSCI 23500", parent: "200level" },
-  { label: "CSCI 26000", value: "CSCI 26000", parent: "200level" },
-  { label: "CSCI 26500", value: "CSCI 26500", parent: "200level" },
-
-  { label: "💻 300-Level Courses", value: "300level", selectable: false },
-  { label: "CSCI 32000", value: "CSCI 32000", parent: "300level" },
-  { label: "CSCI 33500", value: "CSCI 33500", parent: "300level" },
-  { label: "CSCI 34000", value: "CSCI 34000", parent: "300level" },
-
-  { label: "🧠 400-Level Courses", value: "400level", selectable: false },
-  { label: "CSCI 46000", value: "CSCI 46000", parent: "400level" },
-  { label: "CSCI 49201", value: "CSCI 49201", parent: "400level" },
-  { label: "CSCI 49900", value: "CSCI 49900", parent: "400level" },
-];
 
 export default function Landing() {
   const user = auth.currentUser;
 
   const [loading, setLoading] = useState(true);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostInterface[]>([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -180,61 +137,6 @@ export default function Landing() {
       alert("Failed to create post");
     }
   };
-
-  const renderPost = (item: Post) => (
-    <View style={styles.post}>
-      <View style={styles.userInfo}>
-        <View style={styles.avatar}>
-          <Ionicons name="person-circle-outline" size={40} color="#5A31F4" />
-        </View>
-        <View>
-          <Text style={styles.username}>{item.creatorName || "Unknown User"}</Text>
-          <Text style={styles.timestamp}>
-            {item.timestamp?.toDate
-              ? new Date(item.timestamp.toDate()).toLocaleString()
-              : new Date(item.timestamp).toLocaleString()}
-          </Text>
-        </View>
-      </View>
-
-      {item.title ? <Text style={styles.postTitle}>{item.title}</Text> : null}
-      <Text style={styles.content}>{item.content}</Text>
-
-      {item.location ? (
-        <View style={styles.row}>
-          <Ionicons name="location-outline" size={16} color="#e34d4d" />
-          <Text style={styles.cardDetail}>{item.location}</Text>
-        </View>
-      ) : null}
-
-      {/* TAGS */}
-      {(item.tags?.general?.length || item.tags?.courses?.length) ? (
-        <View style={styles.tagContainer}>
-          {(item.tags?.general ?? []).map((t, i) => (
-            <View key={i} style={styles.tagPurple}>
-              <Text style={styles.tagPurpleText}>{t}</Text>
-            </View>
-          ))}
-
-          {(item.tags?.courses ?? []).map((t, i) => (
-            <View key={i} style={styles.tagGreen}>
-              <Text style={styles.tagGreenText}>{t}</Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
-
-      <View style={styles.actions}>
-        <Pressable style={styles.actionBtn}>
-          <FontAwesome name="heart-o" size={18} color="#555" />
-          <Text style={styles.likeText}>{item.likes || 0}</Text>
-        </Pressable>
-        <Pressable style={styles.actionBtn}>
-          <FontAwesome name="comment-o" size={18} color="#555" />
-        </Pressable>
-      </View>
-    </View>
-  );
 
   return (
     <Animated.View
@@ -341,7 +243,7 @@ export default function Landing() {
                 <DropDownPicker
                   open={courseOpen}
                   value={null}
-                  items={courseTagList}
+                  items={courseList}
                   setOpen={(open) => {
                     setCourseOpen(open);
                     setGeneralOpen(false);
@@ -395,7 +297,9 @@ export default function Landing() {
           {loading ? (
             <ActivityIndicator size="large" color="#5A31F4" />
           ) : (
-            posts.map((post) => <View key={post.id}>{renderPost(post)}</View>)
+              posts.map((post) =>
+                  <PostCard post={post}/>
+              )
           )}
         </ScrollView>
       </SafeAreaView>

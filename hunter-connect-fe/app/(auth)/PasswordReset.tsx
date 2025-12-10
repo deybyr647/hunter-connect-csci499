@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth } from "@/components/api/util/firebaseConfig";
+import { auth } from "@/components/api/Firebase/firebaseConfig";
 
 import { AuthStyles as styles } from "../../components/AuthPage/AuthStyles";
 

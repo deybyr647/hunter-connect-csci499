@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { UserInterface, getUser } from "@/components/api/Users/Users";
-import { auth } from "@/components/api/util/firebaseConfig";
+import { auth } from "@/components/api/Firebase/firebaseConfig";
 
 export default function ProfileScreen() {
   const router = useRouter();

@@ -17,7 +17,7 @@ import { getFriends } from "@/components/api/friends/getFriends";
 import { removeFriend } from "@/components/api/friends/removeFriend";
 import { searchUsers } from "@/components/api/friends/searchUsers";
 import { sendFriendRequest } from "@/components/api/friends/sendFriendRequests";
-import { auth, db } from "@/components/api/util/firebaseConfig";
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 
 export default function FriendsScreen() {
   const [tab, setTab] = useState<"friends" | "requests" | "search">("friends");
