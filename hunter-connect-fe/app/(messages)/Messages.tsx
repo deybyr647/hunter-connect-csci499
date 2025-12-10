@@ -345,6 +345,7 @@ export default function MessagesScreen() {
                   </View>
 
                   {u?.status?.state === "online" && <View style={styles.onlineDot} />}
+                  {u?.status?.state === "offline" && <View style={styles.offlineDot} />}
                 </View>
 
                 {/* Middle Section */}
@@ -521,6 +522,18 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: "#34C759",
+    bottom: -2,
+    right: -2,
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+
+  offlineDot: {
+    position: "absolute",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#C7C7CC",
     bottom: -2,
     right: -2,
     borderWidth: 2,
