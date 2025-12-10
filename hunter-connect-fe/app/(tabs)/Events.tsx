@@ -31,7 +31,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {EventInterface, getAllEvents, subscribeToEvent} from "@/components/api/Events/Events";
+import {createEvent, EventInterface, getAllEvents, subscribeToEvent} from "@/components/api/Events/Events";
 import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import { UserInterface, getUser } from "@/components/api/Users/Users";
 import {
@@ -161,56 +161,32 @@ export default function EventsScreen() {
   }, []);
 
   /* ------------------ Create Event ------------------ */
-  const createEvent = async () => {
+  const toggleCreateEvent = async () => {
     if (!user) return;
 
     try {
-      const userSnap = await getDoc(doc(db, "users", user.uid));
-      let creatorName = "Unknown";
+        const normalizedDate = normalizeDateOnly(date);
+        const finalStart = mergeDateAndTime(date, startTime);
+        const finalEnd = mergeDateAndTime(date, endTime);
 
-      if (userSnap.exists()) {
-        const d = userSnap.data();
-        creatorName = `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim();
-      }
+        const newEvent: EventInterface = {
+            title,
+            description,
+            location,
+            date: normalizedDate,
+            startTime: Timestamp.fromDate(finalStart),
+            endTime: Timestamp.fromDate(finalEnd),
+            createdBy: user.uid,
+            attendees: [],
+            tags: {
+                general: [...generalTags],
+                courses: [...courseTags]
+            },
+            createdAt: new Date(),
+        }
 
-      const normalizedDate = normalizeDateOnly(date);
-      const finalStart = mergeDateAndTime(date, startTime);
-      const finalEnd = mergeDateAndTime(date, endTime);
-
-      const docRef = await addDoc(collection(db, "events"), {
-        title,
-        description,
-        location,
-        startTime: Timestamp.fromDate(finalStart),
-        endTime: Timestamp.fromDate(finalEnd),
-        date: Timestamp.fromDate(normalizedDate),
-        createdAt: serverTimestamp(),
-        createdBy: user.uid,
-        creatorName,
-        attendees: [],
-        tags: {
-          general: generalTags,
-          courses: courseTags,
-        },
-      });
-
-      const newEvent: EventInterface = {
-        id: docRef.id,
-        title,
-        description,
-        location,
-        date: normalizedDate, // FIXED
-        startTime,
-        endTime,
-        createdBy: user.uid,
-        creatorName,
-        attendees: [],
-        tags: {
-          general: [...generalTags],
-          courses: [...courseTags],
-        },
-        createdAt: new Date(),
-      };
+        const bearerToken = await user?.getIdToken();
+        await createEvent(newEvent, bearerToken);
 
       setUpcomingEvents((prev) => [newEvent, ...prev]);
 
@@ -232,12 +208,6 @@ export default function EventsScreen() {
     if (!user) return;
 
     try {
-      /*await updateDoc(doc(db, "events", event.id), {
-        attendees: isSubscribed(event)
-          ? arrayRemove(user.uid)
-          : arrayUnion(user.uid),
-      });*/
-
         const bearerToken = await user?.getIdToken();
         await subscribeToEvent(event.id, bearerToken);
 
@@ -650,7 +620,7 @@ export default function EventsScreen() {
               {/* CREATE BUTTON */}
               <TouchableOpacity
                 style={styles.createButton}
-                onPress={createEvent}
+                onPress={toggleCreateEvent}
               >
                 <Text style={styles.createButtonText}>Create Event</Text>
               </TouchableOpacity>

@@ -1,11 +1,11 @@
 import { Timestamp } from "firebase/firestore";
 
 interface EventInterface {
-  id: string; // Added optional ID for frontend convenience
+  id?: string; // Added optional ID for frontend convenience
   attendees: string[];
   createdAt: Timestamp | Date;
   createdBy: string;
-  creatorName: string;
+  creatorName?: string;
   date: Timestamp | Date;
   description: string;
   endTime: Timestamp | Date;
@@ -31,7 +31,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
  * Creates a new event.
  * Note: Backend sets createdBy, creatorName, and createdAt automatically.
  */
-const createEvent = async (body: EventApiRequest, bearerToken: string) => {
+const createEvent = async (body: EventInterface, bearerToken: string) => {
   const { ...eventData } = body;
 
   const requestConfig: RequestInit = {
