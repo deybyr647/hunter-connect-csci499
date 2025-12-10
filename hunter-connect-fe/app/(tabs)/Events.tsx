@@ -41,54 +41,8 @@ import {
   timestampToDate,
 } from "@/components/util/Timestamp";
 
-/* ----------------------------- TAG LISTS ----------------------------- */
-
-const generalTagList = [
-  { label: "Study", value: "Study" },
-  { label: "Review", value: "Review" },
-  { label: "Workshop", value: "Workshop" },
-  { label: "Project", value: "Project" },
-  { label: "Group Meeting", value: "Group Meeting" },
-  { label: "Tutoring", value: "Tutoring" },
-  { label: "Exam Prep", value: "Exam Prep" },
-  { label: "Career Event", value: "Career Event" },
-  { label: "Networking", value: "Networking" },
-  { label: "Hackathon", value: "Hackathon" },
-  { label: "Coding Challenge", value: "Coding Challenge" },
-  { label: "Office Hours", value: "Office Hours" },
-];
-
-const courseTagList = [
-  { label: "🧩 100-Level Courses", value: "100level", selectable: false },
-  { label: "CSCI 12100", value: "CSCI 12100", parent: "100level" },
-  { label: "CSCI 12700", value: "CSCI 12700", parent: "100level" },
-  { label: "CSCI 13200", value: "CSCI 13200", parent: "100level" },
-  { label: "CSCI 13300", value: "CSCI 13300", parent: "100level" },
-  { label: "CSCI 13500", value: "CSCI 13500", parent: "100level" },
-  { label: "CSCI 13600", value: "CSCI 13600", parent: "100level" },
-  { label: "CSCI 15000", value: "CSCI 15000", parent: "100level" },
-  { label: "CSCI 16000", value: "CSCI 16000", parent: "100level" },
-
-  { label: "⚙️ 200-Level Courses", value: "200level", selectable: false },
-  { label: "CSCI 22700", value: "CSCI 22700", parent: "200level" },
-  { label: "CSCI 23200", value: "CSCI 23200", parent: "200level" },
-  { label: "CSCI 23300", value: "CSCI 23300", parent: "200level" },
-  { label: "CSCI 23500", value: "CSCI 23500", parent: "200level" },
-  { label: "CSCI 26000", value: "CSCI 26000", parent: "200level" },
-  { label: "CSCI 26500", value: "CSCI 26500", parent: "200level" },
-
-  { label: "💻 300-Level Courses", value: "300level", selectable: false },
-  { label: "CSCI 32000", value: "CSCI 32000", parent: "300level" },
-  { label: "CSCI 33500", value: "CSCI 33500", parent: "300level" },
-  { label: "CSCI 34000", value: "CSCI 34000", parent: "300level" },
-
-  { label: "🧠 400-Level Courses", value: "400level", selectable: false },
-  { label: "CSCI 46000", value: "CSCI 46000", parent: "400level" },
-  { label: "CSCI 49201", value: "CSCI 49201", parent: "400level" },
-  { label: "CSCI 49900", value: "CSCI 49900", parent: "400level" },
-];
-
-/* ----------------------------- MAIN COMPONENT ----------------------------- */
+import {courseList} from "@/components/util/OnboardingOptions";
+import {generalTagList} from "@/components/util/TagOptions";
 
 export default function EventsScreen() {
   const router = useRouter();
@@ -614,7 +568,7 @@ export default function EventsScreen() {
                 <DropDownPicker
                   open={courseOpen}
                   value={null}
-                  items={courseTagList}
+                  items={courseList}
                   setOpen={(open) => {
                     setCourseOpen(open);
                     setGeneralOpen(false);
@@ -804,7 +758,7 @@ export default function EventsScreen() {
                 <Text style={styles.filterSectionTitle}>Course Tags</Text>
                 <ScrollView style={{ maxHeight: 200 }}>
                   <View style={styles.chipWrap}>
-                    {courseTagList
+                    {courseList
                       .filter((c) => c.selectable !== false)
                       .map((t) => {
                         const active = filterCourses.includes(t.value);
