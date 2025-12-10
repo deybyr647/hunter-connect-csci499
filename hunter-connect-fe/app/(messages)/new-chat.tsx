@@ -53,7 +53,7 @@ export default function NewChatScreen() {
             <Ionicons name="chevron-back" size={24} color="#5A31F4" />
         </TouchableOpacity>
 
-        <Text style={{ fontSize: 20, fontWeight: "700", color: "#222" }}>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: "#3C2E7E" }}>
             New Message
         </Text>
 

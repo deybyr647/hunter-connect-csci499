@@ -19,7 +19,8 @@ import { listenToConversations } from "@/components/api/messages/getConversation
 import { listenToMessages } from "@/components/api/messages/getMessages";
 import { sendMessage } from "@/components/api/messages/sendMessage";
 import { Conversation, Message } from "@/components/api/messages/types";
-import { auth } from "@/components/api/util/firebaseConfig";
+import { auth, db } from "@/components/api/util/firebaseConfig";
+import { doc, updateDoc } from "firebase/firestore";
 
 export default function MessagesScreen() {
   const user = auth.currentUser;
@@ -88,6 +89,21 @@ export default function MessagesScreen() {
   /* ==================================================================== */
   /* ============================ CHAT VIEW ============================== */
   /* ==================================================================== */
+
+  const resetUnread = async (conversationId: string) => {
+    if (!user) return;
+
+    const convoRef = doc(db, "conversations", conversationId);
+
+    try {
+      await updateDoc(convoRef, {
+        [`unread.${user.uid}`]: 0
+      });
+    } catch (e) {
+      console.log("Failed to reset unread:", e);
+    }
+  };
+
 
   if (selectedConversation) {
     const otherId = selectedConversation.participants.find(
@@ -297,11 +313,15 @@ export default function MessagesScreen() {
         renderItem={({ item }) => {
           const otherId = item.participants.find((p) => p !== user?.uid);
           const u = item.participantData?.[otherId];
-          const unread = item.unreadCount ?? 0;
+          const unread = item.unread?.[user.uid] ?? 0;
           return (
             <TouchableOpacity
               style={styles.conversationCard}
-              onPress={() => setSelectedConversationId(item.id)}
+              onPress={() => {
+                resetUnread(item.id);   
+                setSelectedConversationId(item.id);
+              }}
+
             >
               <View style={styles.cardLeft}>
                 {/* Avatar */}
@@ -331,13 +351,12 @@ export default function MessagesScreen() {
                           : ""}
                       </Text>
 
-                      {(item.unreadCount ?? 0) > 0 && (
+                      {unread > 0 && (
                         <View style={styles.unreadBadgeSmall}>
-                          <Text style={styles.unreadBadgeText}>
-                            {item.unreadCount}
-                          </Text>
+                          <Text style={styles.unreadBadgeText}>{unread}</Text>
                         </View>
                       )}
+
                     </View>
                   </View>
 

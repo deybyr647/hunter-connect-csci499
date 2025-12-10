@@ -25,7 +25,7 @@ export function listenToConversations(
         lastMessageAt: d.lastMessageAt ?? null,
         participants: d.participants ?? [],
         participantData: d.participantData ?? {},
-        unreadCount: d.unreadCount ?? 0,
+        unread: d.unread || {},
       });
     });
 

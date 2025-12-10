@@ -14,7 +14,7 @@ export default function MessagesLayout() {
         options={{
           title: "Messages",
           header: () => <TopHeader />,
-          headerShown: true,
+          headerShown: false,
         }}
       />
     </Stack>
