@@ -219,7 +219,7 @@ export default function AuthScreen() {
         await initUserSocial(uid);
 
         await reload(userCredential.user);
-        router.replace("/verify-email");
+        router.replace("/Verification");
       }
     } catch (error: any) {
       setLogLevel("debug");
@@ -385,7 +385,7 @@ export default function AuthScreen() {
           {/* Forgot password link — visible only in login mode */}
           {mode === "login" && (
             <TouchableOpacity
-              onPress={() => router.push("/(auth)/forgot-password")}
+              onPress={() => router.push("/(auth)/PasswordReset")}
             >
               <Text style={styles.forgotPassword}>Forgot password?</Text>
             </TouchableOpacity>

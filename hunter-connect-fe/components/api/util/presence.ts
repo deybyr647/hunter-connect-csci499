@@ -1,7 +1,7 @@
 import { ref, onDisconnect, set, onValue } from "firebase/database";
 import { doc, setDoc, updateDoc } from "firebase/firestore";
-import { auth, db as firestoreDB } from "./firebaseConfig";
-import { rtdb as realtimeDB } from "./firebaseConfig";
+import { auth, db as firestoreDB } from "../Firebase/firebaseConfig";
+import { rtdb as realtimeDB } from "../Firebase/firebaseConfig";
 
 export function setupPresence() {
   const user = auth.currentUser;

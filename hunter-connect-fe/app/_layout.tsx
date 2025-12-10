@@ -10,7 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { setupPresence } from "@/components/api/util/presence";
-import { auth } from "@/components/api/util/firebaseConfig";
+import { auth } from "@/components/api/Firebase/firebaseConfig";
 import TopHeader from "@/components/TopHeader/TopHeader";
 
 export {

@@ -4,7 +4,7 @@ import { View, TextInput, TouchableOpacity, FlatList, Text } from "react-native"
 import { Ionicons } from "@expo/vector-icons";
 import { searchUsers } from "@/components/api/friends/searchUsers";
 import { createConversationIfAbsent } from "@/components/api/messages/createConversation";
-import { auth } from "@/components/api/util/firebaseConfig";
+import { auth } from "@/components/api/Firebase/firebaseConfig";
 
 export default function NewChatScreen() {
   const router = useRouter();

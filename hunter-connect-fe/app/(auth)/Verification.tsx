@@ -32,7 +32,7 @@ export default function VerifyEmailScreen() {
           clearInterval(interval);
 
           // wait a moment before redirecting
-          setTimeout(() => router.replace("/onboarding"), 2500);
+          setTimeout(() => router.replace("/Onboarding"), 2500);
         }
       }
     }, 4000);
