@@ -9,7 +9,7 @@ export function listenToConversations(
 ) {
   const q = query(
     collection(db, "conversations"),
-    orderBy("lastMessageAt", "desc")
+    orderBy("updatedAt", "desc")
   );
 
   return onSnapshot(q, (snap) => {
@@ -25,7 +25,7 @@ export function listenToConversations(
         lastMessageAt: d.lastMessageAt ?? null,
         participants: d.participants ?? [],
         participantData: d.participantData ?? {},
-        unreadCount: d.unreadCount ?? 0,
+        unread: d.unread || {},
       });
     });
 

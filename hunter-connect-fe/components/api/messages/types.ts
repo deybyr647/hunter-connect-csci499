@@ -4,7 +4,7 @@ export interface Conversation {
   lastMessageAt: any;
   participants: string[];
   participantData: any;
-  unreadCount?: number;
+  unread?: Record<string, number>; 
 }
 
 export interface Message {
