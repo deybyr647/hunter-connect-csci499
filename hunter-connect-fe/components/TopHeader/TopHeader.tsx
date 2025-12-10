@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { auth, db } from "@/components/api/Firebase/firebaseConfig";
+import { listenToConversations } from "@/components/api/messages/getConversations";
 
 import { styles } from "./TopHeaderStyles";
 
@@ -23,20 +24,19 @@ const TopHeader = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  // 🔥 NEW: Incoming Request Count
   const [incomingCount, setIncomingCount] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
 
       if (currentUser) {
+        // Watch incoming friend requests
         const ref = doc(db, "users", currentUser.uid);
-
         const unsubscribeSnapshot = onSnapshot(ref, (snap) => {
           const data = snap.data();
-          const incoming = data?.incomingRequests ?? [];
-          setIncomingCount(incoming.length);
+          setIncomingCount(data?.incomingRequests?.length ?? 0);
         });
 
         return () => unsubscribeSnapshot();
@@ -45,6 +45,27 @@ const TopHeader = () => {
 
     return () => unsubscribeAuth();
   }, []);
+
+  /* ---------------------------------------------------------
+      LISTEN FOR UNREAD MESSAGE COUNTS
+  ----------------------------------------------------------- */
+  useEffect(() => {
+    if (!user) return;
+
+    const unsub = listenToConversations(user.uid, (list) => {
+      let totalUnread = 0;
+
+      for (const convo of list) {
+        // unread is a { userId: count } object
+        const count = convo.unread?.[user.uid] ?? 0;
+        totalUnread += count;
+      }
+
+      setUnreadMessages(totalUnread);
+    });
+
+    return unsub;
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -72,13 +93,17 @@ const TopHeader = () => {
           <Text style={styles.title}>Hunter Connect</Text>
         </TouchableOpacity>
 
-        {/* Messages Icon */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => router.push("/(messages)/Messages")}
-        >
-          <FontAwesome name="comment-o" size={22} color="black" />
-        </TouchableOpacity>
+        {/* Messages Icon + Unread Badge */}
+        <View style={{ position: "relative", marginRight: 12 }}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/(messages)/Messages")}
+          >
+            <FontAwesome name="comment-o" size={22} color="black" />
+          </TouchableOpacity>
+
+          {unreadMessages > 0 && <View style={styles.dot} />}
+        </View>
 
         {/* Friends Icon + Badge */}
         <View style={{ position: "relative" }}>
@@ -89,7 +114,6 @@ const TopHeader = () => {
             <Ionicons name="people-outline" size={24} color="black" />
           </TouchableOpacity>
 
-          {/* 🔮 Purple Notification Badge */}
           {incomingCount > 0 && <View style={styles.dot} />}
         </View>
 
@@ -111,7 +135,6 @@ const TopHeader = () => {
             <FontAwesome name="user-circle-o" size={26} color="black" />
           </TouchableOpacity>
 
-          {/* Dropdown */}
           {menuVisible && (
             <View
               {...(Platform.OS === "web"
