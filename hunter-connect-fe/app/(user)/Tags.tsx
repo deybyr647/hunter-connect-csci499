@@ -11,8 +11,8 @@ import {
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { UserInterface, getUser } from "@/components/api/Users/Users";
 import { auth, db } from "@/components/api/Firebase/firebaseConfig";
+import { UserInterface, getUser } from "@/components/api/Users/Users";
 
 export default function TagsScreen() {
   const router = useRouter();

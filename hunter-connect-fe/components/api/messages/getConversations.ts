@@ -1,10 +1,10 @@
 import {
   collection,
+  doc,
+  getDoc,
   onSnapshot,
   orderBy,
   query,
-  doc,
-  getDoc,
 } from "firebase/firestore";
 
 import { db } from "../Firebase/firebaseConfig";
@@ -39,7 +39,7 @@ export function listenToConversations(
             participantData[pid] = {
               username: uSnap.data().username,
               fullName: uSnap.data().fullName,
-              status: uSnap.data().status ?? null,  // ← LIVE PRESENCE DATA
+              status: uSnap.data().status ?? null, // ← LIVE PRESENCE DATA
             };
           }
         })

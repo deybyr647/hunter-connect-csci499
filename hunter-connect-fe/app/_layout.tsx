@@ -9,9 +9,10 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
-import { setupPresence } from "@/components/api/util/presence";
-import { auth } from "@/components/api/Firebase/firebaseConfig";
+
 import TopHeader from "@/components/TopHeader/TopHeader";
+import { auth } from "@/components/api/Firebase/firebaseConfig";
+import { setupPresence } from "@/components/api/util/presence";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -73,14 +74,13 @@ export default function RootLayout() {
 
     const unsub = auth.onAuthStateChanged((user) => {
       if (user && !initialized) {
-        initialized = true;   // prevent multiple listeners
+        initialized = true; // prevent multiple listeners
         setupPresence();
       }
     });
 
     return unsub;
   }, []);
-
 
   return <RootLayoutNav />;
 }

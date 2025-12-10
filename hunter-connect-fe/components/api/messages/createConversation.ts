@@ -1,14 +1,15 @@
-import { db } from "../Firebase/firebaseConfig";
 import {
   addDoc,
   collection,
+  doc,
   getDoc,
   getDocs,
   query,
   serverTimestamp,
   where,
-  doc,
 } from "firebase/firestore";
+
+import { db } from "../Firebase/firebaseConfig";
 
 export async function createConversationIfAbsent(uid1: string, uid2: string) {
   const ref = collection(db, "conversations");

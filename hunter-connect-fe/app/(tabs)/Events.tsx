@@ -32,6 +32,7 @@ import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { EventInterface, getAllEvents } from "@/components/api/Events/Events";
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import { UserInterface, getUser } from "@/components/api/Users/Users";
 import {
   formatDateString,
@@ -39,7 +40,6 @@ import {
   isFuture,
   timestampToDate,
 } from "@/components/util/Timestamp";
-import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 
 /* ----------------------------- TAG LISTS ----------------------------- */
 

@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { ref, set } from "firebase/database";
 import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,9 +15,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth, db , rtdb } from "@/components/api/Firebase/firebaseConfig";
+import { auth, db, rtdb } from "@/components/api/Firebase/firebaseConfig";
 import { listenToConversations } from "@/components/api/messages/getConversations";
-import { ref, set } from "firebase/database";
+
 import { styles } from "./TopHeaderStyles";
 
 const TopHeader = () => {
@@ -68,24 +69,24 @@ const TopHeader = () => {
   }, [user]);
 
   const handleSignOut = async () => {
-  try {
-    const user = auth.currentUser;
-    if (user) {
-      const uid = user.uid;
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const uid = user.uid;
 
-      await set(ref(rtdb, `/status/${uid}`), {
-        state: "offline",
-        last_changed: Date.now(),
-      });
+        await set(ref(rtdb, `/status/${uid}`), {
+          state: "offline",
+          last_changed: Date.now(),
+        });
+      }
+
+      await signOut(auth);
+      setMenuVisible(false);
+      router.replace("/(auth)");
+    } catch (error) {
+      console.error("Sign out failed:", error);
     }
-
-    await signOut(auth);
-    setMenuVisible(false);
-    router.replace("/(auth)");
-  } catch (error) {
-    console.error("Sign out failed:", error);
-  }
-};
+  };
 
   return (
     <SafeAreaView>

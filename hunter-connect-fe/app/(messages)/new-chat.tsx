@@ -1,10 +1,17 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { View, TextInput, TouchableOpacity, FlatList, Text } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import {
+  FlatList,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+import { auth } from "@/components/api/Firebase/firebaseConfig";
 import { searchUsers } from "@/components/api/friends/searchUsers";
 import { createConversationIfAbsent } from "@/components/api/messages/createConversation";
-import { auth } from "@/components/api/Firebase/firebaseConfig";
 
 export default function NewChatScreen() {
   const router = useRouter();
@@ -30,36 +37,35 @@ export default function NewChatScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F2F2F7" }}>
-      
-        {/* HEADER */}
-        <View
+      {/* HEADER */}
+      <View
         style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 14,
-            backgroundColor: "#fff",
-            shadowColor: "#000",
-            shadowOpacity: 0.05,
-            shadowRadius: 4,
-            elevation: 2,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          backgroundColor: "#fff",
+          shadowColor: "#000",
+          shadowOpacity: 0.05,
+          shadowRadius: 4,
+          elevation: 2,
         }}
-        >
+      >
         <TouchableOpacity
-            style={{ width: 60 }}
-            onPress={() => router.push("/Messages")}
+          style={{ width: 60 }}
+          onPress={() => router.push("/Messages")}
         >
-            <Ionicons name="chevron-back" size={24} color="#5A31F4" />
+          <Ionicons name="chevron-back" size={24} color="#5A31F4" />
         </TouchableOpacity>
 
         <Text style={{ fontSize: 20, fontWeight: "700", color: "#3C2E7E" }}>
-            New Message
+          New Message
         </Text>
 
         {/* Spacer so the title stays centered */}
         <View style={{ width: 60 }} />
-        </View>
+      </View>
 
       {/* SEARCH BAR */}
       <View style={{ padding: 16 }}>
@@ -90,7 +96,9 @@ export default function NewChatScreen() {
               borderBottomColor: "#E5E5EA",
             }}
           >
-            <Text style={{ fontSize: 16, color: "#000" }}>@{item.username}</Text>
+            <Text style={{ fontSize: 16, color: "#000" }}>
+              @{item.username}
+            </Text>
           </TouchableOpacity>
         )}
       />

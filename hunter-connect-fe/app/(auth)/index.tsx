@@ -25,9 +25,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import { UserInterface, createUser } from "@/components/api/Users/Users";
 import { initUserSocial } from "@/components/api/friends/initUserSocial";
-import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 
 import { AuthStyles as styles } from "../../components/AuthPage/AuthStyles";
 

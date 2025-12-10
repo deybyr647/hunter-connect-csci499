@@ -1,26 +1,26 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { doc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Text as RNText,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
   View,
-  StyleSheet,
-  Text as RNText,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Text } from "@/components/util/Themed";
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import { listenToConversations } from "@/components/api/messages/getConversations";
 import { listenToMessages } from "@/components/api/messages/getMessages";
 import { sendMessage } from "@/components/api/messages/sendMessage";
 import { Conversation, Message } from "@/components/api/messages/types";
-import { auth, db } from "@/components/api/Firebase/firebaseConfig";
-import { doc, updateDoc } from "firebase/firestore";
+import { Text } from "@/components/util/Themed";
 
 export default function MessagesScreen() {
   const user = auth.currentUser;
@@ -97,13 +97,12 @@ export default function MessagesScreen() {
 
     try {
       await updateDoc(convoRef, {
-        [`unread.${user.uid}`]: 0
+        [`unread.${user.uid}`]: 0,
       });
     } catch (e) {
       console.log("Failed to reset unread:", e);
     }
   };
-
 
   if (selectedConversation) {
     const otherId = selectedConversation.participants.find(
@@ -113,7 +112,6 @@ export default function MessagesScreen() {
       ? selectedConversation.participantData?.[otherId]
       : null;
     return (
-
       <SafeAreaView style={styles.container}>
         <View
           style={{
@@ -138,29 +136,25 @@ export default function MessagesScreen() {
           </TouchableOpacity>
 
           <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={styles.chatHeaderTitle}>
-              @{otherUser?.username}
-            </Text>
+            <Text style={styles.chatHeaderTitle}>@{otherUser?.username}</Text>
 
             {/* OPTIONAL — subtle active status line */}
             <Text style={styles.chatHeaderSubtitle}>
-              {otherUser?.status?.state === "online" ? (
-                "Active now"
-              ) : otherUser?.status?.last_changed ? (
-                `Last seen ${new Date(otherUser.status.last_changed).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`
-              ) : (
-                "Last seen recently"
-              )}
+              {otherUser?.status?.state === "online"
+                ? "Active now"
+                : otherUser?.status?.last_changed
+                  ? `Last seen ${new Date(
+                      otherUser.status.last_changed
+                    ).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`
+                  : "Last seen recently"}
             </Text>
           </View>
 
           <View style={{ width: 60 }} />
         </View>
-
-
 
         {/* Chat Body */}
         <KeyboardAvoidingView
@@ -173,7 +167,9 @@ export default function MessagesScreen() {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => {
               const isMe = item.senderId === user?.uid;
-              const displayName = isMe ? "You" : otherUser?.username ?? "User";
+              const displayName = isMe
+                ? "You"
+                : (otherUser?.username ?? "User");
 
               return (
                 <View
@@ -189,7 +185,9 @@ export default function MessagesScreen() {
                     <Text
                       style={[
                         bubbleStyles.nameText,
-                        isMe ? bubbleStyles.currentUserName : bubbleStyles.otherUserName,
+                        isMe
+                          ? bubbleStyles.currentUserName
+                          : bubbleStyles.otherUserName,
                       ]}
                     >
                       {displayName}
@@ -228,7 +226,6 @@ export default function MessagesScreen() {
                 </View>
               );
             }}
-
             contentContainerStyle={styles.messageList}
             showsVerticalScrollIndicator={false}
           />
@@ -247,12 +244,10 @@ export default function MessagesScreen() {
               returnKeyType="send"
               underlineColorAndroid="transparent"
               selectionColor="#6B4CF6"
-
               onContentSizeChange={(e) => {
                 const newHeight = e.nativeEvent.contentSize.height;
                 setInputHeight(Math.min(newHeight, 120)); // grows but stops at maxHeight
               }}
-
               onKeyPress={({ nativeEvent }) => {
                 if (nativeEvent.key !== "Enter") return;
 
@@ -260,7 +255,8 @@ export default function MessagesScreen() {
 
                 requestAnimationFrame(() => {
                   const after = inputText;
-                  const newlineAdded = after.length > before.length && after.endsWith("\n");
+                  const newlineAdded =
+                    after.length > before.length && after.endsWith("\n");
 
                   if (newlineAdded) {
                     setInputText(after); // allow newline
@@ -283,7 +279,6 @@ export default function MessagesScreen() {
               <FontAwesome name="send" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
-
         </KeyboardAvoidingView>
       </SafeAreaView>
     );
@@ -303,7 +298,12 @@ export default function MessagesScreen() {
     <SafeAreaView style={styles.container}>
       {/* Search Bar */}
       <View style={styles.searchWrapper}>
-        <FontAwesome name="search" size={16} color="#8E8E93" style={{ marginLeft: 10 }} />
+        <FontAwesome
+          name="search"
+          size={16}
+          color="#8E8E93"
+          style={{ marginLeft: 10 }}
+        />
 
         <TextInput
           style={styles.searchInput}
@@ -312,11 +312,13 @@ export default function MessagesScreen() {
           onChangeText={setSearch}
         />
 
-        <TouchableOpacity onPress={() => router.push("/new-chat")} style={styles.newChatIcon}>
+        <TouchableOpacity
+          onPress={() => router.push("/new-chat")}
+          style={styles.newChatIcon}
+        >
           <FontAwesome name="commenting" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
-
 
       {/* Conversation List */}
       <FlatList
@@ -335,7 +337,6 @@ export default function MessagesScreen() {
               }}
             >
               <View style={styles.cardRow}>
-
                 {/* Avatar */}
                 <View style={styles.avatarContainer}>
                   <View style={styles.avatarBubble}>
@@ -344,8 +345,12 @@ export default function MessagesScreen() {
                     </RNText>
                   </View>
 
-                  {u?.status?.state === "online" && <View style={styles.onlineDot} />}
-                  {u?.status?.state === "offline" && <View style={styles.offlineDot} />}
+                  {u?.status?.state === "online" && (
+                    <View style={styles.onlineDot} />
+                  )}
+                  {u?.status?.state === "offline" && (
+                    <View style={styles.offlineDot} />
+                  )}
                 </View>
 
                 {/* Middle Section */}
@@ -455,7 +460,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minHeight: 40,
-    maxHeight: 120,     
+    maxHeight: 120,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
@@ -463,7 +468,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DAD7F2",
     fontSize: 16,
-    textAlignVertical: "top",  
+    textAlignVertical: "top",
   },
 
   sendButton: {
@@ -483,7 +488,7 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: "#CFCDEB",
   },
-  
+
   messageList: {
     paddingVertical: 12,
   },
@@ -539,9 +544,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  
-  
-/* -------------------- TEXT AREA -------------------- */
+
+  /* -------------------- TEXT AREA -------------------- */
 
   cardMiddle: {
     flex: 1,
@@ -680,6 +684,4 @@ const bubbleStyles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
   },
-
 });
-

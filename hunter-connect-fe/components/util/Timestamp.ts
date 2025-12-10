@@ -95,5 +95,5 @@ export {
   formatTimeString,
   formatTimeRange,
   isFuture,
-    FirestoreTimestampLike
+  FirestoreTimestampLike,
 };

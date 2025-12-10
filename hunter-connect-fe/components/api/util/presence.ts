@@ -1,5 +1,6 @@
-import { ref, onDisconnect, set, onValue } from "firebase/database";
+import { onDisconnect, onValue, ref, set } from "firebase/database";
 import { doc, setDoc, updateDoc } from "firebase/firestore";
+
 import { auth, db as firestoreDB } from "../Firebase/firebaseConfig";
 import { rtdb as realtimeDB } from "../Firebase/firebaseConfig";
 
@@ -28,13 +29,13 @@ export function setupPresence() {
 
   // Watch realtime presence → mirror to Firestore
   onValue(statusRef, async (snapshot) => {
-  const userNow = auth.currentUser;
-  if (!userNow) return;
+    const userNow = auth.currentUser;
+    if (!userNow) return;
 
-  const data = snapshot.val();  
+    const data = snapshot.val();
 
-  await updateDoc(doc(firestoreDB, "users", uid), {
-    status: data,  
+    await updateDoc(doc(firestoreDB, "users", uid), {
+      status: data,
+    });
   });
-});
 }

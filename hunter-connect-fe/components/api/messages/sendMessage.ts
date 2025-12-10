@@ -3,9 +3,9 @@ import {
   collection,
   doc,
   getDoc,
+  increment,
   serverTimestamp,
   updateDoc,
-  increment,
 } from "firebase/firestore";
 
 import { db } from "../Firebase/firebaseConfig";
@@ -40,7 +40,6 @@ export async function sendMessage(
   //  Build unread field name: unread.uid
   const unreadField = `unread.${receiverId}`;
 
- 
   await updateDoc(convoRef, {
     lastMessage: trimmed,
     lastMessageAt: serverTimestamp(),

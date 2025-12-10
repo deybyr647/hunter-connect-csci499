@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { UserInterface, getUser } from "@/components/api/Users/Users";
 import { auth } from "@/components/api/Firebase/firebaseConfig";
+import { UserInterface, getUser } from "@/components/api/Users/Users";
 
 export default function ProfileScreen() {
   const router = useRouter();

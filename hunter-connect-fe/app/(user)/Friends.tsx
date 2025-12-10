@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import { getUsersByUIDs } from "@/components/api/Users/UsersBatch";
 import { acceptFriendRequest } from "@/components/api/friends/acceptFriendRequest";
 import { declineFriendRequest } from "@/components/api/friends/declineFriendRequest";
@@ -17,7 +18,6 @@ import { getFriends } from "@/components/api/friends/getFriends";
 import { removeFriend } from "@/components/api/friends/removeFriend";
 import { searchUsers } from "@/components/api/friends/searchUsers";
 import { sendFriendRequest } from "@/components/api/friends/sendFriendRequests";
-import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 
 export default function FriendsScreen() {
   const [tab, setTab] = useState<"friends" | "requests" | "search">("friends");

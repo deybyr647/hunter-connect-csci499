@@ -6,6 +6,7 @@ import {
   signOut,
   updatePassword,
 } from "firebase/auth";
+import { ref, set } from "firebase/database";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -23,9 +24,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { UserInterface, getUser } from "@/components/api/Users/Users";
 import { auth, rtdb } from "@/components/api/Firebase/firebaseConfig";
-import { ref, set } from "firebase/database";
+import { UserInterface, getUser } from "@/components/api/Users/Users";
 
 export default function SettingsScreen() {
   const router = useRouter();

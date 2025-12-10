@@ -1,6 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -19,11 +26,15 @@ import DropDownPicker from "react-native-dropdown-picker";
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {createPost, getAllPosts, PostInterface} from "@/components/api/Posts/Posts";
-import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import PostCard from "@/components/PostCard/PostCard";
-import {courseList} from "@/components/util/OnboardingOptions";
-import {generalTagList} from "@/components/util/TagOptions";
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
+import {
+  PostInterface,
+  createPost,
+  getAllPosts,
+} from "@/components/api/Posts/Posts";
+import { courseList } from "@/components/util/OnboardingOptions";
+import { generalTagList } from "@/components/util/TagOptions";
 
 export default function Landing() {
   const user = auth.currentUser;
@@ -48,7 +59,7 @@ export default function Landing() {
     if (!user) return;
     (async () => {
       try {
-          const bearerToken = await user.getIdToken();
+        const bearerToken = await user.getIdToken();
         const fetchedPosts = await getAllPosts(bearerToken);
         setPosts(fetchedPosts);
         setLoading(false);
@@ -280,7 +291,7 @@ export default function Landing() {
           {loading ? (
             <ActivityIndicator size="large" color="#5A31F4" />
           ) : (
-              posts?.map(PostCard)
+            posts?.map(PostCard)
           )}
         </ScrollView>
       </SafeAreaView>

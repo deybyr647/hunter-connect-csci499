@@ -12,13 +12,17 @@ import {
 import DropDownPicker from "react-native-dropdown-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import {
   UserInterface,
   createUser,
   updateUser,
 } from "@/components/api/Users/Users";
-import { auth, db } from "@/components/api/Firebase/firebaseConfig";
-import {courseList, interestList, skillList} from "@/components/util/OnboardingOptions";
+import {
+  courseList,
+  interestList,
+  skillList,
+} from "@/components/util/OnboardingOptions";
 
 export default function OnboardingScreen() {
   const router = useRouter();
