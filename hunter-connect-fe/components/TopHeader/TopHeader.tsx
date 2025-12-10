@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth, db, rtdb  } from "@/components/api/util/firebaseConfig";
+import { auth, db , rtdb } from "@/components/api/Firebase/firebaseConfig";
 import { listenToConversations } from "@/components/api/messages/getConversations";
 import { ref, set } from "firebase/database";
 import { styles } from "./TopHeaderStyles";

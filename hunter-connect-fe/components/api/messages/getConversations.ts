@@ -7,7 +7,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 
-import { db } from "../util/firebaseConfig";
+import { db } from "../Firebase/firebaseConfig";
 import { Conversation } from "./types";
 
 export function listenToConversations(

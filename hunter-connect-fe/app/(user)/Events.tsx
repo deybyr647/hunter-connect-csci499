@@ -22,7 +22,7 @@ import {
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { auth, db } from "@/components/api/util/firebaseConfig";
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 
 /* ----------------------------- EVENT TYPES ----------------------------- */
 

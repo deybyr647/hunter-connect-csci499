@@ -1,6 +1,6 @@
 import { collection, getDocs, query, where } from "firebase/firestore";
 
-import { db } from "../util/firebaseConfig";
+import { db } from "../Firebase/firebaseConfig";
 
 export async function searchUsers(searchTerm: string) {
   const term = searchTerm.trim().toLowerCase();

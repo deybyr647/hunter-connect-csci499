@@ -24,7 +24,7 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { UserInterface, getUser } from "@/components/api/Users/Users";
-import { auth, rtdb } from "@/components/api/util/firebaseConfig";
+import { auth, rtdb } from "@/components/api/Firebase/firebaseConfig";
 import { ref, set } from "firebase/database";
 
 export default function SettingsScreen() {

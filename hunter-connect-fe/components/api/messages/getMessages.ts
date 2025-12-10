@@ -1,6 +1,6 @@
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 
-import { db } from "../util/firebaseConfig";
+import { db } from "../Firebase/firebaseConfig";
 import { Message } from "./types";
 
 export function listenToMessages(

@@ -14,12 +14,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Text } from "@/components/Themed";
+import { Text } from "@/components/util/Themed";
 import { listenToConversations } from "@/components/api/messages/getConversations";
 import { listenToMessages } from "@/components/api/messages/getMessages";
 import { sendMessage } from "@/components/api/messages/sendMessage";
 import { Conversation, Message } from "@/components/api/messages/types";
-import { auth, db } from "@/components/api/util/firebaseConfig";
+import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import { doc, updateDoc } from "firebase/firestore";
 
 export default function MessagesScreen() {
@@ -113,7 +113,7 @@ export default function MessagesScreen() {
       ? selectedConversation.participantData?.[otherId]
       : null;
     return (
-      
+
       <SafeAreaView style={styles.container}>
         <View
           style={{
@@ -157,7 +157,7 @@ export default function MessagesScreen() {
             </Text>
           </View>
 
-          <View style={{ width: 60 }} /> 
+          <View style={{ width: 60 }} />
         </View>
 
 
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   chatHeaderTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#3C2E7E",          
+    color: "#3C2E7E",
     letterSpacing: 0.3,
     marginBottom: 2,
   },
@@ -663,12 +663,12 @@ const bubbleStyles = StyleSheet.create({
   },
 
   currentUserName: {
-    color: "#6B4CF6", 
+    color: "#6B4CF6",
     marginRight: 6,
   },
 
   otherUserName: {
-    color: "#3C2E7E", 
+    color: "#3C2E7E",
     marginRight: 6,
   },
 

@@ -8,7 +8,7 @@ import {
   increment,
 } from "firebase/firestore";
 
-import { db } from "../util/firebaseConfig";
+import { db } from "../Firebase/firebaseConfig";
 
 export async function sendMessage(
   conversationId: string,
