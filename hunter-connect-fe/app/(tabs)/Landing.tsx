@@ -86,16 +86,7 @@ const dummyPosts = [
 ];
 
 export default function Landing() {
-    const [posts, setPosts] = useState<PostInterface[]>([]);
-
-    /*interface PostCardProps {
-        content: string;
-        title: string;
-        author: string;
-        timestamp: Timestamp;
-        imageURL?: string;
-        likes?: number;
-    }*/
+    const [posts, setPosts] = useState<PostCardProps[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -105,33 +96,26 @@ export default function Landing() {
                 const parsed: PostCardProps = {
                     content: p.content,
                     title: p.title,
-                    author: p.userID,
+                    author: p.userID,  // @ts-ignore
                     timestamp: p.timestamp
                 }
 
                 return parsed;
             })
-        })()
-    })
 
-    interface PostCardProps {
-        content: string;
-        title: string;
-        author: string;
-        timestamp: Timestamp;
-        imageURL?: string;
-        likes?: number;
-    }
+            setPosts(parsedPosts);
+        })()
+    }, [])
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Your Feed</Text>
 
       <FlatList
-        data={dummyPosts}
+        data={posts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <PostCard content={ } title={} author={} timestamp={}
+          <PostCard content={item.content} title={item.title} author={item.author} timestamp={item.timestamp} />
         )}
       />
     </View>

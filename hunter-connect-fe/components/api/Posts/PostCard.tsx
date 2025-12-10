@@ -2,6 +2,7 @@ import {Image, Pressable, StyleSheet, Text, View} from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import React from "react";
 import {Timestamp} from "firebase/firestore";
+import {FirestoreTimestampLike} from "@/components/api/util/Timestamp";
 
 const styles = StyleSheet.create({
     post: {
@@ -47,7 +48,7 @@ interface PostCardProps {
     content: string;
     title: string;
     author: string;
-    timestamp: Timestamp;
+    timestamp: FirestoreTimestampLike
     imageURL?: string;
     likes?: number;
 }
