@@ -1,6 +1,6 @@
 import { arrayRemove, arrayUnion, doc, updateDoc } from "firebase/firestore";
 
-import { db } from "../util/firebaseConfig";
+import { db } from "../Firebase/firebaseConfig";
 
 export async function acceptFriendRequest(myUid: string, fromUid: string) {
   const myRef = doc(db, "users", myUid);

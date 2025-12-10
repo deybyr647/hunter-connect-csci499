@@ -1,6 +1,6 @@
 import { arrayRemove, doc, updateDoc } from "firebase/firestore";
 
-import { db } from "../util/firebaseConfig";
+import { db } from "../Firebase/firebaseConfig";
 
 export async function removeFriend(uidA: string, uidB: string) {
   const aRef = doc(db, "users", uidA);
