@@ -48,7 +48,7 @@ export default function NewChatScreen() {
         >
         <TouchableOpacity
             style={{ width: 60 }}
-            onPress={() => router.back()}
+            onPress={() => router.push("/Messages")}
         >
             <Ionicons name="chevron-back" size={24} color="#5A31F4" />
         </TouchableOpacity>

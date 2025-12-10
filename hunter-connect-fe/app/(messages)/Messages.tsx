@@ -129,7 +129,10 @@ export default function MessagesScreen() {
         >
           <TouchableOpacity
             style={{ width: 60 }}
-            onPress={() => setSelectedConversationId(null)}
+            onPress={() => {
+              setSelectedConversationId(null);
+              router.push("/Messages");
+            }}
           >
             <Ionicons name="chevron-back" size={26} color="#5A31F4" />
           </TouchableOpacity>
