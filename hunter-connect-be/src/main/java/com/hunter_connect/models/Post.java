@@ -1,5 +1,7 @@
 package com.hunter_connect.models;
 
+import com.google.cloud.Timestamp;
+
 import java.time.LocalDateTime;
 
 /**
@@ -7,16 +9,16 @@ import java.time.LocalDateTime;
  */
 public class Post {
     private String uid;
-    private long userId; // Foreign key to the Post author's user ID
+    private String userId; // Foreign key to the Post author's user ID
     private String content;
     private String title;
-    private LocalDateTime timestamp;
+    private Timestamp timestamp;
 
     // No-argument constructor
     public Post() {}
 
     // Parameterized constructor
-    public Post(String uid, long userId, String content, LocalDateTime timestamp, String title) {
+    public Post(String uid, String userId, String content, Timestamp timestamp, String title) {
         this.uid = uid;
         this.userId = userId;
         this.content = content;
@@ -28,8 +30,8 @@ public class Post {
     public String getUid() { return uid; }
     public void setUid(String uid) { this.uid = uid; }
 
-    public long getUserId() { return userId; }
-    public void setUserId(long userId) { this.userId = userId; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
@@ -37,6 +39,6 @@ public class Post {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public Timestamp getTimestamp() { return timestamp; }
+    public void setTimestamp(Timestamp timestamp) { this.timestamp = timestamp; }
 }
