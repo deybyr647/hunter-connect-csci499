@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -15,7 +16,7 @@ import { createConversationIfAbsent } from "@/components/api/messages/createConv
 
 export default function NewChatScreen() {
   const router = useRouter();
-  const user = auth.currentUser;
+  const { user } = useAuth();
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);

@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { FontAwesome } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -23,7 +24,7 @@ import { Conversation, Message } from "@/components/api/messages/types";
 import { Text } from "@/components/util/Themed";
 
 export default function MessagesScreen() {
-  const user = auth.currentUser;
+  const { user } = useAuth();
   const router = useRouter();
 
   /* ---------------- STATE ---------------- */

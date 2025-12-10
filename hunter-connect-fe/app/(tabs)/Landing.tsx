@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
@@ -37,7 +38,7 @@ import { courseList } from "@/components/util/OnboardingOptions";
 import { generalTagList } from "@/components/util/TagOptions";
 
 export default function Landing() {
-  const user = auth.currentUser;
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<PostInterface[]>([]);

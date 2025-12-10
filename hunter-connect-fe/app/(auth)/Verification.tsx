@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
 import { sendEmailVerification } from "firebase/auth";
 import React, { useEffect, useState } from "react";
@@ -17,17 +18,16 @@ export default function VerifyEmailScreen() {
   const router = useRouter();
   const [verified, setVerified] = useState(false);
   const [checking, setChecking] = useState(false);
-  const user = auth.currentUser;
-
+  const { user } = useAuth();
   //  periodically check verification status
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (auth.currentUser && !verified) {
+      if (user && !verified) {
         setChecking(true);
-        await auth.currentUser.reload();
+        await user.reload();
         setChecking(false);
 
-        if (auth.currentUser.emailVerified) {
+        if (user.emailVerified) {
           setVerified(true);
           clearInterval(interval);
 

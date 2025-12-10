@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
@@ -31,9 +32,16 @@ import DropDownPicker from "react-native-dropdown-picker";
 import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {createEvent, EventInterface, getAllEvents, subscribeToEvent} from "@/components/api/Events/Events";
+import {
+  EventInterface,
+  createEvent,
+  getAllEvents,
+  subscribeToEvent,
+} from "@/components/api/Events/Events";
 import { auth, db } from "@/components/api/Firebase/firebaseConfig";
 import { UserInterface, getUser } from "@/components/api/Users/Users";
+import { courseList } from "@/components/util/OnboardingOptions";
+import { generalTagList } from "@/components/util/TagOptions";
 import {
   formatDateString,
   formatTimeString,
@@ -41,12 +49,9 @@ import {
   timestampToDate,
 } from "@/components/util/Timestamp";
 
-import {courseList} from "@/components/util/OnboardingOptions";
-import {generalTagList} from "@/components/util/TagOptions";
-
 export default function EventsScreen() {
   const router = useRouter();
-  const user = auth.currentUser;
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [upcomingEvents, setUpcomingEvents] = useState<
@@ -165,28 +170,28 @@ export default function EventsScreen() {
     if (!user) return;
 
     try {
-        const normalizedDate = normalizeDateOnly(date);
-        const finalStart = mergeDateAndTime(date, startTime);
-        const finalEnd = mergeDateAndTime(date, endTime);
+      const normalizedDate = normalizeDateOnly(date);
+      const finalStart = mergeDateAndTime(date, startTime);
+      const finalEnd = mergeDateAndTime(date, endTime);
 
-        const newEvent: EventInterface = {
-            title,
-            description,
-            location,
-            date: normalizedDate,
-            startTime: Timestamp.fromDate(finalStart),
-            endTime: Timestamp.fromDate(finalEnd),
-            createdBy: user.uid,
-            attendees: [],
-            tags: {
-                general: [...generalTags],
-                courses: [...courseTags]
-            },
-            createdAt: new Date(),
-        }
+      const newEvent: EventInterface = {
+        title,
+        description,
+        location,
+        date: normalizedDate,
+        startTime: Timestamp.fromDate(finalStart),
+        endTime: Timestamp.fromDate(finalEnd),
+        createdBy: user.uid,
+        attendees: [],
+        tags: {
+          general: [...generalTags],
+          courses: [...courseTags],
+        },
+        createdAt: new Date(),
+      };
 
-        const bearerToken = await user?.getIdToken();
-        await createEvent(newEvent, bearerToken);
+      const bearerToken = await user?.getIdToken();
+      await createEvent(newEvent, bearerToken);
 
       setUpcomingEvents((prev) => [newEvent, ...prev]);
 
@@ -208,8 +213,8 @@ export default function EventsScreen() {
     if (!user) return;
 
     try {
-        const bearerToken = await user?.getIdToken();
-        await subscribeToEvent(event.id, bearerToken);
+      const bearerToken = await user?.getIdToken();
+      await subscribeToEvent(event.id, bearerToken);
 
       setUpcomingEvents((prev) =>
         prev?.map((e) =>
