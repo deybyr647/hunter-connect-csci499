@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
@@ -50,7 +51,7 @@ interface EventData {
 
 export default function MyEventsScreen() {
   const router = useRouter();
-  const user = auth.currentUser;
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [myEvents, setMyEvents] = useState<EventData[]>([]);

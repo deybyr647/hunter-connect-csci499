@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -30,7 +31,8 @@ export default function FriendsScreen() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const uid = auth.currentUser?.uid;
+  const { user } = useAuth();
+  const uid = user?.uid;
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
@@ -44,7 +46,6 @@ export default function FriendsScreen() {
   }, [uid]);
 
   useEffect(() => {
-    const user = auth.currentUser;
     if (!user) return;
 
     const ref = doc(db, "users", user.uid);

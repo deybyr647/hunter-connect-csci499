@@ -1,3 +1,4 @@
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   DarkTheme,
@@ -5,13 +6,14 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
+// Added hooks
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 
 import TopHeader from "@/components/TopHeader/TopHeader";
-import { auth } from "@/components/api/Firebase/firebaseConfig";
 import { setupPresence } from "@/components/api/util/presence";
 
 export {
@@ -20,14 +22,42 @@ export {
 } from "expo-router";
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: "(auth)",
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  // Handle Protected Routes
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!user && !inAuthGroup) {
+      // Not logged in -> Redirect to login
+      router.replace("/(auth)");
+    } else if (user && inAuthGroup) {
+      // Logged in -> Redirect to home
+      router.replace("/(tabs)/Landing");
+      // Setup presence only when user is confirmed logged in
+      setupPresence();
+    }
+  }, [user, loading, segments]);
+
+  // Show loading spinner while checking auth state
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#5A31F4" />
+      </View>
+    );
+  }
+
   return (
     <ThemeProvider value={DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
@@ -54,7 +84,6 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -69,18 +98,10 @@ export default function RootLayout() {
     return null;
   }
 
-  useEffect(() => {
-    let initialized = false;
-
-    const unsub = auth.onAuthStateChanged((user) => {
-      if (user && !initialized) {
-        initialized = true; // prevent multiple listeners
-        setupPresence();
-      }
-    });
-
-    return unsub;
-  }, []);
-
-  return <RootLayoutNav />;
+  // Wrap the navigation logic with the Auth Provider
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  );
 }

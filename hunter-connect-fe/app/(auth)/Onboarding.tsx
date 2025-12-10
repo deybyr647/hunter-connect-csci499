@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -65,7 +66,7 @@ export default function OnboardingScreen() {
   };
 
   const handleSubmit = async () => {
-    const user = auth.currentUser;
+    const { user } = useAuth();
     if (!user) return;
 
     setSaving(true);

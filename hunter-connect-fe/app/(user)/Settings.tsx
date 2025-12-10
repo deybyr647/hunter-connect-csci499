@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
@@ -29,7 +30,7 @@ import { UserInterface, getUser } from "@/components/api/Users/Users";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const user = auth.currentUser;
+  const { user } = useAuth();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");

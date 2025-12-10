@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -16,7 +17,7 @@ import { UserInterface, getUser } from "@/components/api/Users/Users";
 
 export default function TagsScreen() {
   const router = useRouter();
-  const user = auth.currentUser;
+  const { user } = useAuth();
 
   const [courses, setCourses] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
