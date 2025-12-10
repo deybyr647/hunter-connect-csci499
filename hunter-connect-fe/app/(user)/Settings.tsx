@@ -24,7 +24,8 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { UserInterface, getUser } from "@/components/api/Users/Users";
-import { auth } from "@/components/api/util/firebaseConfig";
+import { auth, rtdb } from "@/components/api/util/firebaseConfig";
+import { ref, set } from "firebase/database";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -80,6 +81,17 @@ export default function SettingsScreen() {
 
   const handleLogout = async () => {
     try {
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        const uid = currentUser.uid;
+
+        await set(ref(rtdb, `/status/${uid}`), {
+          state: "offline",
+          last_changed: Date.now(),
+        });
+      }
+
       await signOut(auth);
       router.replace("/(auth)");
     } catch (err: any) {

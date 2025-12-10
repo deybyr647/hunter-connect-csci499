@@ -1,4 +1,11 @@
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 
 import { db } from "../util/firebaseConfig";
 import { Conversation } from "./types";
@@ -12,23 +19,45 @@ export function listenToConversations(
     orderBy("updatedAt", "desc")
   );
 
-  return onSnapshot(q, (snap) => {
+  return onSnapshot(q, async (snap) => {
     const list: Conversation[] = [];
 
-    snap.forEach((docSnap) => {
+    // We will build conversations asynchronously
+    const convoPromises = snap.docs.map(async (docSnap) => {
       const d = docSnap.data();
-      if (!d.participants?.includes(userId)) return;
+      if (!d.participants?.includes(userId)) return null;
 
-      list.push({
+      // BUILD participantData LIVE FROM FIRESTORE
+      const participantData: any = {};
+
+      await Promise.all(
+        d.participants.map(async (pid: string) => {
+          const uref = doc(db, "users", pid);
+          const uSnap = await getDoc(uref);
+
+          if (uSnap.exists()) {
+            participantData[pid] = {
+              username: uSnap.data().username,
+              fullName: uSnap.data().fullName,
+              status: uSnap.data().status ?? null,  // ← LIVE PRESENCE DATA
+            };
+          }
+        })
+      );
+
+      return {
         id: docSnap.id,
         lastMessage: d.lastMessage ?? "",
         lastMessageAt: d.lastMessageAt ?? null,
         participants: d.participants ?? [],
-        participantData: d.participantData ?? {},
+        participantData,
         unread: d.unread || {},
-      });
+      } as Conversation;
     });
 
-    callback(list);
+    const results = await Promise.all(convoPromises);
+
+    // Remove null items
+    callback(results.filter((c) => c !== null) as Conversation[]);
   });
 }
