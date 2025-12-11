@@ -168,4 +168,20 @@ export default StyleSheet.create({
     fontSize: 12,
   },
 
+  commentPill: {
+    backgroundColor: "#eee",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  commentPillText: {
+    fontSize: 12,
+    color: "#555",
+    fontWeight: "600",
+  },
+
 });

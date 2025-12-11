@@ -6,6 +6,7 @@ interface PostInterface {
   content: string;
   creatorName: string;
   likes: number;
+  likedBy?: string[];
   location: string;
   tags: {
     courses: string[];
@@ -20,7 +21,10 @@ export async function getPostById(id: string) {
   const snap = await getDoc(doc(db, "posts", id));
   if (!snap.exists()) return null;
 
-  return { id: snap.id, ...snap.data() };
+  return {
+    postID: snap.id,   
+    ...snap.data()
+  };
 }
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
 

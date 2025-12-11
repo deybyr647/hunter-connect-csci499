@@ -292,7 +292,9 @@ export default function Landing() {
           {loading ? (
             <ActivityIndicator size="large" color="#5A31F4" />
           ) : (
-            posts?.map(PostCard)
+            posts?.map((p) => (
+              <PostCard key={p.postID} post={p} />
+            ))
           )}
         </ScrollView>
       </SafeAreaView>

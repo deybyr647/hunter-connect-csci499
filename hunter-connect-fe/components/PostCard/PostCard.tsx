@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import React from "react";
 import { Pressable, Text, View } from "react-native";
-
+import { auth } from "@/components/api/Firebase/firebaseConfig";
+import { toggleLike } from "@/components/api/Posts/toggleLike";
 import { PostInterface } from "@/components/api/Posts/Posts";
 import {
   formatDateString,
@@ -12,17 +12,40 @@ import {
 
 import styles from "./PostCardStyles";
 import { useRouter } from "expo-router";
+import { collection, onSnapshot, doc } from "firebase/firestore";
+import { db } from "@/components/api/Firebase/firebaseConfig";
+import React, { useEffect, useState } from "react";
 
-const PostCard = (post: PostInterface) => {
+const PostCard = ({
+  post,
+  disablePress = false
+}: {
+  post: PostInterface;
+  disablePress?: boolean;
+}) => {
+
   const router = useRouter();
-  const { content, likes, title, timestamp, creatorName, tags, location } =
-    post;
+  const [commentCount, setCommentCount] = useState(0);
+
+  const {
+    content,
+    likes,
+    title,
+    timestamp,
+    creatorName,
+    tags,
+    location,
+    postID
+  } = post;
+  const user = auth.currentUser;
+  const [likesState, setLikesState] = useState(post.likes);
+  const [likedByState, setLikedByState] = useState(post.likedBy ?? []);
+  const liked = likedByState.includes(user?.uid ?? ""); 
+  const isClickable = !disablePress;
+
   const formatRelativeTime = (ts: any) => {
-    const date = timestampToDate(ts); // ✅ always returns a valid JS Date
-
-    const diff = (Date.now() - date.getTime()) / 1000; // seconds
-
-    if (isNaN(diff)) return ""; // safety fallback
+    const date = timestampToDate(ts);
+    const diff = (Date.now() - date.getTime()) / 1000;
 
     if (diff < 60) return "just now";
     if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
@@ -32,15 +55,45 @@ const PostCard = (post: PostInterface) => {
     return `${Math.floor(diff / 86400)} days ago`;
   };
 
+  useEffect(() => {
+    if (!postID) return;
+
+    const commentsRef = collection(db, "posts", postID, "comments");
+
+    const unsubscribe = onSnapshot(commentsRef, snap => {
+      setCommentCount(snap.size);
+    });
+
+    return unsubscribe;
+  }, [postID]);
+
+  useEffect(() => {
+    if (!postID) return;
+
+    const unsubscribe = onSnapshot(doc(db, "posts", postID), snap => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+
+      setLikesState(data.likes ?? 0);
+      setLikedByState(data.likedBy ?? []);
+    });
+
+    return unsubscribe;
+  }, [postID]);
+
   return (
     <Pressable
-      onPress={() => {
-        router.push({
-          pathname: "/post/[id]",
-          params: { id: post.postID },
-        });
-      }}
-      style={styles.card}   // <- this is your ONE card wrapper
+      disabled={!isClickable}
+      onPress={
+        isClickable
+          ? () =>
+              router.push({
+                pathname: "/post/[id]",
+                params: { id: postID }
+              })
+          : undefined
+      }
+      style={styles.card}
     >
 
       {/* USER HEADER */}
@@ -91,13 +144,40 @@ const PostCard = (post: PostInterface) => {
 
       {/* FOOTER */}
       <View style={styles.footer}>
-        <Pressable style={styles.footerBtn}>
-          <FontAwesome name="heart-o" size={18} color="#6e6e6e" />
-          <Text style={styles.footerBtnText}>{likes ?? 0}</Text>
+        <Pressable
+          style={styles.footerBtn}
+          onPress={() => {
+            if (!user) return;
+            toggleLike(postID, user.uid);
+          }}
+        >
+          {liked ? (
+            <FontAwesome name="heart" size={18} color="#e24b4b" />
+          ) : (
+            <FontAwesome name="heart-o" size={18} color="#6e6e6e" />
+          )}
+
+          <Text style={styles.footerBtnText}>
+            {likesState}
+          </Text>
         </Pressable>
 
-        <Pressable style={styles.footerBtn}>
+
+
+        <Pressable
+          disabled={!isClickable}
+          style={styles.footerBtn}
+          onPress={() =>
+            router.push({
+              pathname: "/post/[id]",
+              params: { id: postID }, 
+            })
+          }
+        >
           <FontAwesome name="comment-o" size={18} color="#6e6e6e" />
+          <View style={styles.commentPill}>
+            <Text style={styles.commentPillText}>{commentCount}</Text>
+          </View>
         </Pressable>
       </View>
 
