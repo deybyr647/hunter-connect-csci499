@@ -1,4 +1,6 @@
 import { Timestamp } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/components/api/Firebase/firebaseConfig";
 
 interface PostInterface {
   content: string;
@@ -14,7 +16,12 @@ interface PostInterface {
   postID: string;
   userID: string;
 }
+export async function getPostById(id: string) {
+  const snap = await getDoc(doc(db, "posts", id));
+  if (!snap.exists()) return null;
 
+  return { id: snap.id, ...snap.data() };
+}
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
 
 const createPost = async (

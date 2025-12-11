@@ -1,128 +1,171 @@
 import { StyleSheet } from "react-native";
 
-const styles = StyleSheet.create({
-  /* Post Card */
-  post: {
+export default StyleSheet.create({
+  card: {
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 12,
+
+    // 👇 Reddit-style center column
     width: "100%",
-    maxWidth: 700,
-    backgroundColor: "#FFFFFF",
-    padding: 18,
-    borderRadius: 14,
-    marginBottom: 16,
+    maxWidth: 600,
+    alignSelf: "center",
+
     borderWidth: 1,
-    borderColor: "#E8E8E8",
+    borderColor: "#dcdcdc",
+
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 
-  userInfo: {
+  /* HEADER */
+  header: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
   },
-
-  avatar: {
-    marginRight: 10,
-  },
-
   username: {
+    fontSize: 14,
     fontWeight: "600",
-    fontSize: 16,
-    color: "#222",
+    color: "#1a1a1b",
+    marginRight: 6,   
   },
 
   timestamp: {
     fontSize: 12,
-    color: "#777",
-    marginTop: 2,
+    color: "#7c7c7c",
   },
 
-  postTitle: {
+
+  /* TITLE */
+  title: {
     fontSize: 18,
     fontWeight: "700",
-    marginBottom: 8,
-    color: "#222",
+    color: "#1a1a1b",
+    marginBottom: 6,
   },
 
-  content: {
-    fontSize: 15,
-    marginBottom: 12,
-    color: "#444",
+  /* CONTENT */
+  body: {
+    fontSize: 14,
+    color: "#1c1c1c",
+    marginBottom: 14,
     lineHeight: 20,
   },
 
-  actions: {
-    flexDirection: "row",
-    gap: 15,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-  },
-
-  actionBtn: {
+  /* LOCATION */
+  locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    marginBottom: 10,
+  },
+  locationText: {
+    marginLeft: 4,
+    fontSize: 13,
+    color: "#d9534f",
   },
 
-  likeText: {
-    color: "#555",
-    fontSize: 14,
-  },
-
-  /* Tags */
-  tagContainer: {
+  /* TAGS */
+  tagRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 10,
-    marginBottom: 8,
+    marginBottom: 14,
   },
-
   tagPurple: {
-    backgroundColor: "#EFE9FF",
-    paddingVertical: 4,
+    backgroundColor: "#ede9ff",
     paddingHorizontal: 10,
-    borderRadius: 14,
+    paddingVertical: 4,
+    borderRadius: 20,
     marginRight: 6,
     marginBottom: 6,
   },
-
   tagPurpleText: {
-    color: "#6B4CF6",
-    fontSize: 12,
+    color: "#5A31F4",
     fontWeight: "600",
+    fontSize: 12,
   },
-
   tagGreen: {
-    backgroundColor: "#E8F9EF",
-    paddingVertical: 4,
+    backgroundColor: "#def7e6",
     paddingHorizontal: 10,
-    borderRadius: 14,
+    paddingVertical: 4,
+    borderRadius: 20,
     marginRight: 6,
     marginBottom: 6,
   },
-
   tagGreenText: {
-    color: "#0F6F3C",
-    fontSize: 12,
+    color: "#2f9e5c",
     fontWeight: "600",
+    fontSize: 12,
   },
 
-  remove: {
-    color: "#999",
-    marginLeft: 4,
-    fontSize: 14,
-  },
-
-  row: {
+  /* FOOTER (Reddit-style action bar) */
+  footer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#ededed",
+    paddingTop: 10,
   },
-
-  cardDetail: {
+  footerBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 22,
+  },
+  footerBtnText: {
     marginLeft: 6,
     fontSize: 14,
-    color: "#444",
+    color: "#7c7c7c",
   },
-});
+  userRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 40,
+    backgroundColor: "rgba(90, 49, 244, 0.15)", // lavender
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
 
-export default styles;
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  locationTextSmall: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: "#e34d4d",
+  },
+
+  avatarText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#5A31F4", // purple initial
+  },
+
+  dot: {
+    marginHorizontal: 4,
+    color: "#7c7c7c",
+    fontSize: 12,
+  },
+
+});
