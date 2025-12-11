@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { timestampToDate } from "@/components/util/Timestamp";
 import { auth, db } from "@/components/api/Firebase/firebaseConfig";
-import { toggleCommentLike } from "@/components/api/Comments/toggleCommentLike";
+import { toggleCommentLike } from "@/components/Comments/toggleCommentLike";
 import { doc, onSnapshot } from "firebase/firestore";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
@@ -71,29 +71,29 @@ export default function ReplyableComment({
         <Text style={styles.text}>{comment.text}</Text>
 
         {/* Reply Button */}
-        <TouchableOpacity onPress={() => setShowReplyBox(!showReplyBox)}>
-          <Text style={styles.replyBtn}>Reply</Text>
-        </TouchableOpacity>
+        <View style={styles.actionRow}>
+          {/* Reply */}
+          <TouchableOpacity onPress={() => setShowReplyBox(!showReplyBox)}>
+            <Text style={styles.replyBtn}>Reply</Text>
+          </TouchableOpacity>
 
-        {/* Reply Input Box */}
-        {/* Like Button */}
-        <View style={styles.likeRow}>
-        <TouchableOpacity
+          {/* Like */}
+          <TouchableOpacity
             style={styles.likeButton}
             onPress={() => {
-            if (!user) return;
-            toggleCommentLike(postId, comment.id, user.uid);
+              if (!user) return;
+              toggleCommentLike(postId, comment.id, user.uid);
             }}
-        >
+          >
             {liked ? (
-            <FontAwesome name="heart" size={16} color="#e24b4b" />
+              <FontAwesome name="heart" size={15} color="#e24b4b" />
             ) : (
-            <FontAwesome name="heart-o" size={16} color="#777" />
+              <FontAwesome name="heart-o" size={15} color="#777" />
             )}
-
             <Text style={styles.likeCount}>{likesState}</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
         </View>
+
 
         {showReplyBox && (
           <View style={styles.replyBox}>
@@ -218,16 +218,24 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     },
 
-    likeButton: {
+  actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingVertical: 4,
-    },
+    marginTop: 2,
+    marginBottom: 8,
+    gap: 16,             // space between Reply + Like
+  },
 
-    likeCount: {
+  likeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  likeCount: {
     fontSize: 13,
     color: "#555",
-    },
+  },
+
 
 });
