@@ -121,7 +121,7 @@ export default function TagsScreen() {
 
             <TouchableOpacity
               style={styles.editBtn}
-              onPress={() => router.push("/Onboarding")}
+              onPress={() => router.push("/(auth)/Onboarding")}
             >
               <Text style={styles.editText}>Edit Tags</Text>
             </TouchableOpacity>
