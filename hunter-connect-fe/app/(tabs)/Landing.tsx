@@ -8,6 +8,7 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
+  orderBy,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -62,6 +63,22 @@ export default function Landing() {
       try {
         const bearerToken = await user.getIdToken();
         const fetchedPosts = await getAllPosts(bearerToken);
+        fetchedPosts.sort((a, b) => {
+          const da = new Date(
+            typeof a.timestamp === "object" && "seconds" in a.timestamp
+              ? a.timestamp.seconds * 1000
+              : a.timestamp
+          );
+
+          const db = new Date(
+            typeof b.timestamp === "object" && "seconds" in b.timestamp
+              ? b.timestamp.seconds * 1000
+              : b.timestamp
+          );
+
+          return db.getTime() - da.getTime();
+        });
+
         setPosts(fetchedPosts);
         setLoading(false);
       } catch (error) {
