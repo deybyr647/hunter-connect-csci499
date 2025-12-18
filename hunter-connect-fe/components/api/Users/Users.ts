@@ -46,7 +46,7 @@ const createUser = async (body: UserInterface, bearerToken: string = "") => {
   };
 
   try {
-    const req = await fetch(`${API_URL}/api/users}`, createUserRequest);
+    const req = await fetch(`${API_URL}/api/users`, createUserRequest);
     const json = await req.json();
     console.log("User created.");
     return json;
