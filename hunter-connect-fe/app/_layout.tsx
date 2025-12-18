@@ -32,22 +32,40 @@ function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
 
-  // Handle Protected Routes
-  useEffect(() => {
-    if (loading) return;
+    // Handle Protected Routes
+    useEffect(() => {
+        if (loading) return;
 
-    const inAuthGroup = segments[0] === "(auth)";
+        // 1. Setup presence whenever a user is logged in
+        if (user) {
+            setupPresence();
+        }
 
-    if (!user && !inAuthGroup) {
-      // Not logged in -> Redirect to login
-      router.replace("/(auth)");
-    } else if (user && inAuthGroup) {
-      // Logged in -> Redirect to home
-      router.replace("/(tabs)/Landing");
-      // Setup presence only when user is confirmed logged in
-      setupPresence();
-    }
-  }, [user, loading, segments]);
+        const inAuthGroup = segments[0] === "(auth)";
+
+        if (!user && !inAuthGroup) {
+            // Not logged in -> Redirect to login
+            router.replace("/(auth)");
+        } else if (user && inAuthGroup) {
+            // Logged in, but currently in the (auth) screens.
+            // We need to decide if we should redirect them to Landing.
+
+            // A. If email is NOT verified, allow them to stay on (auth) screens
+            //    (specifically Verification or index).
+            if (!user.emailVerified) return;
+
+            // B. If they are on Onboarding or Verification, allow them to stay
+            //    to complete the process.
+            const currentScreen = segments[1];
+            if (currentScreen === "Onboarding" || currentScreen === "Verification") {
+                return;
+            }
+
+            // C. Otherwise (e.g. they went to login page while already verified),
+            //    redirect to Landing.
+            router.replace("/(tabs)/Landing");
+        }
+    }, [user, loading, segments]);
 
   // Show loading spinner while checking auth state
   if (loading) {

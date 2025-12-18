@@ -27,6 +27,7 @@ import {
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const [academicYear, setAcademicYear] = useState("");
   const [courses, setCourses] = useState<string[]>([]);
@@ -66,7 +67,6 @@ export default function OnboardingScreen() {
   };
 
   const handleSubmit = async () => {
-    const { user } = useAuth();
     if (!user) return;
 
     setSaving(true);
@@ -91,7 +91,12 @@ export default function OnboardingScreen() {
         },
       };
 
-      await updateUser(reqBody, bearerToken);
+      const req = await updateUser(reqBody, bearerToken);
+
+        if (req && (req.error || req.status >= 400)) {
+            alert("Failed to save profile. Please try again.");
+            return;
+        }
 
       router.replace("/(tabs)/Landing");
     } catch (error) {
